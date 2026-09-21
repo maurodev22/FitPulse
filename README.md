@@ -2,15 +2,13 @@
 
 FitPulse - Tu compañero de rendimiento y bienestar.
 
-App Flutter que replica las pantallas del proyecto "FitPulse" de Google Stitch
-(design system *Kinetic Vitality*), orientada a registrarse como atleta, seguir
-entrenamientos, recetas nutricionales y consejos de bienestar.
+App Flutter orientada a registrarse como atleta, seguir entrenamientos,
+recetas nutricionales y consejos de bienestar.
 
 ## Entorno
 
 - **Framework:** Flutter 3.47.3 / Dart 3.13.3
 - **Plataforma:** Android (development, USB debugging en Pixel 6a)
-- **Diseño de referencia:** Google Stitch (`projects/7104873432163098849`)
 
 ## Estructura
 
