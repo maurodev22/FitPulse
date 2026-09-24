@@ -145,10 +145,24 @@ fuera de Cuba (se deja la puerta abierta sin bloquear la app).
 - ⏳ Probar en Pixel 6a y Xiaomi: banner visible sin Premium, recompensado suma +25 una
   vez al día, y al activar Premium (modo prueba) desaparecen todos los anuncios.
 
-## 7. Fase 4 — Comidas ⏳
+## 7. Fase 4 — Comidas ✅ (código)
 
 - Plan semanal de comidas según objetivos y lista de la compra.
-- Día "libre" / cheat meal planificado (no cuenta como fallo de racha).
+  - `lib/state/meal_plan.dart`: generador determinista de 7 días (Lunes→Domingo) a partir
+    del perfil (días de entrenamiento + meta calórica); todas las comidas referencian
+    recetas **reales** del catálogo (`recetas_catalog.dart`, con ingredientes por ración
+    añadidos). Totales por día = suma exacta de las recetas; la cobertura frente a la meta
+    es honesta (el plan base ronda el ~66 % de 2100 kcal/día → se indica ajustar raciones).
+  - `lib/screens/meal_plan_screen.dart`: pantalla con pestañas "Plan semanal" y "Lista de
+    la compra" (ingredientes agrupados con su nombre real y nº de usos). Acceso desde una
+    tarjeta nueva en Recetas (`recipes_screen.dart`).
+- Día "libre" / cheat meal planificado: domingo marcado "Día libre 🍕" y NO penaliza la
+  racha (que solo depende de sesiones de entrenamiento completadas); se aclara en la UI.
+- 7 tests nuevos (`test/meal_plan_test.dart`): 34/34 en verde.
+
+**Pendiente (manual):**
+- ⏳ Probar en Pixel 6a y Xiaomi: abrir Plan semanal desde Recetas, ver 7 días + domingo día
+  libre, lista de la compra agrupada.
 
 ## 8. Fase 5 — Entrenador con cámara ⏳
 

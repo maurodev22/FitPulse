@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../state/app_state.dart';
+import '../state/meal_plan.dart';
 import '../state/recetas_catalog.dart';
+import 'meal_plan_screen.dart';
 import '../theme.dart';
 import '../widgets/common.dart';
 
@@ -56,6 +58,8 @@ class _RecipesScreenState extends State<RecipesScreen> {
                   _buildCategoryPills(),
                   const SizedBox(height: 20),
                   const _MacroSummaryCard(),
+                  const SizedBox(height: 16),
+                  const _PlanSemanalCard(),
                   const SizedBox(height: 24),
                   const _FeaturedRecipeSection(),
                   const SizedBox(height: 24),
@@ -121,6 +125,68 @@ class _RecipesScreenState extends State<RecipesScreen> {
         builder: (_) => RecetasCatalogScreen(
           categoriaInicial: categoria,
           recetasIniciales: recetas,
+        ),
+      ),
+    );
+  }
+}
+
+class _PlanSemanalCard extends StatelessWidget {
+  const _PlanSemanalCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final perfil = context.watch<AppState>().profile;
+    return Material(
+      color: AppColors.surface,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: () {
+          Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) => MealPlanScreen(plan: generarPlanSemanal(perfil)),
+            ),
+          );
+        },
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: AppColors.primaryContainer,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                alignment: Alignment.center,
+                child: const Icon(Icons.restaurant_menu, color: Colors.white, size: 22),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Plan semanal de comidas',
+                      style: AppType.labelMd.copyWith(
+                        color: AppColors.onSurface,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Según tu meta (${perfil.caloriasMeta.round()} kcal/día) + lista '
+                      'de la compra. Día libre el domingo 🍕',
+                      style: AppType.bodySm.copyWith(color: AppColors.onSurfaceVariant),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.chevron_right, color: AppColors.outline),
+            ],
+          ),
         ),
       ),
     );

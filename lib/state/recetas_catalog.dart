@@ -1,3 +1,11 @@
+/// Ingrediente de una receta con su cantidad (por ración).
+class Ingrediente {
+  const Ingrediente(this.nombre, this.cantidad);
+
+  final String nombre;
+  final String cantidad;
+}
+
 /// Modelo de una receta nutricional.
 class Recipe {
   const Recipe({
@@ -11,6 +19,7 @@ class Recipe {
     required this.minutos,
     required this.descripcion,
     required this.imagen,
+    this.ingredientes = const [],
     this.destacada = false,
   });
 
@@ -24,6 +33,7 @@ class Recipe {
   final int minutos;
   final String descripcion;
   final String imagen;
+  final List<Ingrediente> ingredientes;
   final bool destacada;
 
   String get etiquetaCategoria => tipo.toUpperCase().replaceAll(' ', '-');
@@ -43,6 +53,13 @@ const catalog = <Recipe>[
     descripcion:
         'Rico en omega 3 y proteína magra. Diseñado para favorecer la recuperación muscular y mantener masa magra.',
     imagen: 'assets/images/workout.webp',
+    ingredientes: [
+      Ingrediente('Salmón', '150 g'),
+      Ingrediente('Quinoa cocida', '120 g'),
+      Ingrediente('Aguacate', '½ unidad'),
+      Ingrediente('Espinacas', '1 puñado'),
+      Ingrediente('Limón', '½ unidad'),
+    ],
     destacada: true,
   ),
   Recipe(
@@ -57,6 +74,13 @@ const catalog = <Recipe>[
     descripcion:
         'Tortitas esponjosas con avena integral y proteína whey para empiezar el día con energía sostenida.',
     imagen: 'assets/images/core.webp',
+    ingredientes: [
+      Ingrediente('Avena integral', '80 g'),
+      Ingrediente('Proteína whey', '1 scoop (30 g)'),
+      Ingrediente('Huevo', '1 unidad'),
+      Ingrediente('Plátano', '1 unidad'),
+      Ingrediente('Canela', 'al gusto'),
+    ],
   ),
   Recipe(
     nombre: 'Ensalada Griega con Pechuga',
@@ -70,6 +94,13 @@ const catalog = <Recipe>[
     descripcion:
         'Pechuga a la plancha con tomate, pepino, aceitunas y queso feta. Fresca, ligera y muy saciante.',
     imagen: 'assets/images/profile.webp',
+    ingredientes: [
+      Ingrediente('Pechuga de pollo', '150 g'),
+      Ingrediente('Tomate', '1 unidad'),
+      Ingrediente('Pepino', '½ unidad'),
+      Ingrediente('Aceitunas', '50 g'),
+      Ingrediente('Queso feta', '40 g'),
+    ],
   ),
   Recipe(
     nombre: 'Batido Verde Energético',
@@ -83,6 +114,12 @@ const catalog = <Recipe>[
     descripcion:
         'Espinaca, plátano, jengibre y proteína vegetal. Combustible listo 30 minutos antes de entrenar.',
     imagen: 'assets/images/workout.webp',
+    ingredientes: [
+      Ingrediente('Espinaca', '1 puñado'),
+      Ingrediente('Plátano', '1 unidad'),
+      Ingrediente('Jengibre', '1 trozo pequeño'),
+      Ingrediente('Proteína vegetal', '1 scoop (30 g)'),
+    ],
   ),
   Recipe(
     nombre: 'Wrap de Pollo y Aguacate',
@@ -96,6 +133,12 @@ const catalog = <Recipe>[
     descripcion:
         'Tortilla integral con pollo, aguacate y espinacas. Ideal para cerrar la ventana anabólica post-HIIT.',
     imagen: 'assets/images/core.webp',
+    ingredientes: [
+      Ingrediente('Tortilla integral', '1 unidad'),
+      Ingrediente('Pechuga de pollo', '120 g'),
+      Ingrediente('Aguacate', '½ unidad'),
+      Ingrediente('Espinacas', '1 puñado'),
+    ],
   ),
   Recipe(
     nombre: 'Avena Nocturna con Proteína',
@@ -109,6 +152,12 @@ const catalog = <Recipe>[
     descripcion:
         'Avena remojada en yogur griego con semillas de chía. Reposición muscular mientras duermes.',
     imagen: 'assets/images/profile.webp',
+    ingredientes: [
+      Ingrediente('Avena integral', '60 g'),
+      Ingrediente('Yogur griego', '150 g'),
+      Ingrediente('Proteína whey', '1 scoop (30 g)'),
+      Ingrediente('Semillas de chía', '1 cda'),
+    ],
   ),
 ];
 

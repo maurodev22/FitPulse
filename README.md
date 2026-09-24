@@ -22,8 +22,13 @@ dispositivo (sin cuentas ni servidores).
   todas las pestañas + recompensado +25 PTs 1/día), consentimiento local, **Premium
   "Quitar anuncios"** (modo prueba local; el cobro real requiere Play fuera de Cuba) y
   **app ligera** (R8 + shrinkResources en release).
-- **Próximo paso**: prueba manual de Fases 1, 2 y 3 en los dos móviles
-  (`GUIA_TESTEO_FASE1.md`) y, tras aprobación, abrir Fase 4.
+- **Fase 4 completada (código)**: **plan semanal de comidas** según el perfil (7 días,
+  solo recetas reales del catálogo, totales calculados, cobertura honesta de la meta),
+  **lista de la compra** agrupada e ingredientes en el catálogo, y **día libre 🍕 el
+  domingo que no penaliza la racha**.
+- **Prueba manual**: Fases 1-3 probadas en Pixel 6a (PASA en F1/F2/F3; recompensado
+  pendiente por red — AdMob 403 en Cuba). Fase 4 pendiente de probar en
+  `GUIA_TESTEO_FASE1.md`.
 - El plan detallado por fases vive en **[`PLAN.md`](PLAN.md)**.
 
 ## Hoja de ruta por fases
@@ -36,7 +41,7 @@ dispositivo (sin cuentas ni servidores).
 | 1 | ✅ (código) | Datos reales del cuerpo: pasos reales (pedometer) + **Health Connect solo lectura** (pulso, peso, grasa, sueño, agua, gasto activo; permiso por métrica; minSdk 26), reset diario por fecha, analytics local anónimo. "Tiempo activo" se muestra "—" en Android (el tipo EXERCISE_TIME del plugin solo existe en iOS). Falta prueba manual |
 | 2 | ✅ (código) | Catálogo de 4 entrenamientos + **reproductor con temporizador**; sesiones reales persistidas; **racha real**; **retos 3/5/7 días**; **XP/niveles**; **plan adaptativo** que recomienda el programa según tu semana. Falta prueba manual |
 | 3 | ✅ (código) | Anuncios de AdMob con **IDs de prueba** (banner todas las pestañas + recompensado +25 PTs 1/día con consentimiento local) + **Premium "Quitar anuncios"** (modo prueba; el cobro real requiere entidad fuera de Cuba) + **app ligera** (R8 en release; **medido: 55.6 MB universal / 22.5 MB arm64** vs 178 MB debug). Falta prueba manual |
-| 4 | ⏳ | Meal planner, lista de la compra y día libre / cheat meal |
+| 4 | ✅ (código) | Plan semanal de comidas según el perfil (7 días Lunes→Domingo, sin datos inventados: solo recetas reales del catálogo, totales por día = suma exacta, cobertura honesta de la meta) + **lista de la compra** agrupada por ingrediente + **día libre 🍕 el domingo que no penaliza la racha**. Pendiente prueba manual |
 | 5 | ⏳ | Entrenador con cámara (ML Kit, corrección de postura on-device) |
 | 6 | ⏳ | Widgets de home screen y notificaciones locales (permiso por tipo) |
 | 7 | ⏳ | Modo oscuro, accesibilidad (EAA/WCAG), i18n es/en completo, microinteracciones |
@@ -57,14 +62,16 @@ lib/
   state/
     app_state.dart             # ChangeNotifier con estado global + persistencia (Fase 2: historial/racha/XP/retos; Fase 3: recompensa 1/día)
     athlete_profile.dart       # Modelo del atleta / perfil (JSON persistido)
-    recetas_catalog.dart       # Modelo y catálogo estático de recetas
+    recetas_catalog.dart       # Modelo y catálogo estático de recetas (+ ingredientes por ración, Fase 4)
+    meal_plan.dart             # Plan semanal de comidas determinista + lista de la compra (Fase 4)
     workout.dart               # Modelos de sesión/programa de entrenamiento (Fase 2)
     workout_catalog.dart       # Catálogo de 4 programas con ejercicios (Fase 2)
   screens/
     eula_screen.dart           # Términos y EULA con casilla obligatoria
     registration_screen.dart   # Onboarding "Crea tu Perfil Atlético" (ruedas + IMC en vivo)
     home_screen.dart           # Inicio (Día ideal, pasos/pulso reales, resumen, hero entrenamiento)
-    recipes_screen.dart        # Recetas Nutricionales + catálogo completo
+    recipes_screen.dart        # Recetas Nutricionales + catálogo completo (+ acceso al plan, Fase 4)
+    meal_plan_screen.dart      # Plan semanal + lista de la compra (pestañas, Fase 4)
     progress_screen.dart       # Progreso (métricas Health Connect + sesiones/reto/nivel/insignias reales)
     workout_player_screen.dart # Reproductor de entrenamiento con temporizador (Fase 2)
     tips_screen.dart           # Consejos y Bienestar

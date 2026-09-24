@@ -195,7 +195,35 @@ Ajustes → Privacidad → Permisos del cuerpo/Actividad física → FitPulse �
 
 ---
 
-## 12. Criterio de aprobación / fallo
+## 12. Fase 4 — Comidas (plan semanal y lista de la compra)
+
+**a) Acceso al plan**
+- Pestaña **Recetas** → tarjeta **"Plan semanal de comidas"** (debajo del resumen de
+  macros). Al pulsar abre la pantalla con 2 pestañas: **Plan semanal** y **Lista de la
+  compra**.
+
+**b) Plan semanal honesto**
+- Se ven **7 días (Lunes→Domingo)**; cada día tiene 4 comidas (Desayuno, Almuerzo, Cena y
+  Pre-entreno/Recarga) que **siempre son recetas reales del catálogo**.
+- El resumen muestra la meta del perfil (ej. 2100 kcal/día) y el promedio real del plan
+  (ej. ~1387 kcal/día, ~66 %) con la nota de *ajustar raciones*: **ningún número es
+  inventado**.
+- El **Domingo** muestra la etiqueta **"Día libre 🍕"** y la nota de que *no penaliza tu
+  racha de sesiones* (la racha solo cuenta entrenamientos completados).
+- Los totales por día = suma exacta de las kcal de sus recetas.
+
+**c) Lista de la compra**
+- Pestaña **Lista de la compra**: ingredientes agrupados por nombre real con su nº de usos
+  (ej. "Pechuga de pollo ×7"), ordenados de más a menos usados. Cantidades por ración se
+  ven en cada receta del catálogo.
+
+**d) Día libre y racha**
+- Completar un entrenamiento en domingo (día libre) sigue sumando a la racha con normalidad:
+  el día libre **solo es informativo** en el plan de comidas.
+
+---
+
+## 13. Criterio de aprobación / fallo
 
 **PASA si:**
 - Los pasos siempre vienen del sensor real (número real, nunca ficticio).
@@ -205,6 +233,9 @@ Ajustes → Privacidad → Permisos del cuerpo/Actividad física → FitPulse �
   el reto avanza al cumplir días seguidos y todo persiste tras cerrar la app.
 - Los anuncios de PRUEBA aparecen solo sin Premium, y el recompensado suma +25 una sola
   vez por día y persiste.
+- El plan semanal tiene 7 días, todas sus comidas son recetas reales del catálogo, el
+  domingo está marcado como día libre (que no rompe la racha) y la lista de la compra
+  agrupa ingredientes con su nombre real.
 - No aparecen tendencias inventadas ni valores de salud ficticios.
 - `flutter analyze` → 0 issues y todos los tests verdes.
 
@@ -217,6 +248,8 @@ Ajustes → Privacidad → Permisos del cuerpo/Actividad física → FitPulse �
   reiniciar la app).
 - El banner o el recompensado aparecen con Premium activo, o el recompensado otorga +25
   más de una vez el mismo día, o la app crashea sin Play Services/red.
+- El plan semanal incluye comidas inventadas (fuera del catálogo real), totales que no
+  coinciden con la suma de sus recetas, o el día libre no está marcado en domingo.
 
 ---
 
@@ -224,5 +257,6 @@ Ajustes → Privacidad → Permisos del cuerpo/Actividad física → FitPulse �
 
 | Fecha | Dispositivo | Resultado | Observaciones |
 |-------|-------------|-----------|---------------|
-|  | Pixel 6a | ☐ PASA / ☐ FALLA |  |
+| 2026-09-24 | Pixel 6a | ☑ PASA (F1-F3) | F1/F2 ✅ (Health Connect, reproductor, racha, retos). F3: banner+Premium tras arreglo del placeholder ✅; **recompensado pendiente por red** (AdMob 403 en Cuba — probar fuera de Cuba). |
+|  | Pixel 6a | ☐ PASA / ☐ FALLA (F4) | Plan semanal de comidas + lista de la compra + día libre. |
 |  | Xiaomi | ☐ PASA / ☐ FALLA |  |
