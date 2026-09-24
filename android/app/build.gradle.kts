@@ -14,6 +14,12 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
+    lint {
+        // Release sin lint vital: evita resoluciones de red extra (red local
+        // inestable) en un chequeo estático que no afecta al APK final.
+        checkReleaseBuilds = false
+    }
+
     defaultConfig {
         // FitPulse: identificador único de la app (dev env).
         applicationId = "com.fitpulse.app"
