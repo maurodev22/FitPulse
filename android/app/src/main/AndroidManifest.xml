@@ -1,11 +1,39 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <!-- Sensor de pasos interno del teléfono (Android 10+, ACTIVITY_RECOGNITION). -->
     <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION"/>
-    <!-- No requiere INTERNET: los datos de salud se quedan en el dispositivo. -->
+    <!-- Health Connect (Fase 1): permisos de LECTURA por métrica. Cada una puede
+         concederse o rechazarse por separado desde la pantalla de Health Connect. -->
+    <uses-permission android:name="android.permission.health.READ_STEPS"/>
+    <uses-permission android:name="android.permission.health.READ_HEART_RATE"/>
+    <uses-permission android:name="android.permission.health.READ_WEIGHT"/>
+    <uses-permission android:name="android.permission.health.READ_SLEEP"/>
+    <uses-permission android:name="android.permission.health.READ_WATER"/>
+    <uses-permission android:name="android.permission.health.READ_ACTIVE_CALORIES_BURNED"/>
+    <uses-permission android:name="android.permission.health.READ_BODY_FAT"/>
+    <!-- INTERNET SOLO para los anuncios de AdMob (Fase 3). Los datos de salud
+         nunca salen del dispositivo. -->
+    <uses-permission android:name="android.permission.INTERNET"/>
     <application
         android:label="FitPulse"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
+        <!-- AdMob (Fase 3): ID de APP de PRUEBA oficial de Google. Para anuncios
+             de producción se sustituye por el ID real (requiere cuenta fuera de
+             Cuba según el plan). -->
+        <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="ca-app-pub-3940256099942544~3347511713"/>
+        <!-- Health Connect: alias para mostrar la pantalla de permisos/rationale
+             de la propia app de Health Connect. -->
+        <activity-alias
+            android:name="ViewPermissionUsageActivity"
+            android:exported="true"
+            android:targetActivity=".MainActivity"
+            android:permission="android.permission.START_VIEW_PERMISSION_USAGE">
+            <intent-filter>
+                <action android:name="androidx.health.ACTION_SHOW_PERMISSIONS_RATIONALE"/>
+            </intent-filter>
+        </activity-alias>
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -43,6 +71,11 @@
         <intent>
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
+        </intent>
+        <!-- Health Connect: consulta si la app está instalada. -->
+        <package android:name="com.google.android.apps.healthdata"/>
+        <intent>
+            <action android:name="androidx.health.ACTION_SHOW_PERMISSIONS_RATIONALE"/>
         </intent>
     </queries>
 </manifest>

@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../state/app_state.dart';
+import '../state/workout.dart';
 import '../theme.dart';
 import '../widgets/common.dart';
+import 'workout_player_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -46,6 +48,8 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildResumenHoy() {
     final state = context.watch<AppState>();
     final pasosDisponible = state.healthDisponible;
+    final pulso = state.pulsoHoy;
+    final pulsoConPermiso = state.pulsoConPermiso;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -85,16 +89,25 @@ class _HomeScreenState extends State<HomeScreen> {
             const SizedBox(width: 12),
             Expanded(
               child: MetricCard(
-                stat: const MetricStat(
+                stat: MetricStat(
                   label: 'Pulso',
-                  value: '—',
+                  value: pulso?.toString() ?? '—',
                   unit: 'bpm',
                   icon: Icons.favorite,
-                  iconColor: AppColors.outline,
-                  iconBackground: AppColors.surfaceContainerHighest,
+                  iconColor: pulsoConPermiso ? AppColors.primary : AppColors.outline,
+                  iconBackground: pulsoConPermiso
+                      ? AppColors.surfaceContainer
+                      : AppColors.surfaceContainerHighest,
                 ),
-                subtitle: 'Requiere reloj inteligente',
-                subtitleColor: AppColors.outline,
+                subtitle: pulso != null
+                    ? 'Última lectura de hoy'
+                    : (pulsoConPermiso
+                        ? 'Sin lectura de hoy'
+                        : (state.healthConnectDisponible
+                            ? 'Conecta Health Connect'
+                            : 'Requiere Health Connect')),
+                subtitleColor:
+                    pulso != null ? AppColors.primary : AppColors.outline,
                 radius: 24,
                 progress: null,
               ),
@@ -138,7 +151,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
         const SizedBox(height: 12),
-        const _WorkoutHeroCard(),
+        _WorkoutHeroCard(program: context.watch<AppState>().entrenamientoRecomendado),
       ],
     );
   }
@@ -150,7 +163,8 @@ class _HomeHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Saludo personalizado con el nombre del atleta de la sesión.
-    final nombre = context.watch<AppState>().profile.nombre.split(' ').first;
+    final state = context.watch<AppState>();
+    final nombre = state.profile.nombre.split(' ').first;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       decoration: const BoxDecoration(color: AppColors.surface),
@@ -219,7 +233,7 @@ class _HomeHeader extends StatelessWidget {
                 const Text('🔥', style: TextStyle(fontSize: 14)),
                 const SizedBox(width: 4),
                 Text(
-                  '14 días',
+                  '${state.rachaDias} días',
                   style: AppType.labelMd.copyWith(
                     color: AppColors.primary,
                     fontWeight: FontWeight.w700,
@@ -360,39 +374,11 @@ class _PasosCard extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 8),
-                    if (available)
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: AppColors.secondaryContainer,
-                              borderRadius: BorderRadius.circular(999),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(Icons.trending_up, size: 12, color: AppColors.onSecondaryContainer),
-                                const SizedBox(width: 2),
-                                Text(
-                                  '+12%',
-                                  style: AppType.labelSm.copyWith(
-                                    color: AppColors.onSecondaryContainer,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          Text('vs ayer', style: AppType.bodySm.copyWith(color: AppColors.outline)),
-                        ],
-                      )
-                    else
+                    if (!available)
                       Text(
                         'Activa el permiso de actividad en los ajustes del teléfono',
                         textAlign: TextAlign.left,
-style: AppType.bodySm.copyWith(color: AppColors.outline),
+                        style: AppType.bodySm.copyWith(color: AppColors.outline),
                       ),
                   ],
                 ),
@@ -423,10 +409,13 @@ String _groupThousands(int value) => value.toString().replaceAllMapped(
     );
 
 class _WorkoutHeroCard extends StatelessWidget {
-  const _WorkoutHeroCard();
+  const _WorkoutHeroCard({required this.program});
+
+  final WorkoutProgram program;
 
   @override
   Widget build(BuildContext context) {
+    final intensidad = program.intensidad.toUpperCase();
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
@@ -475,7 +464,7 @@ class _WorkoutHeroCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'RECOMENDADO PARA TI • 45 MIN • INTENSIDAD MEDIA',
+                'RECOMENDADO PARA TI • ${program.duracionEtiqueta.toUpperCase()} • INTENSIDAD $intensidad',
                 style: AppType.labelSm.copyWith(
                   color: AppColors.secondaryFixed,
                   fontWeight: FontWeight.w700,
@@ -484,7 +473,7 @@ class _WorkoutHeroCard extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               Text(
-                'HIIT & Quema Total',
+                program.nombre,
                 style: AppType.headlineLg.copyWith(
                   color: Colors.white,
                   fontWeight: FontWeight.w800,
@@ -492,17 +481,17 @@ class _WorkoutHeroCard extends StatelessWidget {
               ),
               const SizedBox(height: 6),
               Text(
-                'Aumenta tu resistencia aeróbica y tonifica con intervalos explosivos.',
+                program.descripcion,
                 style: AppType.bodySm.copyWith(color: Colors.white.withValues(alpha: 0.85)),
               ),
               const SizedBox(height: 16),
               Wrap(
                 spacing: 8,
                 runSpacing: 8,
-                children: const [
-                  _HeroInfoChip(icon: Icons.schedule, label: '45 min'),
-                  _HeroInfoChip(icon: Icons.local_fire_department, label: '380 kcal'),
-                  _HeroInfoChip(icon: Icons.fitness_center, label: '12 ejercicios'),
+                children: [
+                  _HeroInfoChip(icon: Icons.schedule, label: program.duracionEtiqueta),
+                  _HeroInfoChip(icon: Icons.local_fire_department, label: program.kcalEtiqueta),
+                  _HeroInfoChip(icon: Icons.fitness_center, label: program.ejerciciosEtiqueta),
                 ],
               ),
               const SizedBox(height: 16),
@@ -512,7 +501,13 @@ class _WorkoutHeroCard extends StatelessWidget {
                   color: AppColors.secondaryFixed,
                   borderRadius: BorderRadius.circular(999),
                   child: InkWell(
-                    onTap: () {},
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) => WorkoutPlayerScreen(program: program),
+                        ),
+                      );
+                    },
                     borderRadius: BorderRadius.circular(999),
                     child: Padding(
                       padding: const EdgeInsets.symmetric(vertical: 14),
@@ -582,10 +577,13 @@ class _DiaIdealCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final state = context.watch<AppState>();
-    final entrenado = state.caloriasConsumidas > 0;
+    final entrenado = state.entrenadoHoy;
     final metaOk = state.progresoCalorias >= 1.0;
-    final aguaOk = false;
+    final aguaActual = state.aguaHoy;
+    final aguaObjetivo = 2.5;
+    final aguaOk = state.aguaConPermiso && (aguaActual ?? 0) >= aguaObjetivo;
     final completados = [entrenado, metaOk, aguaOk].where((v) => v).length;
+    final recomendado = state.entrenamientoRecomendado;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -631,9 +629,15 @@ class _DiaIdealCard extends StatelessWidget {
           _DiaIdealItem(
             icon: Icons.fitness_center,
             title: 'Entrenamiento',
-            subtitle: 'HIIT & Quema Total • 45 min',
+            subtitle: '${recomendado.nombre} • ${recomendado.duracionEtiqueta}',
             done: entrenado,
-            onTap: () {},
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => WorkoutPlayerScreen(program: recomendado),
+                ),
+              );
+            },
           ),
           const SizedBox(height: 8),
           _DiaIdealItem(
@@ -647,7 +651,9 @@ class _DiaIdealCard extends StatelessWidget {
           _DiaIdealItem(
             icon: Icons.water_drop_outlined,
             title: 'Agua',
-            subtitle: '2.0 / 2.5 L',
+            subtitle: state.aguaConPermiso && aguaActual != null
+                ? '${aguaActual.toStringAsFixed(1)} / $aguaObjetivo L'
+                : 'Objetivo: $aguaObjetivo L',
             done: aguaOk,
             onTap: () {},
           ),

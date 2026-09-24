@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../services/config_service.dart';
 import '../services/locale_service.dart';
 import '../state/app_state.dart';
 import '../state/athlete_profile.dart';
@@ -61,6 +62,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   const SizedBox(height: 16),
                   _buildMetasActividad(),
                   const SizedBox(height: 16),
+                  _buildPremium(),
+                  const SizedBox(height: 16),
+                  _buildConectarSalud(),
+                  const SizedBox(height: 16),
                   _buildDatosPersonales(),
                   const SizedBox(height: 16),
                   _buildPreferencias(),
@@ -74,6 +79,51 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildPremium() {
+    final config = context.watch<ConfigService>();
+    final activo = config.premiumEnabled;
+    return _SettingsCard(
+      children: [
+        const _CardTitle(icon: Icons.workspace_premium, title: 'FitPulse Premium'),
+        const SizedBox(height: 8),
+        Text(
+          activo
+              ? 'Premium activo: los anuncios están desactivados. 🎉'
+              : 'Quita los anuncios de por vida con una compra única.',
+          style: AppType.bodySm.copyWith(color: AppColors.onSurfaceVariant),
+        ),
+        const SizedBox(height: 12),
+        // Consentimiento local de anuncios (Fase 3): el usuario puede apagarlos.
+        _ToggleRow(
+          icon: Icons.campaign_outlined,
+          title: 'Anuncios habilitados',
+          subtitle: 'Banners y recompensados con IDs de prueba de AdMob',
+          value: config.adsEnabled,
+          onChanged: (v) => config.setAds(v),
+        ),
+        const SizedBox(height: 12),
+        SizedBox(
+          width: double.infinity,
+          child: FilledButton.tonal(
+            onPressed: () => config.setPremium(!activo),
+            child: Text(
+              activo
+                  ? 'Desactivar Premium (modo prueba)'
+                  : 'Activar Premium (modo prueba)',
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'El cobro real requiere Google Play con una cuenta fuera de Cuba '
+          '(ver PLAN.md, Fase 3). Este botón activa Premium localmente para '
+          'probar que los anuncios se ocultan.',
+          style: AppType.bodySm.copyWith(color: AppColors.outline),
+        ),
+      ],
     );
   }
 
@@ -115,25 +165,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
         Row(
           children: [
             Expanded(
-              child: _MiniStat(
-                icon: Icons.local_fire_department,
-                iconColor: AppColors.error,
-                iconBackground: AppColors.errorContainer,
-                label: 'Calorías activas',
-                value: _profile.caloriasMeta.toStringAsFixed(0),
-                unit: 'kcal',
-              ),
+              child: Builder(builder: (context) {
+                final gasto = context.watch<AppState>().gastoActivoHoy;
+                return _MiniStat(
+                  icon: Icons.local_fire_department,
+                  iconColor: AppColors.error,
+                  iconBackground: AppColors.errorContainer,
+                  label: 'Calorías activas',
+                  value: gasto?.toStringAsFixed(0) ?? '—',
+                  unit: 'kcal',
+                );
+              }),
             ),
             const SizedBox(width: 10),
-            const Expanded(
-              child: _MiniStat(
-                icon: Icons.favorite,
-                iconColor: AppColors.outline,
-                iconBackground: AppColors.surfaceContainer,
-                label: 'Cardio semanal',
-                value: '—',
-                unit: 'min',
-              ),
+            Expanded(
+              child: Builder(builder: (context) {
+                final minutos = context.watch<AppState>().minutosEntrenadosSemana;
+                return _MiniStat(
+                  icon: Icons.favorite,
+                  iconColor: AppColors.outline,
+                  iconBackground: AppColors.surfaceContainer,
+                  label: 'Cardio semanal',
+                  value: minutos > 0 ? '$minutos' : '—',
+                  unit: 'min',
+                );
+              }),
             ),
           ],
         ),
@@ -195,6 +251,131 @@ class _ProfileScreenState extends State<ProfileScreen> {
             );
           }).toList(),
         ),
+      ],
+    );
+  }
+
+  Widget _buildConectarSalud() {
+    return _SettingsCard(
+      children: [
+        const _CardTitle(icon: Icons.monitor_heart_outlined, title: 'Datos de salud'),
+        const SizedBox(height: 8),
+        Builder(builder: (context) {
+          final state = context.watch<AppState>();
+          final disponible = state.healthConnectDisponible;
+          final conectado = state.healthConnectConectado;
+          final pidiendo = state.healthConnectPidiendo;
+          final pulsoOk = state.pulsoConPermiso;
+          final aguaOk = state.aguaConPermiso;
+          final grasaOk = state.grasaConPermiso;
+          final suenioOk = state.suenioConPermiso;
+
+          if (!disponible) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _ToggleRow(
+                  icon: Icons.watch,
+                  title: 'Health Connect',
+                  subtitle: 'Instala la app Google Health Connect para sincronizar',
+                  value: _healthKit,
+                  onChanged: (v) => setState(() => _healthKit = v),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Sin Health Connect, pulso, sueño y grasa se muestran como "—" (nunca inventados).',
+                  style: AppType.bodySm.copyWith(color: AppColors.outline),
+                ),
+              ],
+            );
+          }
+          if (pidiendo) {
+            return const Padding(
+              padding: EdgeInsets.symmetric(vertical: 12),
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                  SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Concediendo permisos en la pantalla de Health Connect…',
+                      style: TextStyle(color: AppColors.onSurfaceVariant),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceContainerLow,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          conectado ? Icons.check_circle : Icons.monitor_heart_outlined,
+                          size: 18,
+                          color: conectado ? AppColors.primary : AppColors.outline,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            conectado
+                                ? 'Health Connect conectado'
+                                : 'Health Connect disponible',
+                            style: AppType.labelMd.copyWith(
+                              color: AppColors.onSurface,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 6,
+                      children: [
+                        _PermisoChip(ok: pulsoOk, label: 'Pulso'),
+                        _PermisoChip(ok: aguaOk, label: 'Agua'),
+                        _PermisoChip(ok: grasaOk, label: 'Grasa'),
+                        _PermisoChip(ok: suenioOk, label: 'Sueño'),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                height: 44,
+                child: OutlinedButton.icon(
+                  onPressed: () =>
+                      context.read<AppState>().solicitarPermisosHealthConnect(),
+                  icon: const Icon(Icons.link, size: 18),
+                  label: const Text('Abrir permisos de Health Connect'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.primary,
+                    side: BorderSide(color: AppColors.primary.withValues(alpha: 0.5)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          );
+        }),
       ],
     );
   }
@@ -442,34 +623,6 @@ class _ProfileHeader extends StatelessWidget {
       decoration: const BoxDecoration(color: AppColors.surface),
       child: Row(
         children: [
-          Stack(
-            children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(color: AppColors.secondaryFixed, width: 2),
-                ),
-                clipBehavior: Clip.antiAlias,
-                child: Image.asset('assets/images/avatar.webp', fit: BoxFit.cover),
-              ),
-              Positioned(
-                right: 0,
-                bottom: 0,
-                child: Container(
-                  width: 12,
-                  height: 12,
-                  decoration: BoxDecoration(
-                    color: AppColors.secondaryFixed,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: AppColors.surface, width: 2),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -497,7 +650,7 @@ class _ProfileHeader extends StatelessWidget {
                 const Text('🔥', style: TextStyle(fontSize: 14)),
                 const SizedBox(width: 4),
                 Text(
-                  '14 días',
+                  '${context.watch<AppState>().rachaDias} días',
                   style: AppType.labelMd.copyWith(color: AppColors.primary, fontWeight: FontWeight.w700),
                 ),
               ],
@@ -605,7 +758,7 @@ class _ProfileHero extends StatelessWidget {
                 const SizedBox(width: 4),
                 Flexible(
                   child: Text(
-                    '${profile.rachaDias} días en racha',
+                    '${context.watch<AppState>().rachaDias} días en racha',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: AppType.labelMd.copyWith(
@@ -643,7 +796,15 @@ class _ProfileHero extends StatelessWidget {
               children: [
                 _QuickStat(label: 'Peso', value: profile.pesoKg.toStringAsFixed(1), unit: 'kg'),
                 _QuickStat(label: 'Altura', value: profile.alturaM.toStringAsFixed(2), unit: 'm'),
-                _QuickStat(label: '% Grasa', value: '21.4', unit: '%', valueColor: AppColors.primary),
+                _QuickStat(
+                  label: '% Grasa',
+                  value: (() {
+                    final grasa = context.watch<AppState>().grasaHoy;
+                    return grasa?.toStringAsFixed(1) ?? '—';
+                  })(),
+                  unit: '%',
+                  valueColor: AppColors.primary,
+                ),
                 _QuickStat(label: 'IMC', value: profile.imcFormateado, unit: profile.imc < 25 && profile.imc >= 18.5 ? 'Óptimo' : profile.imcCategoria),
               ],
             ),
@@ -991,6 +1152,43 @@ class _ToggleRow extends StatelessWidget {
             activeTrackColor: AppColors.primary,
             inactiveThumbColor: AppColors.onPrimary,
             inactiveTrackColor: AppColors.surfaceContainerHighest,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Chip de estado de un permiso de Health Connect (concedido o no).
+class _PermisoChip extends StatelessWidget {
+  const _PermisoChip({required this.ok, required this.label});
+
+  final bool ok;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: ok ? AppColors.secondaryContainer : AppColors.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            ok ? Icons.check : Icons.block,
+            size: 12,
+            color: ok ? AppColors.onSecondaryContainer : AppColors.outline,
+          ),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: AppType.labelSm.copyWith(
+              color: ok ? AppColors.onSecondaryContainer : AppColors.outline,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ],
       ),

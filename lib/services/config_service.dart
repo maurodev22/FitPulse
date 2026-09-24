@@ -57,4 +57,12 @@ class ConfigService extends ChangeNotifier {
     notifyListeners();
     await _prefs?.setInt(_premiumKey, active ? 1 : 0);
   }
+
+  /// Activa/desactiva la visualización de anuncios (consentimiento local del
+  /// usuario, Fase 3). No afecta al flag persistido si ya hay Premium.
+  Future<void> setAds(bool habilitados) async {
+    adsEnabled = habilitados;
+    notifyListeners();
+    await _prefs?.setInt(_adsKey, habilitados ? 1 : 0);
+  }
 }

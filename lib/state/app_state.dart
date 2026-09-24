@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:convert';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -6,12 +8,15 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../services/health_service.dart';
 import '../services/usage_log_service.dart';
 import 'athlete_profile.dart';
+import 'workout.dart';
+import 'workout_catalog.dart';
 
 /// Estado global de la aplicación (patrón ChangeNotifier + Provider).
 ///
-/// Centraliza el perfil del atleta y el balance nutricional diario, y los
-/// persiste por dispositivo mediante `shared_preferences`. De este modo, al
-/// reabrir la app en el mismo móvil se conserva la sesión de usuario.
+/// Centraliza el perfil del atleta, el balance nutricional diario, las métricas
+/// reales del dispositivo (pasos + Health Connect) y el progreso de
+/// entrenamiento (sesiones, racha, puntos/niveles y retos). Todo se persiste
+/// por dispositivo mediante `shared_preferences`.
 class AppState extends ChangeNotifier {
   static const _profileKey = 'fitpulse_profile_v1';
   static const _caloriasKey = 'fitpulse_calorias_v1';
@@ -26,10 +31,26 @@ class AppState extends ChangeNotifier {
   static const _pasosBaseKey = 'fitpulse_pasos_base_v1';
   static const _pasosBaseDateKey = 'fitpulse_pasos_base_date_v1';
 
+  // Fase 2: historial de sesiones, puntos y retos.
+  static const _historyKey = 'fitpulse_workout_history_v1';
+  static const _xpKey = 'fitpulse_xp_v1';
+  static const _retoKey = 'fitpulse_reto_v1';
+
+  // Fase 3: recompensa del anuncio (una vez por día, guardada por fecha).
+  static const _recompensaAnuncioKey = 'fitpulse_recompensa_anuncio_v1';
+  static const int ptsRecompensaAnuncio = 25;
+
+  // Health Connect: flag de "permisos ya solicitados al arrancar".
+  static const _hcRequestedKey = 'fitpulse_hc_requested_v1';
+
   SharedPreferences? _prefs;
   StreamSubscription<int>? _pasosSub;
   HealthDataSource? _healthSource;
   UsageLogService? _log;
+  HealthConnectService? _healthConnect;
+  HealthToday _healthToday = HealthToday.vacio;
+  bool _healthConnectDisponible = false;
+  bool _healthConnectPidiendo = false;
 
   /// Registro de uso anónimo (opcional, por defecto desactivado).
   void setUsageLog(UsageLogService log) => _log = log;
@@ -136,6 +157,9 @@ class AppState extends ChangeNotifier {
       ..clear()
       ..addAll(_prefs!.getStringList(_favRecetasKey) ?? const []);
 
+    // Fase 2: historial de sesiones, puntos y reto actual.
+    _cargarHistorial();
+
     // Reinicio diario: si el balance guardado pertenece a otro día, se vacía.
     final today = _dayKey(DateTime.now());
     if (_prefs!.getString(_balanceDateKey) != today) {
@@ -155,6 +179,326 @@ class AppState extends ChangeNotifier {
     _healthSource?.dispose();
     super.dispose();
   }
+
+  // =====================================================================
+  //  Health Connect (Fase 1): métricas reales por permiso individual
+  // =====================================================================
+
+  /// Inyecta el servicio de Health Connect (desde main o tests).
+  void setHealthConnect(HealthConnectService service) {
+    _healthConnect = service;
+  }
+
+  /// `true` si la app Health Connect está instalada en el dispositivo.
+  bool get healthConnectDisponible => _healthConnectDisponible;
+
+  /// `true` mientras se está mostrando la pantalla de permisos de Google.
+  bool get healthConnectPidiendo => _healthConnectPidiendo;
+
+  /// `true` la primera vez que se consigue leer algo desde Health Connect
+  /// (independientemente de cuántas métricas estén concedidas).
+  bool get healthConnectConectado => _healthToday.funciono;
+
+  // --- Métricas de hoy (solo números reales; null = sin dato) ---
+  int? get pulsoHoy => _healthToday.pulsoBpm;
+  double? get pesoMedidoKg => _healthToday.pesoKg;
+  double? get grasaHoy => _healthToday.grasaPct;
+  Duration? get suenioHoy => _healthToday.suenioMin != null
+      ? Duration(minutes: _healthToday.suenioMin!)
+      : null;
+  double? get aguaHoy => _healthToday.aguaLitros;
+  double? get gastoActivoHoy => _healthToday.gastoActivoKcal;
+  int? get tiempoActivoMin => _healthToday.tiempoActivoMin;
+
+  // --- Permisos concedidos por métrica (para textos honestos) ---
+  bool get pulsoConPermiso =>
+      _healthToday.metricasConPermiso.contains(HealthMetricas.pulso);
+  bool get pesoConPermiso =>
+      _healthToday.metricasConPermiso.contains(HealthMetricas.peso);
+  bool get grasaConPermiso =>
+      _healthToday.metricasConPermiso.contains(HealthMetricas.grasa);
+  bool get suenioConPermiso =>
+      _healthToday.metricasConPermiso.contains(HealthMetricas.suenio);
+  bool get aguaConPermiso =>
+      _healthToday.metricasConPermiso.contains(HealthMetricas.agua);
+  bool get gastoActivoConPermiso =>
+      _healthToday.metricasConPermiso.contains(HealthMetricas.gastoActivo);
+  bool get tiempoActivoConPermiso =>
+      _healthToday.metricasConPermiso.contains(HealthMetricas.tiempoActivo);
+
+  /// Pide los permisos de lectura de todas las métricas (una sola pantalla de
+  /// Health Connect donde se aceptan o rechazan por separado) y refresca.
+  Future<void> solicitarPermisosHealthConnect() async {
+    final hc = _healthConnect;
+    if (hc == null) return;
+    _healthConnectPidiendo = true;
+    notifyListeners();
+    await hc.solicitarPermisos();
+    _healthConnectPidiendo = false;
+    await _prefs?.setBool(_hcRequestedKey, true);
+    await refreshHealthConnect();
+  }
+
+  /// Detecta Health Connect, pide permisos una sola vez por instalación y
+  /// lee las métricas del día. Se llama una vez al arrancar (asíncrono).
+  Future<void> initHealthConnect() async {
+    final hc = _healthConnect;
+    if (hc == null) return;
+    _healthConnectDisponible = await hc.disponible();
+    final yaPedido = _prefs?.getBool(_hcRequestedKey) ?? false;
+    if (_healthConnectDisponible && !yaPedido) {
+      _healthConnectPidiendo = true;
+      notifyListeners();
+      final ok = await hc.solicitarPermisos();
+      _healthConnectPidiendo = false;
+      await _prefs?.setBool(_hcRequestedKey, true);
+      if (!ok) return;
+    }
+    await refreshHealthConnect();
+  }
+
+  /// Relee las métricas de hoy desde Health Connect y actualiza la UI.
+  Future<void> refreshHealthConnect() async {
+    final hc = _healthConnect;
+    if (hc == null) return;
+    _healthToday = await hc.leerHoy();
+    // Si el sensor del teléfono no está disponible pero Health Connect sí
+    // concede pasos, usamos el total del día de Health Connect.
+    if (!healthDisponible && _healthToday.pasos > 0) {
+      pasosHoy = _healthToday.pasos;
+    }
+    notifyListeners();
+  }
+
+  // =====================================================================
+  //  Fase 2: historial real de entrenamiento
+  // =====================================================================
+
+  /// Sesiones completadas de verdad (ordenadas, más reciente primero).
+  List<WorkoutSession> historial = [];
+
+  /// Puntos totales ganados con sesiones y retos.
+  int get xp => _xp;
+  int _xp = 0;
+
+  /// Nivel actual: sube cada 300 puntos.
+  int get nivel => 1 + _xp ~/ 300;
+
+  /// Progreso dentro del nivel actual (0..1).
+  double get progresoNivel => (_xp % 300) / 300.0;
+
+  /// Etiqueta de nivel según puntos acumulados.
+  String get nombreNivel {
+    if (nivel >= 8) return 'Avanzado';
+    if (nivel >= 4) return 'Intermedio';
+    return 'Principiante';
+  }
+
+  /// Objetivo del reto actual: 3 → 5 → 7 días seguidos entrenando.
+  int get retoObjetivo => _retoObjetivo;
+  int _retoObjetivo = 3;
+
+  /// Días seguidos entrenando hasta hoy (o hasta ayer si hoy aún no entrena).
+  int get retoProgreso => _rachaActual();
+
+  /// `true` si ya se completó el reto actual.
+  bool get retoCompletado => retoProgreso >= _retoObjetivo;
+
+  /// Mejor racha consecutiva de la historia completa.
+  int get rachaMaxima {
+    final dias = _diasConSesion();
+    if (dias.isEmpty) return 0;
+    var mejor = 1;
+    var actual = 1;
+    for (var i = 1; i < dias.length; i++) {
+      if (dias[i].difference(dias[i - 1]).inDays == 1) {
+        actual++;
+        if (actual > mejor) mejor = actual;
+      } else {
+        actual = 1;
+      }
+    }
+    return mejor;
+  }
+
+  /// `true` si hoy hay al menos una sesión completada.
+  bool get entrenadoHoy {
+    final hoy = _dayKey(DateTime.now());
+    return historial.any((s) => _dayKey(s.fecha) == hoy);
+  }
+
+  /// Minutos reales de entrenamiento esta semana (lunes a domingo actual).
+  int get minutosEntrenadosSemana {
+    final ahora = DateTime.now();
+    final lunes = ahora.subtract(Duration(days: ahora.weekday - 1));
+    final inicio = DateTime(lunes.year, lunes.month, lunes.day);
+    var total = 0;
+    for (final s in historial) {
+      if (!s.fecha.isBefore(inicio)) total += s.duracionMin;
+    }
+    return total;
+  }
+
+  /// Días distintos con al menos una sesión esta semana.
+  int get diasEntrenadosSemana {
+    final ahora = DateTime.now();
+    final lunes = ahora.subtract(Duration(days: ahora.weekday - 1));
+    final inicio = DateTime(lunes.year, lunes.month, lunes.day);
+    final dias = <String>{};
+    for (final s in historial) {
+      if (!s.fecha.isBefore(inicio)) dias.add(_dayKey(s.fecha));
+    }
+    return dias.length;
+  }
+
+  /// Días (L..D) de la semana actual con al menos una sesión, para la UI.
+  Set<int> get diasSemanaEntrenados {
+    final ahora = DateTime.now();
+    final lunes = DateTime(ahora.year, ahora.month, ahora.day);
+    final lunesInicio = lunes.subtract(Duration(days: lunes.weekday - 1));
+    final entrenados = <int>{};
+    for (final s in historial) {
+      final d = DateTime(s.fecha.year, s.fecha.month, s.fecha.day);
+      final diff = d.difference(lunesInicio).inDays;
+      if (diff >= 0 && diff <= 6) entrenados.add(diff);
+    }
+    return entrenados;
+  }
+
+  /// Días consecutivos de entrenamiento actuales (racha viva).
+  int get rachaDias => _rachaActual();
+
+  /// Intensidad del plan adaptativo según el cumplimiento de esta semana:
+  /// 5+ días → Alta, 3-4 → Media, 0-2 → Baja.
+  String get intensidadPlan {
+    final d = diasEntrenadosSemana;
+    if (d >= 5) return 'Alta';
+    if (d >= 3) return 'Media';
+    return 'Baja';
+  }
+
+  /// Programa recomendado según la intensidad del plan adaptativo.
+  WorkoutProgram get entrenamientoRecomendado {
+    final buscado = switch (intensidadPlan) {
+      'Alta' => 'fuerza_superior_core',
+      'Baja' => 'full_body_flexibilidad',
+      _ => 'hiit_quema_total',
+    };
+    return workoutCatalog.firstWhere(
+      (p) => p.id == buscado,
+      orElse: () => workoutCatalog.first,
+    );
+  }
+
+  List<DateTime> _diasConSesion() {
+    final set = <DateTime>{};
+    for (final s in historial) {
+      set.add(DateTime(s.fecha.year, s.fecha.month, s.fecha.day));
+    }
+    final list = set.toList()..sort();
+    return list;
+  }
+
+  int _rachaActual() {
+    final dias = _diasConSesion();
+    if (dias.isEmpty) return 0;
+    final ahora = DateTime.now();
+    final hoy = DateTime(ahora.year, ahora.month, ahora.day);
+    // Si hoy aún no entreno, la racha se cuenta desde ayer.
+    var cursor = dias.contains(hoy) ? hoy : hoy.subtract(const Duration(days: 1));
+    var count = 0;
+    while (dias.contains(cursor)) {
+      count++;
+      cursor = cursor.subtract(const Duration(days: 1));
+    }
+    return count;
+  }
+
+  /// Registra una sesión completada de verdad: la guarda en el historial,
+  /// otorga puntos y comprueba el reto (3 → 5 → 7 días).
+  ///
+  /// [fecha] solo se usa en pruebas para simular días distintos; en producción
+  /// siempre es `DateTime.now()`.
+  Future<void> registrarSesionCompletada({
+    required String nombre,
+    required Duration duracion,
+    required int calorias,
+    DateTime? fecha,
+  }) async {
+    final duracionMin = max(1, duracion.inMinutes);
+    historial.add(WorkoutSession(
+      fecha: fecha ?? DateTime.now(),
+      nombre: nombre,
+      duracionMin: duracionMin,
+      calorias: calorias,
+    ));
+    historial.sort((a, b) => b.fecha.compareTo(a.fecha));
+    _xp += 50;
+    _trace('entrenamiento', 'sesion', detail: nombre);
+    notifyListeners();
+    await _persistHistorial();
+    await _persistXp();
+
+    // Reto completado → premio y avance al siguiente objetivo (hasta 7).
+    if (_retoObjetivo < 7 && _rachaActual() >= _retoObjetivo) {
+      _retoObjetivo = _retoObjetivo == 3 ? 5 : 7;
+      _xp += 100;
+      _trace('entrenamiento', 'reto', detail: '$_retoObjetivo días');
+      notifyListeners();
+      await _prefs?.setInt(_retoKey, _retoObjetivo);
+      await _persistXp();
+    }
+  }
+
+  /// Si hoy ya se usó el anuncio recompensado (se otorga una vez por día).
+  bool get recompensaAnuncioDisponibleHoy {
+    final usado = _prefs?.getString(_recompensaAnuncioKey);
+    return usado != _dayKey(DateTime.now());
+  }
+
+  /// Aplica la recompensa del anuncio visto: +[ptsRecompensaAnuncio] XP, una
+  /// sola vez por día. Devuelve `false` si hoy ya se recibió.
+  Future<bool> aplicarRecompensaAnuncio() async {
+    final hoy = _dayKey(DateTime.now());
+    if ((_prefs?.getString(_recompensaAnuncioKey)) == hoy) return false;
+    await _prefs?.setString(_recompensaAnuncioKey, hoy);
+    _xp += ptsRecompensaAnuncio;
+    notifyListeners();
+    await _persistXp();
+    _trace('recompensa', 'anuncio', detail: '+$ptsRecompensaAnuncio XP');
+    return true;
+  }
+
+  void _cargarHistorial() {
+    final raw = _prefs?.getString(_historyKey);
+    if (raw != null && raw.isNotEmpty) {
+      try {
+        historial = (jsonDecode(raw) as List)
+            .map((e) => WorkoutSession.fromJson(e as Map<String, dynamic>))
+            .toList()
+          ..sort((a, b) => b.fecha.compareTo(a.fecha));
+      } catch (_) {
+        historial = [];
+      }
+    }
+    _xp = _prefs?.getInt(_xpKey) ?? 0;
+    _retoObjetivo = _prefs?.getInt(_retoKey) ?? 3;
+  }
+
+  Future<void> _persistHistorial() async {
+    await _prefs?.setString(
+      _historyKey,
+      jsonEncode(historial.map((s) => s.toJson()).toList()),
+    );
+  }
+
+  Future<void> _persistXp() async {
+    await _prefs?.setInt(_xpKey, _xp);
+  }
+
+  // =====================================================================
+  //  Perfil y balance
+  // =====================================================================
 
   /// Guarda el perfil del atleta en el dispositivo (inicio de sesión/edición).
   Future<void> guardarPerfil(AthleteProfile nuevo) async {

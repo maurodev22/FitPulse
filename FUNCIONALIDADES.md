@@ -1,53 +1,65 @@
 # FitPulse — Funcionalidades: presentes vs. pendientes
 
 Documento de control que contrasta el diseño de referencia (Google Stitch, 8 pantallas)
-contra el estado real de la implementación Flutter. Actualizado tras la revisión del
-funcionamiento de sesión persistida, Recetas, Progreso y Consejos.
+contra el estado real de la implementación Flutter. Actualizado tras las **Fases 1, 2 y 3**
+(datos reales del cuerpo + entrenamientos motivacionales + anuncios y Premium con IDs de prueba).
 
 ## Funcionalidades presentes (funcionales)
 
 | # | Funcionalidad | Pantalla / Archivo | Detalle |
 |---|---|---|---|
 | 1 | Onboarding de registro | `RegistrationScreen` | Formulario completo (nombre, edad, sexo, peso, altura, meta). IMC calculado en vivo sobre el formulario. Guarda la sesión del atleta en el dispositivo. |
-| 2 | Sesión persistente por dispositivo | `AppState` (`lib/state/app_state.dart`) | Perfil, balance nutricional, favoritos y metas se guardan con `shared_preferences`. Al reabrir la app el usuario vuelve directo al dashboard. Al cerrar sesión se borran todos los datos del dispositivo. |
-| 3 | Dashboard / Home | `HomeScreen` | Saludo personalizado ("Hola, {nombre}"), tarjetas de pasos (formato 8,450 con separador de miles corregido), calorías, pulso, entrenamiento recomendado y categorías filtrables. |
+| 2 | Sesión persistente por dispositivo | `AppState` (`lib/state/app_state.dart`) | Perfil, balance nutricional, favoritos y metas se guardan con `shared_preferences`. Al reabrir la app el usuario vuelve directo al dashboard. |
+| 3 | Dashboard / Home | `HomeScreen` | Saludo personalizado, tarjeta **Día ideal** (entrenamiento + macros + agua reales), **pasos reales** del sensor, **pulso real** de Health Connect, calorías y hero de entrenamiento conectado al reproductor. |
 | 4 | Recetas nutricionales | `RecipesScreen` + `RecetasCatalogScreen` | Búsqueda por texto, filtros por categoría (Alta Proteína / Low Carb / Pre-entreno / Smoothies), receta destacada, opciones rápidas, favoritos y catálogo completo. |
-| 5 | Registro de consumo | `registrarConsumo` (AppState) | Al pulsar "Registrar en mi balance" se suman calorías y macros al balance del día persistido. |
-| 6 | Progreso y Rendimiento | `ProgressScreen` | Peso corporal (dinámico según el perfil), IMC en vivo, gasto activo, gráfico semanal, sesiones recientes e insignias. Responde a las métricas del atleta guardado. |
-| 7 | Consejos y Bienestar | `TipsScreen` | Plan personalizado según la meta del atleta, tips de alto impacto, artículos recomendados y comunidad activa. |
-| 8 | Perfil y ajustes | `ProfileScreen` | Datos personales, IMC calculado, nivel, preferencias, días de entrenamiento editables, "Guardar cambios" (persiste) y "Cerrar sesión" (vuelve al onboarding **sin borrar** datos: un solo usuario por dispositivo). |
-| 9 | Navegación de 6 pestañas | `FitNavBar` (`lib/widgets/fit_nav_bar.dart`) | Inicio, Recetas, Progreso, Consejos, Perfil y Ayuda. |
-| 10 | Diseño y tema | `theme.dart` + `common.dart` | Sistema de colores Material 3 verde y tipografías Plus Jakarta Sans / Inter. `SectionHeader` unificado con parámetro `uppercase`. |
-| 11 | Android con identidad propia | `android/` | Namespace e ID de paquete `com.fitpulse.app`, `MainActivity` movido a `kotlin/com/fitpulse/app/`. |
-| 12 | Tests de widget | `test/widget_test.dart` | Cubren onboarding, dashboard, cada pestaña, perfil y cierre de sesión (con `shared_preferences` simulado). |
-| 13 | Documentación | `README.md` | Guía del proyecto con estructura, arquitectura y decisiones. |
+| 5 | Registro de consumo | `registrarConsumo` (AppState) | Suma calorías y macros al balance del día con **reinicio diario por fecha**. |
+| 6 | **Pasos reales del teléfono** | `PhoneStepSource` (`lib/services/health_service.dart`) | Sensor `pedometer` con baseline diario y re-basificado tras reinicio del equipo. |
+| 7 | **Health Connect (solo lectura)** | `HealthConnectService` (`lib/services/health_service.dart`) | Permisos por métrica (pulso, peso, grasa, sueño, agua, gasto activo, tiempo activo). Solicitud automática 1 vez; botón "Abrir permisos" en Perfil para re-solicitar. Los números solo se muestran si hay permiso + dato real; si no, "—". |
+| 8 | Progreso y Rendimiento | `ProgressScreen` | Peso e IMC del perfil; grasa, gasto activo y tiempo activo reales (Health Connect); **Sesiones Recientes reales**, **Reto 3/5/7 días**, **Nivel/XP** y **Insignias** calculadas del historial real. |
+| 9 | **Entrenamientos reproducibles** | `workout_catalog.dart` + `WorkoutPlayerScreen` | 4 programas (HIIT, Fuerza, Running, Full Body) con temporizador trabajo→descanso→siguiente, pausa/saltar; al completar registra sesión real. |
+| 10 | **Racha real de días** | `AppState.historial` | Días consecutivos con sesión hasta hoy (o ayer) calculados por fechas; visible en Inicio, Progreso y Perfil. |
+| 11 | **Plan adaptativo** | `AppState.intensidadPlan` | Intensidad Alta (≥5 días/semana), Media (3-4), Baja (≤2); el hero "RECOMENDADO PARA TI" elige el programa según esa intensidad. |
+| 12 | Consejos y Bienestar | `TipsScreen` | Plan personalizado según la meta del atleta, tips de alto impacto y artículos recomendados (contenido orientativo, sin coaches). |
+| 13 | Perfil y ajustes | `ProfileScreen` | Datos personales, IMC calculado, nivel, preferencias, días de entrenamiento editables, "Guardar cambios" (persiste) y tarjeta **Datos de salud** con estado de permisos Health Connect. |
+| 14 | Navegación de 6 pestañas | `FitNavBar` (`lib/widgets/fit_nav_bar.dart`) | Inicio, Recetas, Progreso, Consejos, Perfil y Ayuda. |
+| 15 | Pestaña Ayuda | `HelpScreen` + `assets/docs/manual_es.md` / `manual_en.md` | Manual de usuario local sin internet y preguntas frecuentes. |
+| 16 | Registro de uso anónimo | `UsageLogService` | Máx. 200 eventos locales `{t, c, a, d}`, sin red ni identificadores. |
+| 17 | Diseño y tema | `theme.dart` + `common.dart` | Sistema de colores Material 3 verde y tipografías Plus Jakarta Sans / Inter. `SectionHeader` unificado. |
+| 18 | Android con identidad propia | `android/` | Namespace e ID de paquete `com.fitpulse.app`, `minSdk 26`, permisos `READ_*` de Health Connect en manifest, `INTERNET` solo para anuncios, R8 activado en release (app ligera). |
+| 19 | Tests | `test/state_test.dart`, `test/widget_test.dart`, `test/responsive_test.dart` | Cubren onboarding, dashboard, pestañas, Health Connect (mock), racha, retos, niveles, plan adaptativo, reproductor (registro de sesión), recompensa 1/día y toggles de anuncios/premium; responsividad 360-411 dp. **27 en verde.** |
+| 20 | Documentación | `README.md`, `PLAN.md`, `FUNCIONALIDADES.md`, `GUIA_TESTEO_FASE1.md` | Plan por fases, estado real, funcionalidades y guía de prueba manual. |
+| 21 | **Anuncios (IDs de prueba)** | `lib/services/ads_service.dart` + `google_mobile_ads` 5.3.1 | Banner inferior en todas las pestañas y en el reproductor; **recompensado** en Progreso: +25 PTs una vez al día (persistido por fecha). Degradación elegante si no hay Play Services/red. Toggle "Anuncios habilitados" en Perfil (consentimiento local). |
+| 22 | **Premium "Quitar anuncios"** | `ProfileScreen` + `ConfigService` | Tarjeta con estado y botón "Activar/Desactivar Premium (modo prueba)". Con Premium activo se ocultan banner y recompensado. El cobro real requiere Google Play con entidad fuera de Cuba (ver PLAN.md). |
 
 ## Funcionalidades pendientes / ausentes
 
 | # | Funcionalidad | Estado | Sugerencia |
 |---|---|---|---|
 | 1 | Subida real de foto de perfil | Ornamental | Integrar `image_picker` y persistir el path en `AthleteProfile`. |
-| 2 | Registro/Inicio con backend | Ausente | No hay cuenta ni servidor; la sesión es 100% local como se acordó (entorno dev por dispositivo móvil). |
-| 3 | Datos de pulso/HealthKit reales | Placeholder | Los valores de pulso, oximetría y HealthKit son estáticos; integrar sensores/HealthKit. |
-| 4 | Seguimiento real de pasos | Placeholder | `8450/10000` es fijo; usar pedómetro nativo para alimentar `pasos`. |
-| 5 | Entrenamientos reproducibles | Botones sin acción | "Comenzar entrenamiento" y tarjetas de sesión no inician nada aún. |
-| 6 | Volumen de sesiones e insignias | Estático | Sesiones recientes e insignias son catálogo fijo en `ProgressScreen`; falta lógica de fechas/recompensas. |
-| 7 | Consulta a coaches | SnackBar informativo | El botón "Hacer una consulta" solo muestra un aviso; falta pantalla de chat. |
-| 8 | Lectura de artículos de consejos | Placeholder | Los artículos/tips son decorativos; falta contenido real y persistencia de favoritos de consejos. |
-| 9 | Cambio de foto / avatar | Placeholder | Edición de foto muestra SnackBar "próximamente". |
-| 10 | Alertas reales de hidratación | Placeholder | Los toggles de preferencias son visuales; no programan notificaciones. |
-| 11 | sincronización con smartwatch | Placeholder | El toggle HealthKit no conecta con el sistema. |
-| 12 | Compartir actividad | Placeholder | Solo un toggle visual. |
-| 13 | Pantalla "Ver detalles"/gráficos | Sin navegación | Enlaces tipo "Ver detalles", "Ver plan", "Ver todo (18)" no implementan destinos. |
-| 14 | Cambio de idioma / localización | Ausente | Todo el texto está hardcodeado en español. |
-| 15 | Modo oscuro | Ausente | El tema sólo define modo claro. |
-| 16 | Persistencia diaria del balance | Parcial | El balance se acumula sin reinicio por día calendario. |
+| 2 | Registro/Inicio con backend | Ausente | No hay cuenta ni servidor; la sesión es 100% local como se acordó. |
+| 3 | Consulta a coaches | Eliminada | Se retiró toda referencia a coaches en el hotfix aprobado. |
+| 4 | Lectura de artículos de consejos | Placeholder | Los artículos/tips son orientativos; falta persistencia de favoritos de consejos. |
+| 5 | Alertas reales de hidratación | Placeholder | Los toggles de preferencias son visuales; no programan notificaciones (previsto en Fase 6). |
+| 6 | Sincronización de "Tiempo Activo" completa | Parcial | El paquete `health` 13.3.2 solo expone `EXERCISE_TIME` en iOS; en Android se muestra "—" (honesto, nunca inventado). |
+| 7 | Compartir actividad | Placeholder | Solo un toggle visual. |
+| 8 | Pantalla "Ver detalles"/gráficos | Sin navegación | Enlaces tipo "Ver detalles", "Ver plan", "Ver todo" no implementan destinos. |
+| 9 | Modo oscuro | Ausente | El tema sólo define modo claro (previsto en Fase 7). |
+| 10 | Plan semanal de comidas / lista de la compra | Ausente | Fase 4. |
+| 11 | Entrenador con cámara | Ausente | Fase 5 (ML Kit, on-device). |
+| 12 | Widgets y avisos locales | Ausente | Fase 6. |
+| 13 | Exportar/importar y borrado total (GDPR) | Ausente | Fase 8. |
 
 ## Decisiones registradas
 
 - **Sesión local por dispositivo**: en línea con la petición de mantener los datos de
   inicio de sesión de forma persistente en el móvil (entorno de producción dev), se usa
   `shared_preferences` (almacenamiento seguro por app en el dispositivo).
+- **Datos de salud nunca inventados**: si una métrica (pulso, grasa, agua, gasto activo,
+  tiempo activo, sueño) no tiene permiso o dato real de Health Connect, se muestra "—"
+  con la nota correspondiente.
+- **Health Connect solo lectura**: nunca se escribe ningún dato de salud del usuario.
+- **Historial de entrenamiento local**: las sesiones completadas, la racha, los puntos y
+  los retos se persisten por dispositivo y se calculan de ese historial real.
 - **Estructura comentada**: los archivos de `lib/` llevan documentación en español por
   archivo, clase y método clave.
 - **Nombre de paquete**: `com.fitpulse.app` (build 1, versión 1.0.0).

@@ -110,6 +110,40 @@ void main() {
     expect(find.text('Insignias & Logros'), findsOneWidget);
   });
 
+  testWidgets('Completar un entrenamiento registra la sesión real',
+      (WidgetTester tester) async {
+    await _enterDashboard(tester);
+
+    // El hero recomendado abre el reproductor con ejercicios y temporizador.
+    // El hero vive bajo el pliegue del Home: se hace scroll hasta él.
+    await tester.scrollUntilVisible(find.text('Comenzar entrenamiento'), 200);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Comenzar entrenamiento'));
+    await tester.pumpAndSettle();
+    expect(find.text('EJERCICIO'), findsOneWidget);
+    expect(find.text('1 / 8'), findsOneWidget);
+
+    // Avanza con "Saltar" (ejercicio → descanso → siguiente) hasta el final.
+    var saltos = 0;
+    while (find.text('Terminar sesión').evaluate().isNotEmpty && saltos < 40) {
+      await tester.tap(find.text('Saltar'));
+      await tester.pumpAndSettle();
+      saltos++;
+    }
+
+    // Al completar, el SnackBar confirma el premio de XP.
+    expect(find.textContaining('Sesión completada'), findsOneWidget);
+    await tester.pump(const Duration(seconds: 5)); // deja cerrar el SnackBar
+    await tester.pumpAndSettle();
+
+    // La sesión aparece en Progreso como sesión real (no inventada).
+    await tester.tap(find.text('Progreso').first);
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(find.text('Sesiones Recientes'), 200);
+    await tester.pumpAndSettle();
+    expect(find.text('Full Body & Flexibilidad'), findsOneWidget);
+  });
+
   testWidgets('Navega a la pestaña de Consejos', (WidgetTester tester) async {
     await _enterDashboard(tester);
 

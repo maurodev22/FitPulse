@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
@@ -10,6 +12,7 @@ import 'screens/progress_screen.dart';
 import 'screens/recipes_screen.dart';
 import 'screens/registration_screen.dart';
 import 'screens/tips_screen.dart';
+import 'services/ads_service.dart';
 import 'services/config_service.dart';
 import 'services/health_service.dart';
 import 'services/locale_service.dart';
@@ -30,11 +33,20 @@ Future<void> main() async {
   appState.setUsageLog(usageLog);
   // Conecta el sensor real de pasos del teléfono.
   appState.attachHealthSource(PhoneStepSource());
+  // Health Connect (Fase 1): detecta, pide permisos una vez y lee métricas.
+  // No bloquea el arranque: se completa en segundo plano.
+  appState.setHealthConnect(HealthConnectService());
+  unawaited(appState.initHealthConnect());
   final localeService = LocaleService();
   await localeService.init();
   final configService = ConfigService();
   await configService.init();
   usageLog.log('app', 'inicio');
+  // AdMob (Fase 3): se inicializa en segundo plano si los anuncios están
+  // activos y el usuario no tiene Premium. Nunca bloquea el arranque.
+  if (configService.adsEnabled && !configService.premiumEnabled) {
+    unawaited(initAds());
+  }
 
   runApp(FitPulseApp(
     appState: appState,
@@ -113,6 +125,9 @@ class _AppShellState extends State<AppShell> {
 
   @override
   Widget build(BuildContext context) {
+    final config = context.watch<ConfigService>();
+    // Fase 3: banner de anuncios solo si están activos y sin Premium.
+    final mostrarBanner = config.adsEnabled && !config.premiumEnabled;
     return Scaffold(
       backgroundColor: AppColors.background,
       body: IndexedStack(
@@ -126,12 +141,18 @@ class _AppShellState extends State<AppShell> {
           const HelpScreen(),
         ],
       ),
-      bottomNavigationBar: FitNavBar(
-        current: _current,
-        onChanged: (tab) {
-          context.read<AppState>().traceTab(tab.nombre);
-          setState(() => _current = tab);
-        },
+      bottomNavigationBar: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (mostrarBanner) const FitBannerAd(),
+          FitNavBar(
+            current: _current,
+            onChanged: (tab) {
+              context.read<AppState>().traceTab(tab.nombre);
+              setState(() => _current = tab);
+            },
+          ),
+        ],
       ),
     );
   }

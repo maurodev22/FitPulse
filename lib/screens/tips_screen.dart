@@ -56,34 +56,6 @@ class _TipsHeader extends StatelessWidget {
       decoration: const BoxDecoration(color: AppColors.surface),
       child: Row(
         children: [
-          Stack(
-            children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(color: AppColors.secondaryFixed, width: 2),
-                ),
-                clipBehavior: Clip.antiAlias,
-                child: Image.asset('assets/images/avatar.webp', fit: BoxFit.cover),
-              ),
-              Positioned(
-                right: 0,
-                bottom: 0,
-                child: Container(
-                  width: 12,
-                  height: 12,
-                  decoration: BoxDecoration(
-                    color: AppColors.secondaryFixed,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: AppColors.surface, width: 2),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -112,7 +84,7 @@ class _TipsHeader extends StatelessWidget {
                 const Text('🔥', style: TextStyle(fontSize: 14)),
                 const SizedBox(width: 4),
                 Text(
-                  '14 días',
+                  '${context.watch<AppState>().rachaDias} días',
                   style: AppType.labelMd.copyWith(color: AppColors.primary, fontWeight: FontWeight.w700),
                 ),
               ],

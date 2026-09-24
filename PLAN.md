@@ -13,11 +13,12 @@
 | Fase 0 (cimientos + datos premium) | ✅ | Servicios, feature-flags, validaciones, ruedas, IMC en vivo, tipo de cuerpo, EULA, i18n es/en |
 | Fase 0.5 (multi-dispositivo + Ayuda + identidad) | ✅ | Anti-overflow 360-411 dp, tarjeta Día ideal, WebP propios, pestaña Ayuda con manual local |
 | **Hotfix** (aprobado) | ✅ | Aplicado y verificado en código (sin "Explorar categorías", "Nutrición & Vitalidad", coaches ni "Cerrar sesión"; `**` del manual limpiados) |
-| Fase 1 (datos reales del cuerpo) | 🚧 | Pasos reales ✅ (pedometer); pulso/sueño/grasa/hidratación vía **Health Connect** ⏳; reinicio diario ✅; analytics local ✅ |
-| Fases 2–8 | ⏳ | Pendientes (ver detalle abajo) |
+| Fase 1 (datos reales del cuerpo) | ✅ código | Pasos reales ✅; **Health Connect ✅** (pulso, peso, grasa, sueño, agua, gasto activo, tiempo activo; solo lectura); reinicio diario ✅; analytics local ✅. Falta prueba manual en dispositivo |
+| Fase 2 (entrenamientos + motivación) | ✅ código | Catálogo + reproductor ✅; historial real ✅; racha real ✅; retos 3/5/7 ✅; puntos/niveles ✅; plan adaptativo ✅. Falta prueba manual en dispositivo |
+| Fases 3–8 | ⏳ | Pendientes (ver detalle abajo) |
 
-**Sesión** (`FUNCIONALIDADES.md`) y **guía de prueba manual** (`GUIA_TESTEO_FASE1.md`)
-están alineadas con la Fase 1 de pasos. El README aún no refleja que Fases 0 y 0.5 están hechas.
+**Sesión** (`FUNCIONALIDADES.md`), **guía de prueba manual** (`GUIA_TESTEO_FASE1.md`) y
+**README** están pendientes de actualización con el estado de Fases 1 y 2.
 
 ---
 
@@ -58,40 +59,89 @@ están alineadas con la Fase 1 de pasos. El README aún no refleja que Fases 0 y
 - ➡️ **Acción pendiente (manual):** reinstalar la app en el Pixel 6a desde cero
   (desinstalar + instalar) para asegurar la versión activa con todos los cambios.
 
-## 4. Fase 1 — Datos reales del cuerpo 🚧
+## 4. Fase 1 — Datos reales del cuerpo ✅ (código)
 
 **Completado:**
 - ✅ Pasos reales del teléfono (`pedometer` + `PhoneStepSource`) con baseline diario y
   re-basificado tras reinicio del equipo.
 - ✅ Reinicio diario del balance por fecha (`app_state.dart`).
 - ✅ Registro de uso anónimo local (máx. 200 eventos, sin red ni identificadores).
-- ✅ Regla "sin datos inventados": pulso/grasa/gasto activo/sueño muestran "—".
+- ✅ Regla "sin datos inventados": pulso/grasa/gasto activo/sueño muestran "—" si no
+  hay fuente real conectada.
+- ✅ **Health Connect** con el paquete `health` 13.3.2, **solo lectura**:
+  - Permisos por métrica (`READ_*` en manifest, `minSdk 26`): pasos, pulso, peso,
+    grasa, sueño, agua, gasto activo y tiempo activo.
+  - `HealthConnectService` (`lib/services/health_service.dart`): disponibilidad,
+    solicitud de permisos (una sola pantalla de Google, concedibles/rechazables por
+    separado), lectura diaria → `HealthToday`.
+  - Solicitud automática al arrancar **una sola vez** (flag `fitpulse_hc_requested_v1`);
+  luego botones "Conectar" permiten re-solicitar (Perfil → "Abrir permisos de Health
+  Connect").
+  - UI integrada: Inicio (pulso real + agua en Día ideal), Progreso (grasa, gasto
+  activo, tiempo activo reales), Perfil (calorías activas reales + cardio semanal real
+  + estado de permisos).
 
-**Pendiente:**
-- ⏳ Integrar **Health Connect** (`health_connect`): pulso, peso, sueño e hidratación.
-  - Cada métrica pide permiso por separado y se puede rechazar.
-  - minSdk sube a **26** en `android/app/build.gradle.kts`.
-- ⏳ Conectar en UI: Home (pulso), Progreso (grasa, gasto activo, tiempo activo),
-  Perfil (cardio semanal).
-- ⏳ Criterio de aceptación: `flutter analyze` 0 issues, tests verdes, prueba manual en
-  Pixel 6a y Xiaomi con `GUIA_TESTEO_FASE1.md` actualizada a Fase 1 completa.
+**Pendiente (manual):**
+- ⏳ Prueba manual en Pixel 6a y Xiaomi con `GUIA_TESTEO_FASE1.md` actualizada a
+  Fase 1 completa (Health Connect + pre-workout). Nota: "Tiempo Activo" se lee de
+  `EXERCISE_TIME`, un tipo que el paquete `health` 13.3.2 solo expone en **iOS**
+  (en Android no está en el mapa del plugin y no debe pedirse: rompería la pantalla
+  de permisos). Por eso en Android se muestra "—" de forma honesta.
 
-## 5. Fase 2 — Entrenamientos + motivación adaptativa ⏳
+## 5. Fase 2 — Entrenamientos + motivación adaptativa ✅ (código)
 
-- Entrenamientos reproducibles con reproductor integrado (hoy "Comenzar entrenamiento"
-  y tarjetas de sesión no inician nada).
-- Racha real de días (hoy el perfil guarda `rachaDias` pero no hay lógica de fechas).
-- Retos cortos de 3/5/7 días y puntos/niveles.
-- Plan adaptativo: baja intensidad si no cumples 3 días, la sube si cumples 5.
+**Completado:**
+- ✅ Catálogo reproducible de 4 programas (`lib/state/workout_catalog.dart`): HIIT &
+  Quema Total, Fuerza Superior & Core, Running 5K Matutino, Full Body & Flexibilidad.
+- ✅ **Reproductor de entrenamiento** (`workout_player_screen.dart`): ejercicios con
+  temporizador (trabajo → descanso → siguiente), pausa/reanudar, saltar y finalizar;
+  el hero del Inicio y el Día ideal abren el reproductor de verdad.
+- ✅ **Sesiones reales**: al completar se registra la sesión (fecha, nombre, duración,
+  kcal del plan) en `fitpulse_workout_history_v1`; Progreso muestra las recientes.
+- ✅ **Racha real**: días consecutivos con sesión hasta hoy (o ayer); header de Inicio,
+  Progreso y Perfil usan `rachaDias` calculado, no el campo guardado del perfil.
+- ✅ **Retos 3/5/7 días**: al cumplir N días seguidos se otorgan +100 pts y el reto
+  avanza (→5, →7); progreso visible en Progreso.
+- ✅ **Puntos y niveles**: +50 pts por sesión; nivel = 1 + XP~/300 con progreso por barra
+  y etiquetas Principiante/Intermedio/Avanzado.
+- ✅ **Plan adaptativo**: intensidad Alta si entrenas ≥5 días/semana, Media si 3-4,
+  Baja si ≤2; el hero "RECOMENDADO PARA TI" selecciona el programa según esa intensidad.
+- ✅ Insignias calculadas de datos reales (Primera Sesión, Racha 3/7, Nivel, Reto).
+- ✅ Tests: racha, retos, niveles, plan adaptativo, Health Connect (mock) y flujo
+  completo del reproductor.
 
-## 6. Fase 3 — Negocio: anuncios en vídeo + Premium + app ligera ⏳
+**Pendiente (manual):**
+- ⏳ Probar el reproductor y las recompensas en ambos móviles; confirmar que "Tiempo
+  Activo" aparece cuando Health Connect lo registra.
 
-- Anuncios en vídeo (recompensado y descansos) con consentimiento.
-- Compra única "Quitar anuncios" de por vida (Premium).
-- App ligera: de 148 MB debug a ~28-35 MB instalado.
-- Nota: AdMob/Google Play no admiten cuentas con residencia en Cuba. Se dejará el
-  código listo con IDs de prueba; cobro y listado requieren entidad fuera de Cuba.
-- Ya existe el esqueleto de flags en `ConfigService` (`adsEnabled`, `premiumEnabled`).
+## 6. Fase 3 — Negocio: anuncios en vídeo + Premium + app ligera ✅ (código)
+
+**Completado:**
+- ✅ **AdMob con IDs de PRUEBA oficiales de Google** (`google_mobile_ads` 5.3.1):
+  - Banner inferior en todas las pestañas (sobre la barra de navegación) y descansos en
+    el reproductor de entrenamiento (`lib/services/ads_service.dart` → `FitBannerAd`).
+  - Anuncio **recompensado** desde Progreso: "Ver anuncio y ganar +25 PTs", **una vez por
+    día** (persistido por fecha en `fitpulse_recompensa_anuncio_v1`).
+  - Degradación elegante: sin Play Services o sin red no ocupa espacio ni rompe nada.
+- ✅ **Consentimiento local**: toggle "Anuncios habilitados" en Perfil (guarda en
+  `ConfigService.setAds`); los anuncios solo se cargan tras el EULA (la app entera lo
+  requiere) y si el flag está activo.
+- ✅ **Premium "Quitar anuncios"**: tarjeta en Perfil con estado, botón
+  "Activar/Desactivar Premium (modo prueba)" (`ConfigService.setPremium`) y nota honesta
+  de que el cobro real requiere Google Play con entidad fuera de Cuba. Con Premium activo
+  se ocultan banner y recompensado.
+- ✅ **App ligera**: `isMinifyEnabled` + `isShrinkResources` (R8) en el build de release;
+  el APK debug sigue siendo grande a propósito (contiene símbolos de depuración).
+- ✅ Tests: recompensa 1/día y persistencia de toggles (27 en total, en verde) +
+  `flutter analyze` sin issues.
+
+**Nota:** AdMob/Google Play no admiten cuentas con residencia en Cuba. El código queda
+listo: sustituir los IDs de prueba por los reales y el cobro/lista requieren una entidad
+fuera de Cuba (se deja la puerta abierta sin bloquear la app).
+
+**Pendiente (manual):**
+- ⏳ Probar en Pixel 6a y Xiaomi: banner visible sin Premium, recompensado suma +25 una
+  vez al día, y al activar Premium (modo prueba) desaparecen todos los anuncios.
 
 ## 7. Fase 4 — Comidas ⏳
 
@@ -135,8 +185,9 @@ están alineadas con la Fase 1 de pasos. El README aún no refleja que Fases 0 y
 
 ## 13. Próximos pasos recomendados
 
-1. **Commitear el estado actual** (Fases 0, 0.5 y hotfix ya implementados en código pero
-   sin commitear; hay ~20 archivos modificados + nuevos).
-2. **Actualizar README** para reflejar el estado real (Fases 0/0.5 ✅, Fase 1 en curso).
-3. **Probar la Fase 1 de pasos** siguiendo `GUIA_TESTEO_FASE1.md` (registrar PASA/FALLA
-   por dispositivo) y, si acepta, continuar con **Health Connect** en el Pixel 6a.
+1. **Probar Fases 1 + 2 + 3 en los móviles** siguiendo `GUIA_TESTEO_FASE1.md`
+   (registrar PASA/FALLA por dispositivo: Health Connect, entrenamientos, anuncios y
+   Premium).
+2. **Actualizar README y FUNCIONALIDADES** para reflejar el estado real
+   (Fases 0/0.5/1/2/3 ✅ en código).
+3. Con la aprobación, abrir **Fase 4** (plan semanal de comidas + lista de la compra).
