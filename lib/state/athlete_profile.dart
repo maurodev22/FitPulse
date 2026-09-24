@@ -5,14 +5,45 @@ import 'dart:convert';
 /// Es la fuente de verdad de la sesión del dispositivo: se serializa a JSON
 /// para persistirse con `shared_preferences` y se comparte entre la pantalla
 /// de registro, inicio, perfil, recetas y progreso.
+/// Tipo de cuerpo del atleta (informativo; no participa en cálculos).
+///
+/// Si el usuario elige "No lo sé" se guarda [tipoCuerpoNormal].
+abstract final class TipoCuerpo {
+  static const ectomorfo = 'Ectomorfo';
+  static const mesomorfo = 'Mesomorfo';
+  static const endomorfo = 'Endomorfo';
+  static const ectoMeso = 'Ecto-Meso';
+  static const mesoEndo = 'Meso-Endo';
+  static const ectoEndo = 'Ecto-Endo';
+  static const noLoSe = 'No lo sé';
+
+  /// Valor almacenado cuando el usuario no sabe su tipo de cuerpo.
+  static const normal = 'Normal';
+
+  static const opciones = [
+    ectomorfo,
+    mesomorfo,
+    endomorfo,
+    ectoMeso,
+    mesoEndo,
+    ectoEndo,
+    noLoSe,
+  ];
+
+  /// Normaliza la selección; "No lo sé" se guarda como [normal].
+  static String normalizar(String? seleccion) =>
+      (seleccion == null || seleccion == noLoSe) ? normal : seleccion;
+}
+
 class AthleteProfile {
   const AthleteProfile({
-    this.nombre = 'Sofía Martínez',
-    this.edad = 26,
-    this.sexo = 'Femenino',
-    this.pesoKg = 64.5,
-    this.alturaM = 1.72,
-    this.meta = 'Definir',
+    this.nombre = '',
+    this.edad = 0,
+    this.sexo = '',
+    this.pesoKg = 0,
+    this.alturaM = 0,
+    this.metas = const [],
+    this.tipoCuerpo = 'Normal',
     this.nivel = 'Intermedio',
     this.diasEntrenamiento = const ['L', 'M', 'X', 'J', 'V'],
     this.hidratacion = true,
@@ -20,12 +51,12 @@ class AthleteProfile {
     this.healthKit = true,
     this.vibracion = true,
     this.compartirActividad = false,
-    this.rachaDias = 14,
-    this.caloriasMeta = 750,
+    this.rachaDias = 0,
+    this.caloriasMeta = 2100,
     this.pasosMeta = 10000,
   });
 
-  /// Crea un perfil por defecto usado como placeholder en entorno dev.
+  /// Crea un perfil neutro (sin datos ficticios) para una nueva sesión.
   factory AthleteProfile.initial() => const AthleteProfile();
 
   /// Reconstruye un perfil desde un string JSON persistido.
@@ -34,13 +65,23 @@ class AthleteProfile {
 
   /// Reconstruye un perfil desde un mapa decodificado de JSON.
   factory AthleteProfile.fromJson(Map<String, dynamic> json) {
+    final metasList = (json['metas'] as List?)
+        ?.cast<String>()
+        .where((s) => s.isNotEmpty)
+        .toList();
+    // Compatibilidad con perfiles antiguos que guardaban una sola `meta`.
+    final legacyMeta = json['meta'] as String?;
+    final metas = (metasList != null && metasList.isNotEmpty)
+        ? metasList
+        : (legacyMeta != null && legacyMeta.isNotEmpty ? [legacyMeta] : <String>[]);
     return AthleteProfile(
-      nombre: json['nombre'] as String? ?? 'Sofía Martínez',
-      edad: json['edad'] as int? ?? 26,
-      sexo: json['sexo'] as String? ?? 'Femenino',
-      pesoKg: (json['pesoKg'] as num?)?.toDouble() ?? 64.5,
-      alturaM: (json['alturaM'] as num?)?.toDouble() ?? 1.72,
-      meta: json['meta'] as String? ?? 'Definir',
+      nombre: json['nombre'] as String? ?? '',
+      edad: json['edad'] as int? ?? 0,
+      sexo: json['sexo'] as String? ?? '',
+      pesoKg: (json['pesoKg'] as num?)?.toDouble() ?? 0,
+      alturaM: (json['alturaM'] as num?)?.toDouble() ?? 0,
+      metas: metas,
+      tipoCuerpo: json['tipoCuerpo'] as String? ?? 'Normal',
       nivel: json['nivel'] as String? ?? 'Intermedio',
       diasEntrenamiento:
           (json['diasEntrenamiento'] as List?)?.cast<String>() ?? ['L', 'M', 'X', 'J', 'V'],
@@ -49,8 +90,8 @@ class AthleteProfile {
       healthKit: json['healthKit'] as bool? ?? true,
       vibracion: json['vibracion'] as bool? ?? true,
       compartirActividad: json['compartirActividad'] as bool? ?? false,
-      rachaDias: json['rachaDias'] as int? ?? 14,
-      caloriasMeta: (json['caloriasMeta'] as num?)?.toDouble() ?? 750,
+      rachaDias: json['rachaDias'] as int? ?? 0,
+      caloriasMeta: (json['caloriasMeta'] as num?)?.toDouble() ?? 2100,
       pasosMeta: json['pasosMeta'] as int? ?? 10000,
     );
   }
@@ -60,7 +101,15 @@ class AthleteProfile {
   final String sexo;
   final double pesoKg;
   final double alturaM;
-  final String meta;
+
+  /// Metas principales del atleta (1 o 2).
+  final List<String> metas;
+
+  /// Etiqueta principal de meta (primera de la lista).
+  String get meta => metas.isEmpty ? '' : metas.first;
+
+  /// Tipo de cuerpo informativo (ver [TipoCuerpo]).
+  final String tipoCuerpo;
   final String nivel;
   final List<String> diasEntrenamiento;
   final bool hidratacion;
@@ -96,7 +145,9 @@ class AthleteProfile {
         'sexo': sexo,
         'pesoKg': pesoKg,
         'alturaM': alturaM,
-        'meta': meta,
+        'meta': metas.isEmpty ? '' : metas.first,
+        'metas': metas,
+        'tipoCuerpo': tipoCuerpo,
         'nivel': nivel,
         'diasEntrenamiento': diasEntrenamiento,
         'hidratacion': hidratacion,

@@ -43,6 +43,12 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+/android/build/
+
+# Logs de diagnóstico de build (temporales, no son documentación)
+/gradle_err.txt
+/gradle_info.txt
+/android/gradle_stack.txt
 
 # Widget Preview related
 .widget_preview/

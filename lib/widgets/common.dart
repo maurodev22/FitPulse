@@ -88,12 +88,14 @@ class MetricCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                stat.label.toUpperCase(),
-                style: AppType.labelMd.copyWith(
-                  color: AppColors.outline,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 0.6,
+              Flexible(
+                child: Text(
+                  stat.label.toUpperCase(),
+                  style: AppType.labelMd.copyWith(
+                    color: AppColors.outline,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.6,
+                  ),
                 ),
               ),
               if (stat.icon != null)
@@ -189,7 +191,7 @@ class SectionHeader extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        titleWidget,
+        Expanded(child: titleWidget),
         if (actionLabel != null)
           InkWell(
             onTap: onAction,

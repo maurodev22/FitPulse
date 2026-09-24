@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../main.dart';
+import '../services/locale_service.dart';
 import '../state/app_state.dart';
 import '../state/athlete_profile.dart';
 import '../theme.dart';
+import '../utils/validators.dart';
+import '../widgets/wheel_number_picker.dart';
 
 class RegistrationScreen extends StatefulWidget {
   const RegistrationScreen({super.key});
@@ -14,14 +17,24 @@ class RegistrationScreen extends StatefulWidget {
 }
 
 class _RegistrationScreenState extends State<RegistrationScreen> {
-  final _nombreController = TextEditingController(text: 'Sofía Martínez');
-  final _edadController = TextEditingController(text: '26');
-  String _sexo = 'Femenino';
-  final _pesoController = TextEditingController(text: '64.5');
-  final _alturaController = TextEditingController(text: '1.72');
-  String _meta = 'Definir';
+  final _formKey = GlobalKey<FormState>();
+  final _nombreController = TextEditingController();
 
-  static const _metas = {
+  // Los valores númericos se eligen con ruedas dentro de rangos oficiales.
+  late double _edad;
+  late double _pesoKg;
+  late double _alturaM;
+  // Las metas se eligen con chips de selección múltiple (máximo 2).
+  final List<String> _metas = <String>[];
+  String? _sexo;
+  String? _tipoCuerpo;
+
+  String? _nombreError;
+  String? _sexoError;
+  String? _metaError;
+  String? _metaLimite; // Aviso cuando se intenta elegir una 3ª meta.
+
+  static const _metasColores = {
     'Bajar de peso': Color(0xFFFBBF24),
     'Definir': Color(0xFF6FFBBE),
     'Aumentar de peso': Color(0xFF60A5FA),
@@ -29,16 +42,20 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   };
 
   @override
+  void initState() {
+    super.initState();
+    _edad = 30.0;
+    _pesoKg = 70.0;
+    _alturaM = 1.70;
+  }
+
+  @override
   void dispose() {
     _nombreController.dispose();
-    _edadController.dispose();
-    _pesoController.dispose();
-    _alturaController.dispose();
     super.dispose();
   }
 
   void _goToDashboard() {
-    // Persistir la sesión del atleta en el dispositivo antes de entrar.
     context.read<AppState>().guardarPerfil(_buildProfile());
 
     Navigator.of(context).pushReplacement(
@@ -49,23 +66,32 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   /// Construye el perfil a partir de los campos del formulario.
   AthleteProfile _buildProfile() {
     return AthleteProfile(
-      nombre: _nombreController.text.trim().isEmpty
-          ? 'Sofía Martínez'
-          : _nombreController.text.trim(),
-      edad: int.tryParse(_edadController.text.trim()) ?? 26,
-      sexo: _sexo,
-      pesoKg: double.tryParse(_pesoController.text.trim()) ?? 64.5,
-      alturaM: double.tryParse(_alturaController.text.trim()) ?? 1.72,
-      meta: _meta,
+      nombre: _nombreController.text.trim(),
+      edad: _edad.round(),
+      sexo: _sexo ?? '',
+      pesoKg: _pesoKg,
+      alturaM: _alturaM,
+      metas: List.of(_metas),
+      tipoCuerpo: TipoCuerpo.normalizar(_tipoCuerpo),
     );
   }
 
-  /// IMC calculado en vivo a partir de peso y altura del formulario.
+  /// IMC calculado en vivo a partir de los valores de las ruedas.
   double get _imcEnVivo {
-    final peso = double.tryParse(_pesoController.text.trim()) ?? 0;
-    final altura = double.tryParse(_alturaController.text.trim()) ?? 0;
-    if (peso <= 0 || altura <= 0) return 0;
-    return peso / (altura * altura);
+    if (_pesoKg <= 0 || _alturaM <= 0) return 0;
+    return _pesoKg / (_alturaM * _alturaM);
+  }
+
+  bool _validate() {
+    final nombreError = Validators.validarNombre(_nombreController.text);
+    final sexoError = _sexo == null ? 'Selecciona un sexo biológico' : null;
+    final metaError = _metas.isEmpty ? 'Selecciona al menos una meta principal' : null;
+    setState(() {
+      _nombreError = nombreError;
+      _sexoError = sexoError;
+      _metaError = metaError;
+    });
+    return nombreError == null && sexoError == null && metaError == null;
   }
 
   @override
@@ -75,20 +101,25 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            _RegHeader(onSkip: _goToDashboard),
+            const _RegHeader(),
             Expanded(
-              child: ListView(
+              child: SingleChildScrollView(
                 padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
-                children: [
-                  const _WelcomeBlock(),
-                  const SizedBox(height: 20),
-                  _buildAvatarPicker(),
-                  const SizedBox(height: 20),
-                  _buildForm(),
-                ],
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const _WelcomeBlock(),
+                    const SizedBox(height: 20),
+                    _buildAvatarPicker(),
+                    const SizedBox(height: 20),
+                    _buildForm(),
+                  ],
+                ),
               ),
             ),
-            _RegFooter(onSave: _goToDashboard),
+            _RegFooter(onSave: () {
+              if (_validate()) _goToDashboard();
+            }),
           ],
         ),
       ),
@@ -114,7 +145,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
               border: Border.all(color: AppColors.primary, width: 2),
             ),
             clipBehavior: Clip.antiAlias,
-            child: Image.asset('assets/images/avatar.jpg', fit: BoxFit.cover),
+            child: Image.asset('assets/images/avatar.webp', fit: BoxFit.cover),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -164,116 +195,228 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   }
 
   Widget _buildForm() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _fieldLabel('Nombre Completo', required: true, icon: Icons.person),
-        const SizedBox(height: 6),
-        _textField(controller: _nombreController, hint: 'Ej. Sofía Martínez'),
-        const SizedBox(height: 16),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _fieldLabel('Edad', required: true, icon: Icons.cake),
-                  const SizedBox(height: 6),
-                  _textField(
-                    controller: _edadController,
-                    hint: '26',
-                    suffix: 'años',
-                  ),
-                ],
-              ),
+    return Form(
+      key: _formKey,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _fieldLabel('Nombre Completo', required: true, icon: Icons.person),
+          const SizedBox(height: 6),
+          TextFormField(
+            controller: _nombreController,
+            onChanged: (_) => setState(() {}),
+            style: AppType.bodyMd.copyWith(
+              color: AppColors.onSurface,
+              fontWeight: FontWeight.w600,
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _fieldLabel('Sexo biológico', required: true, icon: Icons.wc),
-                  const SizedBox(height: 6),
-                  _dropdown(_sexo, (v) => setState(() => _sexo = v!), [
-                    'Femenino',
-                    'Masculino',
-                    'Otro',
-                  ]),
-                ],
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _fieldLabel('Peso', required: true, icon: Icons.scale),
-                  const SizedBox(height: 6),
-                  _textField(
-                    controller: _pesoController,
-                    hint: '64.5',
-                    suffix: 'kg',
-                    onChanged: (_) => setState(() {}),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _fieldLabel('Altura', required: true, icon: Icons.straighten),
-                  const SizedBox(height: 6),
-                  _textField(
-                    controller: _alturaController,
-                    hint: '1.72',
-                    suffix: 'm',
-                    onChanged: (_) => setState(() {}),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        _BmiBar(imc: _imcEnVivo),
-        const SizedBox(height: 20),
-        Row(
-          children: [
-            _fieldLabel('Meta Principal', required: true, icon: Icons.flag),
-            const Spacer(),
-            Text(
-              'Requerido',
-              style: AppType.labelSm.copyWith(
-                color: AppColors.onSurfaceVariant,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 10),
-        Wrap(
-          spacing: 10,
-          runSpacing: 10,
-          children: _metas.entries
-              .map(
-                (entry) => _MetaChip(
-                  label: entry.key,
-                  dotColor: entry.value,
-                  selected: entry.key == _meta,
-                  onTap: () => setState(() => _meta = entry.key),
+            decoration: InputDecoration(
+              hintText: 'Escribe tu nombre',
+              hintStyle: AppType.bodyMd.copyWith(color: Colors.grey),
+              filled: true,
+              fillColor: AppColors.surfaceLowest,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: BorderSide(
+                  color: _nombreError == null
+                      ? AppColors.outlineVariant
+                      : AppColors.error,
                 ),
-              )
-              .toList(),
-        ),
-      ],
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+              ),
+              errorText: _nombreError,
+              errorStyle: AppType.bodySm.copyWith(color: AppColors.error),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _fieldLabel('Edad', required: true, icon: Icons.cake),
+                    const SizedBox(height: 4),
+                    _wheelCard(
+                      WheelNumberPicker(
+                        min: Validators.minEdad.toDouble(),
+                        max: Validators.maxEdad.toDouble(),
+                        step: 1,
+                        decimals: 0,
+                        semanticsUnit: 'años',
+                        initialValue: _edad,
+                        onChanged: (v) => setState(() => _edad = v),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _fieldLabel('Sexo biológico', required: true, icon: Icons.wc),
+                    const SizedBox(height: 6),
+                    _dropdown(
+                      _sexo,
+                      (v) => setState(() {
+                        _sexo = v;
+                        _sexoError = null;
+                      }),
+                      const ['Femenino', 'Masculino', 'Otro'],
+                      hint: 'Selecciona',
+                      error: _sexoError,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _fieldLabel('Peso', required: true, icon: Icons.scale),
+                    const SizedBox(height: 4),
+                    _wheelCard(
+                      WheelNumberPicker(
+                        min: Validators.minPesoKg,
+                        max: Validators.maxPesoKg,
+                        step: 0.5,
+                        decimals: 1,
+                        semanticsUnit: 'kg',
+                        initialValue: _pesoKg,
+                        onChanged: (v) => setState(() => _pesoKg = v),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _fieldLabel('Altura', required: true, icon: Icons.straighten),
+                    const SizedBox(height: 4),
+                    _wheelCard(
+                      WheelNumberPicker(
+                        min: Validators.minAlturaM,
+                        max: Validators.maxAlturaM,
+                        step: 0.01,
+                        decimals: 2,
+                        semanticsUnit: 'm',
+                        initialValue: _alturaM,
+                        onChanged: (v) => setState(() => _alturaM = v),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          _BmiBar(imc: _imcEnVivo),
+          const SizedBox(height: 20),
+          _fieldLabel('Meta Principal', required: true, icon: Icons.flag),
+          const SizedBox(height: 4),
+          Text(
+            'Elige hasta 2 metas',
+            style: AppType.bodySm.copyWith(color: AppColors.outline),
+          ),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: _metasColores.entries
+                .map(
+                  (entry) => _MetaChip(
+                    label: entry.key,
+                    dotColor: entry.value,
+                    selected: _metas.contains(entry.key),
+                    onTap: () => setState(() {
+                      if (_metas.contains(entry.key)) {
+                        _metas.remove(entry.key);
+                        _metaLimite = null;
+                      } else if (_metas.length >= 2) {
+                        _metaLimite = 'Máximo 2 metas seleccionadas';
+                      } else {
+                        _metas.add(entry.key);
+                        _metaLimite = null;
+                      }
+                      _metaError = null;
+                    }),
+                  ),
+                )
+                .toList(),
+          ),
+          if (_metaLimite != null) ...[
+            const SizedBox(height: 8),
+            Text(
+              _metaLimite!,
+              style: AppType.bodySm.copyWith(color: AppColors.onSurfaceVariant),
+            ),
+          ],
+          if (_metaError != null) ...[
+            const SizedBox(height: 8),
+            Text(
+              _metaError!,
+              style: AppType.bodySm.copyWith(color: AppColors.error),
+            ),
+          ],
+          const SizedBox(height: 20),
+          _fieldLabel('Tipo de cuerpo', icon: Icons.accessibility_new),
+          const SizedBox(height: 4),
+          Text(
+            'Ayuda a personalizar la perspectiva visual (informativo)',
+            style: AppType.bodySm.copyWith(color: AppColors.outline),
+          ),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: TipoCuerpo.opciones
+                .map(
+                  (tipo) => ChoiceChip(
+                    label: Text(tipo),
+                    selected: _tipoCuerpo == tipo,
+                    selectedColor: AppColors.secondaryContainer,
+                    onSelected: (_) => setState(() => _tipoCuerpo = tipo),
+                    labelStyle: AppType.labelMd.copyWith(
+                      color: _tipoCuerpo == tipo
+                          ? AppColors.onSecondaryContainer
+                          : AppColors.onSurfaceVariant,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                )
+                .toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _wheelCard(Widget wheel) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.surfaceLowest,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.outlineVariant),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(14),
+        child: wheel,
+      ),
     );
   }
 
@@ -284,12 +427,14 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
           Icon(icon, size: 15, color: AppColors.outline),
           const SizedBox(width: 4),
         ],
-        Text(
-          text.toUpperCase(),
-          style: AppType.labelSm.copyWith(
-            color: AppColors.onSurface,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 0.5,
+        Flexible(
+          child: Text(
+            text.toUpperCase(),
+            style: AppType.labelSm.copyWith(
+              color: AppColors.onSurface,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.5,
+            ),
           ),
         ),
         if (required) ...[
@@ -300,74 +445,24 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     );
   }
 
-  Widget _textField({
-    required TextEditingController controller,
-    required String hint,
-    String? suffix,
-    ValueChanged<String>? onChanged,
-  }) {
+  Widget _dropdown(String? value, ValueChanged<String?> onChanged, List<String> options,
+      {String? hint, String? error}) {
     return Container(
-      height: 48,
-      decoration: BoxDecoration(
-        color: AppColors.surfaceLowest,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.outlineVariant),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primaryContainer.withValues(alpha: 0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: TextField(
-              controller: controller,
-              onChanged: onChanged,
-              style: AppType.bodyMd.copyWith(
-                color: AppColors.onSurface,
-                fontWeight: FontWeight.w600,
-              ),
-              decoration: InputDecoration(
-                hintText: hint,
-                hintStyle: AppType.bodyMd.copyWith(color: Colors.grey),
-                border: InputBorder.none,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 14),
-              ),
-            ),
-          ),
-          if (suffix != null)
-            Padding(
-              padding: const EdgeInsets.only(right: 14),
-              child: Text(
-                suffix,
-                style: AppType.labelMd.copyWith(
-                  color: AppColors.onSurfaceVariant,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _dropdown(String value, ValueChanged<String?> onChanged, List<String> options) {
-    return Container(
-      height: 48,
       padding: const EdgeInsets.symmetric(horizontal: 14),
       decoration: BoxDecoration(
         color: AppColors.surfaceLowest,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.outlineVariant),
+        border: Border.all(color: error == null ? AppColors.outlineVariant : AppColors.error),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
           value: value,
           isExpanded: true,
           isDense: true,
+          hint: Text(
+            hint ?? '',
+            style: AppType.bodyMd.copyWith(color: Colors.grey),
+          ),
           icon: const Icon(Icons.expand_more, size: 18, color: AppColors.onSurfaceVariant),
           style: AppType.bodyMd.copyWith(
             color: AppColors.onSurface,
@@ -384,9 +479,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
 }
 
 class _RegHeader extends StatelessWidget {
-  const _RegHeader({required this.onSkip});
-
-  final VoidCallback onSkip;
+  const _RegHeader();
 
   @override
   Widget build(BuildContext context) {
@@ -408,36 +501,12 @@ class _RegHeader extends StatelessWidget {
                 color: AppColors.onSurface,
               ),
               const Spacer(),
-              Row(
-                children: [
-                  Container(
-                    width: 10,
-                    height: 10,
-                    decoration: const BoxDecoration(
-                      color: AppColors.primary,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    'PASO 1 DE 2',
-                    style: AppType.labelSm.copyWith(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 0.6,
-                    ),
-                  ),
-                ],
-              ),
-              const Spacer(),
-              TextButton(
-                onPressed: onSkip,
-                child: Text(
-                  'Saltar',
-                  style: AppType.labelMd.copyWith(
-                    color: AppColors.onSurfaceVariant,
-                    fontWeight: FontWeight.w600,
-                  ),
+              Text(
+                'CREA TU PERFIL',
+                style: AppType.labelSm.copyWith(
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.6,
                 ),
               ),
             ],
@@ -463,6 +532,7 @@ class _WelcomeBlock extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final strings = context.watch<LocaleService>().strings;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -473,15 +543,16 @@ class _WelcomeBlock extends StatelessWidget {
             borderRadius: BorderRadius.circular(999),
           ),
           child: Row(
-            mainAxisSize: MainAxisSize.min,
             children: [
               const Icon(Icons.fitness_center, size: 15, color: AppColors.primary),
               const SizedBox(width: 6),
-              Text(
-                'Personaliza tu experiencia',
-                style: AppType.labelMd.copyWith(
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.w700,
+              Expanded(
+                child: Text(
+                  strings.regInfoBanner,
+                  style: AppType.labelMd.copyWith(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
             ],
@@ -489,7 +560,7 @@ class _WelcomeBlock extends StatelessWidget {
         ),
         const SizedBox(height: 12),
         Text(
-          'Crea tu Perfil Atlético',
+          strings.regTitle,
           style: AppType.headlineLg.copyWith(
             color: AppColors.onSurface,
             fontWeight: FontWeight.w800,
@@ -498,7 +569,7 @@ class _WelcomeBlock extends StatelessWidget {
         ),
         const SizedBox(height: 6),
         Text(
-          'Para calibrar tus métricas de pulso, quema calórica y planes de entrenamiento diarios.',
+          strings.regSubtitle,
           style: AppType.bodyMd.copyWith(color: AppColors.onSurfaceVariant, height: 1.5),
         ),
       ],
@@ -509,49 +580,46 @@ class _WelcomeBlock extends StatelessWidget {
 class _BmiBar extends StatelessWidget {
   const _BmiBar({required this.imc});
 
-  /// IMC en vivo calculado desde el formulario (0 si no hay datos válidos).
+  /// IMC en vivo desde las ruedas (0 si no hay datos válidos).
   final double imc;
 
   @override
   Widget build(BuildContext context) {
     final valid = imc > 0;
-    final label = valid ? imc.toStringAsFixed(1) : '--';
-    final categoria = valid
-        ? _categoriaImc(imc)
-        : 'Ingresa tu peso y altura';
-    final badge = valid
-        ? (imc < 25 && imc >= 18.5 ? 'ÓPTIMO' : '¡ATENCIÓN!')
-        : 'PENDIENTE';
+    final categoria = valid ? _categoriaImc(imc) : '...';
+    final (badge, badColor) = valid ? _estadoImc(imc) : ('—', Colors.grey);
+
+    final borderColor = valid ? badColor : AppColors.outlineVariant;
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: const Color(0xFFEAF5EF),
+        color: valid ? badColor.withValues(alpha: 0.08) : AppColors.surfaceContainerLow,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.secondaryFixed.withValues(alpha: 0.6)),
+        border: Border.all(color: borderColor.withValues(alpha: 0.6)),
       ),
       child: Row(
         children: [
-          const Icon(Icons.insights, size: 22, color: AppColors.primary),
+          Icon(Icons.insights, size: 22, color: valid ? badColor : AppColors.outline),
           const SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'IMC Inicial Estimado: $label',
-                  style: const TextStyle(
+                  valid ? 'IMC en vivo: ${imc.toStringAsFixed(1)}' : 'IMC en vivo —',
+                  style: TextStyle(
                     fontFamily: 'Inter',
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.primary,
+                    color: valid ? badColor : AppColors.onSurfaceVariant,
                   ),
                 ),
                 Text(
-                  categoria,
-                  style: const TextStyle(
+                  valid ? categoria : 'Gira las ruedas de peso y altura',
+                  style: TextStyle(
                     fontFamily: 'Inter',
                     fontSize: 11,
-                    color: AppColors.primary,
+                    color: valid ? badColor : AppColors.onSurfaceVariant,
                   ),
                 ),
               ],
@@ -560,7 +628,7 @@ class _BmiBar extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
             decoration: BoxDecoration(
-              color: AppColors.primary,
+              color: badColor,
               borderRadius: BorderRadius.circular(999),
             ),
             child: Text(
@@ -582,6 +650,13 @@ class _BmiBar extends StatelessWidget {
     if (v < 25) return 'Rango normal y saludable';
     if (v < 30) return 'Sobrepeso';
     return 'Obesidad';
+  }
+
+  (String, Color) _estadoImc(double v) {
+    if (v < 18.5) return ('BAJO', AppColors.error);
+    if (v < 25) return ('ÓPTIMO', const Color(0xFF059669));
+    if (v < 30) return ('ALTO', const Color(0xFFB45309));
+    return ('MUY ALTO', AppColors.error);
   }
 }
 
@@ -679,13 +754,17 @@ class _RegFooter extends StatelessWidget {
                 child: const Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(
-                      'Guardar y Entrar al Dashboard',
-                      style: TextStyle(
-                        fontFamily: 'Inter',
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
+                    Flexible(
+                      child: Text(
+                        'Guardar y Entrar al Dashboard',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
                     SizedBox(width: 8),

@@ -1,5 +1,20 @@
 import 'package:flutter/material.dart';
 
+/// Desactiva el glow/overscroll blanco del sistema: al hacer scroll hasta el
+/// borde, Android pinta una línea o brillo blancuzco que distorsiona la vista.
+class NoGlowScrollBehavior extends MaterialScrollBehavior {
+  const NoGlowScrollBehavior();
+
+  @override
+  Widget buildOverscrollIndicator(
+    BuildContext context,
+    Widget child,
+    ScrollableDetails details,
+  ) {
+    return child;
+  }
+}
+
 abstract final class AppColors {
   static const background = Color(0xFFF8FAF8);
   static const surface = Color(0xFFF8FAF8);

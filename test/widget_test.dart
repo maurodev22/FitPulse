@@ -3,10 +3,47 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:fitpulse/main.dart';
+import 'package:fitpulse/widgets/fit_nav_bar.dart';
 
+/// Acepta el EULA inicial y vuelca el flujo de registro hasta el dashboard.
 Future<void> _enterDashboard(WidgetTester tester) async {
   await tester.pumpWidget(const FitPulseApp());
+
+  // Pantalla de Términos/EULA: marcar la casilla y continuar.
+  expect(find.text('Términos y Condiciones de Uso'), findsOneWidget);
+  await tester.tap(find.byType(CheckboxListTile));
+  await tester.pumpAndSettle();
+  await tester.tap(find.text('Continuar'));
+  await tester.pumpAndSettle();
+
+  // Onboarding: el formulario está vacío (sin datos ficticios).
   expect(find.text('Crea tu Perfil Atlético'), findsOneWidget);
+
+  // Nombre completo (campo texto).
+  await tester.enterText(
+    find.widgetWithText(TextFormField, 'Escribe tu nombre'),
+    'Sofía Martínez',
+  );
+  await tester.pumpAndSettle();
+
+  // El formulario es más largo que la pantalla de test: hay que llevar cada
+  // control al área visible antes de interactuar.
+  await tester.ensureVisible(find.text('Selecciona'));
+  await tester.pumpAndSettle();
+
+  // Sexo biológico por dropdown.
+  await tester.tap(find.text('Selecciona'));
+  await tester.pumpAndSettle();
+  await tester.tap(find.text('Femenino').last);
+  await tester.pumpAndSettle();
+
+  // Meta principal por chip.
+  await tester.ensureVisible(find.text('Definir'));
+  await tester.pumpAndSettle();
+  await tester.tap(find.text('Definir'));
+  await tester.pumpAndSettle();
+
+  // Guardar y entrar.
   await tester.tap(find.text('Guardar y Entrar al Dashboard'));
   await tester.pumpAndSettle();
 }
@@ -17,12 +54,24 @@ void main() {
     SharedPreferences.setMockInitialValues({});
   });
 
-  testWidgets('FitPulse muestra el onboarding de registro', (WidgetTester tester) async {
+  testWidgets('FitPulse muestra el flujo EULA y el onboarding', (WidgetTester tester) async {
     await tester.pumpWidget(const FitPulseApp());
 
+    expect(find.text('Términos y Condiciones de Uso'), findsOneWidget);
+
+    // Sin marcar la casilla el botón continuar no avanza.
+    await tester.tap(find.text('Continuar'));
+    await tester.pumpAndSettle();
+    expect(find.text('Términos y Condiciones de Uso'), findsOneWidget);
+
+    // Al aceptar, se llega al onboarding con el formulario vacío.
+    await tester.tap(find.byType(CheckboxListTile));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Continuar'));
+    await tester.pumpAndSettle();
+
     expect(find.text('Crea tu Perfil Atlético'), findsOneWidget);
-    expect(find.text('PASO 1 DE 2'), findsOneWidget);
-    expect(find.text('Sofía Martínez'), findsWidgets);
+    expect(find.text('Escribe tu nombre'), findsOneWidget);
   });
 
   testWidgets('FitPulse renderiza la pantalla de inicio', (WidgetTester tester) async {
@@ -40,7 +89,7 @@ void main() {
     await tester.tap(find.text('Recetas').first);
     await tester.pumpAndSettle();
 
-    expect(find.text('Recetas FitPulse'), findsOneWidget);
+    expect(find.text('Recetas'), findsWidgets);
     expect(find.text('BALANCE NUTRICIONAL DE HOY'), findsOneWidget);
   });
 
@@ -78,7 +127,10 @@ void main() {
     // Se sigue desplazando desde la zona central de la pantalla.
     await tester.dragFrom(const Offset(400, 300), const Offset(0, -400));
     await tester.pumpAndSettle();
-    expect(find.text('Comunidad Activa'), findsOneWidget);
+    expect(
+      find.text('Estos contenidos son orientativos y no sustituyen el consejo de un profesional de la salud.'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('Navega a la pestaña de Perfil', (WidgetTester tester) async {
@@ -95,17 +147,38 @@ void main() {
     expect(find.text('Datos Personales'), findsOneWidget);
   });
 
-  testWidgets('Cerrar sesión vuelve al onboarding', (WidgetTester tester) async {
+  testWidgets('Sin desbordes en pantalla pequeña (360x640)', (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(360, 640);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
     await _enterDashboard(tester);
 
-    await tester.tap(find.byIcon(Icons.person).last);
+    // Inicio sin la sección "Explorar categorías".
+    expect(find.text('Explorar categorías'), findsNothing);
+    expect(find.text('Hola, Sofía'), findsOneWidget);
+
+    // Recetas con encabezado simplificado (sin meta ni "Nutrición & Vitalidad").
+    await tester.tap(find.text('Recetas').first);
+    await tester.pumpAndSettle();
+    expect(find.text('BALANCE NUTRICIONAL DE HOY'), findsOneWidget);
+    await tester.tap(find.text('Progreso').first);
+    await tester.pumpAndSettle();
+    expect(find.text('Evolución & Rendimiento'), findsOneWidget);
+  });
+
+  testWidgets('Navega a la pestaña de Ayuda (manual + FAQ)', (WidgetTester tester) async {
+    await _enterDashboard(tester);
+
+    await tester.tap(
+      find.descendant(of: find.byType(FitNavBar), matching: find.text('Ayuda')),
+    );
     await tester.pumpAndSettle();
 
-    await tester.scrollUntilVisible(find.text('Cerrar sesión'), 300);
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Cerrar sesión'));
-    await tester.pumpAndSettle();
-
-    expect(find.text('Crea tu Perfil Atlético'), findsOneWidget);
+    expect(find.text('Manual de usuario'), findsOneWidget);
+    expect(find.text('¿Dónde se guardan mis datos?'), findsOneWidget);
+    await tester.scrollUntilVisible(find.text('¿Funciona sin internet?'), 200);
+    expect(find.text('Preguntas frecuentes'), findsOneWidget);
+    expect(find.text('¿Funciona sin internet?'), findsOneWidget);
   });
 }

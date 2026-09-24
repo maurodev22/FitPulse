@@ -1,4 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Sensor de pasos interno del teléfono (Android 10+, ACTIVITY_RECOGNITION). -->
+    <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION"/>
+    <!-- No requiere INTERNET: los datos de salud se quedan en el dispositivo. -->
     <application
         android:label="FitPulse"
         android:name="${applicationName}"

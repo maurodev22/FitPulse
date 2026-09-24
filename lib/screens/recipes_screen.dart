@@ -132,10 +132,8 @@ class _RecipesHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // La meta del atleta proviene de la sesión (p. ej. "Definir").
-    final meta = context.watch<AppState>().profile.meta;
     return Container(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 4),
       decoration: BoxDecoration(
         color: AppColors.surface,
         border: Border(
@@ -146,92 +144,15 @@ class _RecipesHeader extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Stack(
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(color: AppColors.primary, width: 2),
-                ),
-                clipBehavior: Clip.antiAlias,
-                child: Image.asset('assets/images/avatar.jpg', fit: BoxFit.cover),
-              ),
-              Positioned(
-                right: 0,
-                bottom: 0,
-                child: Container(
-                  width: 11,
-                  height: 11,
-                  decoration: BoxDecoration(
-                    color: AppColors.secondaryFixed,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white, width: 2),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(width: 12),
+          Icon(Icons.restaurant_menu, size: 22, color: AppColors.primary),
+          const SizedBox(width: 10),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'NUTRICIÓN & VITALIDAD',
-                  style: AppType.labelSm.copyWith(
-                    color: AppColors.outline,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 0.6,
-                  ),
-                ),
-                const SizedBox(height: 1),
-                Text(
-                  'Recetas FitPulse',
-                  style: AppType.headlineSm.copyWith(
-                    fontWeight: FontWeight.w800,
-                    height: 1.15,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF0F7F3),
-              borderRadius: BorderRadius.circular(999),
-              border: Border.all(
-                color: AppColors.secondaryFixed.withValues(alpha: 0.6),
+            child: Text(
+              'Recetas',
+              style: AppType.headlineSm.copyWith(
+                fontWeight: FontWeight.w800,
+                height: 1.15,
               ),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.local_fire_department, size: 14, color: Colors.amber.shade600),
-                const SizedBox(width: 4),
-                Text(
-                  'Meta: $meta',
-                  style: AppType.labelSm.copyWith(
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 4),
-          IconButton(
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Filtra por favoritos desde el catálogo')),
-              );
-            },
-            icon: const Icon(Icons.bookmark_border, size: 20),
-            color: AppColors.onSurfaceVariant,
-            style: IconButton.styleFrom(
-              backgroundColor: AppColors.surfaceContainerLow,
-              fixedSize: const Size(36, 36),
             ),
           ),
         ],
@@ -291,7 +212,7 @@ class _MacroSummaryCard extends StatelessWidget {
     // Balance del día proveniente del estado persistido.
     final state = context.watch<AppState>();
     final kcal = state.caloriasConsumidas.round();
-    final meta = AppState.caloriasMeta.round();
+    final meta = state.caloriasMeta.round();
     final pct = (state.progresoCalorias * 100).round();
     return Container(
       width: double.infinity,
@@ -317,7 +238,8 @@ class _MacroSummaryCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Column(
+              Expanded(
+                child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
@@ -337,6 +259,7 @@ class _MacroSummaryCard extends StatelessWidget {
                     ),
                   ),
                 ],
+                ),
               ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -586,7 +509,10 @@ class _RecipeCard extends StatelessWidget {
                   style: AppType.bodySm.copyWith(color: AppColors.outline, height: 1.5),
                 ),
                 const SizedBox(height: 12),
-                Row(
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
                     _MacroTag(text: '💪 ${recipe.proteinas.round()}g Prot'),
                     const Text('  •  ', style: TextStyle(color: AppColors.outline, fontSize: 11)),
@@ -611,13 +537,17 @@ class _RecipeCard extends StatelessWidget {
                           children: [
                             Icon(Icons.add_circle_outline, size: 18, color: Colors.white),
                             SizedBox(width: 6),
-                            Text(
-                              'Registrar en mi balance',
-                              style: TextStyle(
-                                fontFamily: 'Inter',
-                                fontSize: 13,
-                                fontWeight: FontWeight.w700,
-                                color: Colors.white,
+                            Flexible(
+                              child: Text(
+                                'Registrar en mi balance',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontFamily: 'Inter',
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.white,
+                                ),
                               ),
                             ),
                           ],

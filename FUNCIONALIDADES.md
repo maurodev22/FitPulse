@@ -15,8 +15,8 @@ funcionamiento de sesión persistida, Recetas, Progreso y Consejos.
 | 5 | Registro de consumo | `registrarConsumo` (AppState) | Al pulsar "Registrar en mi balance" se suman calorías y macros al balance del día persistido. |
 | 6 | Progreso y Rendimiento | `ProgressScreen` | Peso corporal (dinámico según el perfil), IMC en vivo, gasto activo, gráfico semanal, sesiones recientes e insignias. Responde a las métricas del atleta guardado. |
 | 7 | Consejos y Bienestar | `TipsScreen` | Plan personalizado según la meta del atleta, tips de alto impacto, artículos recomendados y comunidad activa. |
-| 8 | Perfil y ajustes | `ProfileScreen` | Datos personales, IMC calculado, nivel, preferencias, días de entrenamiento editables, "Guardar cambios" (persiste) y "Cerrar sesión" (limpia el dispositivo y vuelve al onboarding). |
-| 9 | Navegación de 5 pestañas | `FitNavBar` (`lib/widgets/fit_nav_bar.dart`) | Inicio, Recetas, Progreso, Consejos, Perfil (el orden ya no usa nombres de categoría heredados). |
+| 8 | Perfil y ajustes | `ProfileScreen` | Datos personales, IMC calculado, nivel, preferencias, días de entrenamiento editables, "Guardar cambios" (persiste) y "Cerrar sesión" (vuelve al onboarding **sin borrar** datos: un solo usuario por dispositivo). |
+| 9 | Navegación de 6 pestañas | `FitNavBar` (`lib/widgets/fit_nav_bar.dart`) | Inicio, Recetas, Progreso, Consejos, Perfil y Ayuda. |
 | 10 | Diseño y tema | `theme.dart` + `common.dart` | Sistema de colores Material 3 verde y tipografías Plus Jakarta Sans / Inter. `SectionHeader` unificado con parámetro `uppercase`. |
 | 11 | Android con identidad propia | `android/` | Namespace e ID de paquete `com.fitpulse.app`, `MainActivity` movido a `kotlin/com/fitpulse/app/`. |
 | 12 | Tests de widget | `test/widget_test.dart` | Cubren onboarding, dashboard, cada pestaña, perfil y cierre de sesión (con `shared_preferences` simulado). |

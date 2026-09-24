@@ -42,7 +42,7 @@ const catalog = <Recipe>[
     minutos: 25,
     descripcion:
         'Rico en omega 3 y proteína magra. Diseñado para favorecer la recuperación muscular y mantener masa magra.',
-    imagen: 'assets/images/workout.jpg',
+    imagen: 'assets/images/workout.webp',
     destacada: true,
   ),
   Recipe(
@@ -56,7 +56,7 @@ const catalog = <Recipe>[
     minutos: 15,
     descripcion:
         'Tortitas esponjosas con avena integral y proteína whey para empiezar el día con energía sostenida.',
-    imagen: 'assets/images/core.jpg',
+    imagen: 'assets/images/core.webp',
   ),
   Recipe(
     nombre: 'Ensalada Griega con Pechuga',
@@ -69,7 +69,7 @@ const catalog = <Recipe>[
     minutos: 10,
     descripcion:
         'Pechuga a la plancha con tomate, pepino, aceitunas y queso feta. Fresca, ligera y muy saciante.',
-    imagen: 'assets/images/profile.jpg',
+    imagen: 'assets/images/profile.webp',
   ),
   Recipe(
     nombre: 'Batido Verde Energético',
@@ -82,7 +82,7 @@ const catalog = <Recipe>[
     minutos: 5,
     descripcion:
         'Espinaca, plátano, jengibre y proteína vegetal. Combustible listo 30 minutos antes de entrenar.',
-    imagen: 'assets/images/workout.jpg',
+    imagen: 'assets/images/workout.webp',
   ),
   Recipe(
     nombre: 'Wrap de Pollo y Aguacate',
@@ -95,7 +95,7 @@ const catalog = <Recipe>[
     minutos: 20,
     descripcion:
         'Tortilla integral con pollo, aguacate y espinacas. Ideal para cerrar la ventana anabólica post-HIIT.',
-    imagen: 'assets/images/core.jpg',
+    imagen: 'assets/images/core.webp',
   ),
   Recipe(
     nombre: 'Avena Nocturna con Proteína',
@@ -108,7 +108,7 @@ const catalog = <Recipe>[
     minutos: 8,
     descripcion:
         'Avena remojada en yogur griego con semillas de chía. Reposición muscular mientras duermes.',
-    imagen: 'assets/images/profile.jpg',
+    imagen: 'assets/images/profile.webp',
   ),
 ];
 

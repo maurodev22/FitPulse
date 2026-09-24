@@ -30,12 +30,19 @@ class ProgressScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Evolución & Rendimiento',
-                    style: AppType.headlineLg.copyWith(
-                      color: AppColors.onSurface,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -0.5,
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        'Evolución & Rendimiento',
+                        maxLines: 1,
+                        style: AppType.headlineLg.copyWith(
+                          color: AppColors.onSurface,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -0.5,
+                        ),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -54,8 +61,9 @@ class ProgressScreen extends StatelessWidget {
                         child: _SmallStat(
                           icon: Icons.opacity,
                           label: 'Grasa Corporal',
-                          value: '21.4%',
-                          trend: '-0.6%',
+                          value: '—',
+                          trend: 'Requiere reloj inteligente',
+                          trendColor: AppColors.outline,
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -64,7 +72,7 @@ class ProgressScreen extends StatelessWidget {
                           icon: Icons.insights,
                           label: 'Índice IMC',
                           value: profile.imcFormateado,
-                          trend: 'Óptimo',
+                          trend: 'De tu perfil',
                           trendColor: AppColors.primary,
                         ),
                       ),
@@ -72,27 +80,38 @@ class ProgressScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
                   Row(
-                    children: const [
+                    children: [
                       Expanded(
                         child: _SmallStat(
                           icon: Icons.local_fire_department,
                           label: 'Gasto Activo',
-                          value: '4,850 kcal',
-                          trend: 'Semanal',
+                          value: '—',
+                          trend: 'Requiere reloj inteligente',
+                          trendColor: AppColors.outline,
                         ),
                       ),
-                      SizedBox(width: 12),
+                      const SizedBox(width: 12),
                       Expanded(
                         child: _SmallStat(
                           icon: Icons.schedule,
                           label: 'Tiempo Activo',
-                          value: '4h 20m',
-                          trend: 'Semanal',
+                          value: '—',
+                          trend: 'Requiere reloj inteligente',
+                          trendColor: AppColors.outline,
                         ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 16),
+                  const Text(
+                    'Pulso, sueño y gasto activo aparecen cuando conectes un reloj inteligente.',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontFamily: 'Inter',
+                      color: AppColors.outline,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
                   _buildSemanaCard(),
                   const SizedBox(height: 12),
                   const _ConsistenciaBanner(),
@@ -139,21 +158,20 @@ class ProgressScreen extends StatelessWidget {
             children: [
               const Icon(Icons.monitor_weight, size: 18, color: AppColors.primary),
               const SizedBox(width: 8),
-              Text(
-                'Peso Corporal',
-                style: AppType.labelMd.copyWith(
-                  color: AppColors.outline,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 0.4,
+              Expanded(
+                child: Text(
+                  'Peso Corporal',
+                  style: AppType.labelMd.copyWith(
+                    color: AppColors.outline,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.4,
+                  ),
                 ),
               ),
-              const Spacer(),
-              const Icon(Icons.trending_down, size: 16, color: AppColors.error),
-              const SizedBox(width: 4),
               Text(
-                '-1.8 kg',
+                'De tu perfil',
                 style: AppType.labelMd.copyWith(
-                  color: AppColors.error,
+                  color: AppColors.primary,
                   fontWeight: FontWeight.w700,
                 ),
               ),
@@ -176,7 +194,7 @@ class ProgressScreen extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12),
-          _MiniWeightChart(),
+          _MiniWeightChart(label: 'Registra tu peso cada semana'),
         ],
       ),
     );
@@ -191,14 +209,15 @@ class ProgressScreen extends StatelessWidget {
         children: [
           Row(
             children: [
-              Text(
-                'Meta superada (650 kcal)',
-                style: AppType.labelMd.copyWith(
-                  color: AppColors.onSurface,
-                  fontWeight: FontWeight.w700,
+              Expanded(
+                child: Text(
+                  'Meta superada (650 kcal)',
+                  style: AppType.labelMd.copyWith(
+                    color: AppColors.onSurface,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
-              const Spacer(),
               Text(
                 '5/7 días',
                 style: AppType.labelMd.copyWith(
@@ -210,32 +229,34 @@ class ProgressScreen extends StatelessWidget {
           ),
           const SizedBox(height: 14),
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               for (final dia in _diasSemana)
-                Column(
-                  children: [
-                    Container(
-                      width: 24,
-                      height: 24,
-                      decoration: BoxDecoration(
-                        color: AppColors.surfaceContainer,
-                        shape: BoxShape.circle,
+                Expanded(
+                  child: Column(
+                    children: [
+                      Container(
+                        width: 24,
+                        height: 24,
+                        decoration: BoxDecoration(
+                          color: AppColors.surfaceContainer,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          dia == 'D' ? Icons.check : Icons.bolt,
+                          size: 14,
+                          color: dia == 'D'
+                              ? AppColors.onSurfaceVariant
+                              : AppColors.primary,
+                        ),
                       ),
-                      child: Icon(
-                        dia == 'D' ? Icons.check : Icons.bolt,
-                        size: 14,
-                        color: dia == 'D'
-                            ? AppColors.onSurfaceVariant
-                            : AppColors.primary,
+                      const SizedBox(height: 4),
+                      Text(
+                        dia,
+                        textAlign: TextAlign.center,
+                        style: AppType.labelSm.copyWith(color: AppColors.outline),
                       ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      dia,
-                      style: AppType.labelSm.copyWith(color: AppColors.outline),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
             ],
           ),
@@ -244,11 +265,15 @@ class ProgressScreen extends StatelessWidget {
             children: [
               const Icon(Icons.bolt, size: 14, color: AppColors.primary),
               const SizedBox(width: 4),
-              Text(
-                '+14% vs. semana previa',
-                style: AppType.labelMd.copyWith(
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.w700,
+              Flexible(
+                child: Text(
+                  '+14% vs. semana previa',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppType.labelMd.copyWith(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
             ],
@@ -279,7 +304,7 @@ class _ProgressHeader extends StatelessWidget {
                   border: Border.all(color: AppColors.secondaryFixed, width: 2),
                 ),
                 clipBehavior: Clip.antiAlias,
-                child: Image.asset('assets/images/avatar.jpg', fit: BoxFit.cover),
+                child: Image.asset('assets/images/avatar.webp', fit: BoxFit.cover),
               ),
               Positioned(
                 right: 0,
@@ -302,7 +327,7 @@ class _ProgressHeader extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Hola, Atleta',
+                  'Progreso',
                   style: AppType.headlineSm.copyWith(fontWeight: FontWeight.w700, height: 1.1),
                 ),
                 const SizedBox(height: 2),
@@ -440,27 +465,42 @@ class _SmallStat extends StatelessWidget {
 }
 
 class _MiniWeightChart extends StatelessWidget {
+  const _MiniWeightChart({this.label});
+
   static const _valores = [3.0, 4.2, 3.6, 5.0, 4.0, 4.8, 3.2];
+  final String? label;
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 48,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          for (final v in _valores)
-            Container(
-              width: 22,
-              height: 48 * v / 5.0,
-              decoration: BoxDecoration(
-                color: AppColors.primaryContainer,
-                borderRadius: BorderRadius.circular(6),
-              ),
-            ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          height: 48,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              for (final v in _valores)
+                Container(
+                  width: 22,
+                  height: 48 * v / 5.0,
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryContainer,
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                ),
+            ],
+          ),
+        ),
+        if (label != null) ...[
+          const SizedBox(height: 6),
+          Text(
+            label!,
+            style: AppType.labelSm.copyWith(color: AppColors.outline),
+          ),
         ],
-      ),
+      ],
     );
   }
 }
@@ -488,11 +528,13 @@ class _ConsistenciaBanner extends StatelessWidget {
             children: [
               const Icon(Icons.workspace_premium, color: AppColors.secondaryFixed, size: 20),
               const SizedBox(width: 8),
-              Text(
-                '¡Consistencia Imparable!',
-                style: AppType.headlineSm.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w800,
+              Expanded(
+                child: Text(
+                  '¡Consistencia Imparable!',
+                  style: AppType.headlineSm.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
               ),
             ],

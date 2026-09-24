@@ -13,8 +13,6 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  String _category = 'Todos';
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -30,11 +28,11 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  const _DiaIdealCard(),
+                  const SizedBox(height: 24),
                   _buildResumenHoy(),
                   const SizedBox(height: 24),
                   _buildEntrenamientoHoy(),
-                  const SizedBox(height: 24),
-                  _buildExplorarCategorias(),
                   const SizedBox(height: 16),
                 ],
               ),
@@ -46,6 +44,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildResumenHoy() {
+    final state = context.watch<AppState>();
+    final pasosDisponible = state.healthDisponible;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -56,8 +56,9 @@ class _HomeScreenState extends State<HomeScreen> {
             Expanded(
               flex: 2,
               child: _PasosCard(
-                steps: 8450,
-                goal: 10000,
+                steps: pasosDisponible ? state.pasosHoy : -1,
+                goal: state.profile.pasosMeta,
+                available: pasosDisponible,
                 onTap: () {},
               ),
             ),
@@ -69,16 +70,16 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             Expanded(
               child: MetricCard(
-                stat: const MetricStat(
+                stat: MetricStat(
                   label: 'Calorías',
-                  value: '620',
+                  value: state.caloriasConsumidas.round().toString(),
                   unit: 'kcal',
                   icon: Icons.local_fire_department,
                   iconColor: AppColors.primary,
                   iconBackground: AppColors.surfaceContainer,
                 ),
-                subtitle: 'Meta: 750 kcal',
-                progress: 0.82,
+                subtitle: 'Meta: ${state.caloriasMeta.round()} kcal',
+                progress: state.progresoCalorias,
               ),
             ),
             const SizedBox(width: 12),
@@ -86,19 +87,24 @@ class _HomeScreenState extends State<HomeScreen> {
               child: MetricCard(
                 stat: const MetricStat(
                   label: 'Pulso',
-                  value: '74',
+                  value: '—',
                   unit: 'bpm',
                   icon: Icons.favorite,
-                  iconColor: AppColors.error,
-                  iconBackground: AppColors.errorContainer,
+                  iconColor: AppColors.outline,
+                  iconBackground: AppColors.surfaceContainerHighest,
                 ),
-                subtitle: 'En reposo',
-                subtitleColor: AppColors.primary,
+                subtitle: 'Requiere reloj inteligente',
+                subtitleColor: AppColors.outline,
                 radius: 24,
                 progress: null,
               ),
             ),
           ],
+        ),
+        const SizedBox(height: 12),
+        Text(
+          'Solo orientativo · consulta a un médico antes de cambiar tu rutina',
+          style: AppType.labelSm.copyWith(color: AppColors.outline),
         ),
       ],
     );
@@ -111,7 +117,9 @@ class _HomeScreenState extends State<HomeScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text('Entrenamiento de hoy', style: AppType.headlineSm.copyWith(fontWeight: FontWeight.w700)),
+            Expanded(
+              child: Text('Entrenamiento de hoy', style: AppType.headlineSm.copyWith(fontWeight: FontWeight.w700)),
+            ),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
@@ -131,50 +139,6 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         const SizedBox(height: 12),
         const _WorkoutHeroCard(),
-      ],
-    );
-  }
-
-  Widget _buildExplorarCategorias() {
-    const categories = [
-      ('Todos', null),
-      ('Cardio', Icons.directions_run),
-      ('Fuerza', Icons.fitness_center),
-      ('Yoga', Icons.self_improvement),
-      ('Pilates', Icons.accessibility_new),
-      ('HIIT', Icons.bolt),
-    ];
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text('Explorar categorías', style: AppType.headlineSm.copyWith(fontWeight: FontWeight.w700)),
-            const Icon(Icons.tune, color: AppColors.outline, size: 22),
-          ],
-        ),
-        const SizedBox(height: 12),
-        SizedBox(
-          height: 36,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            itemCount: categories.length,
-            separatorBuilder: (_, _) => const SizedBox(width: 8),
-            itemBuilder: (context, i) {
-              final (label, icon) = categories[i];
-              final selected = label == _category;
-              return CategoryChip(
-                label: label,
-                icon: icon,
-                selected: selected,
-                onTap: () => setState(() => _category = label),
-              );
-            },
-          ),
-        ),
-        const SizedBox(height: 12),
-        const _FeaturedWorkoutCard(),
       ],
     );
   }
@@ -203,7 +167,7 @@ class _HomeHeader extends StatelessWidget {
                 ),
                 clipBehavior: Clip.antiAlias,
                 child: Image.asset(
-                  'assets/images/avatar.jpg',
+                  'assets/images/avatar.webp',
                   fit: BoxFit.cover,
                 ),
               ),
@@ -316,16 +280,18 @@ class _PasosCard extends StatelessWidget {
   const _PasosCard({
     required this.steps,
     required this.goal,
+    required this.available,
     required this.onTap,
   });
 
   final int steps;
   final int goal;
+  final bool available;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final percent = steps / goal;
+    final percent = available && goal > 0 ? steps / goal : 0.0;
     return Material(
       color: AppColors.surfaceLowest,
       borderRadius: BorderRadius.circular(24),
@@ -371,45 +337,63 @@ class _PasosCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.baseline,
                       textBaseline: TextBaseline.alphabetic,
                       children: [
-                        Text(
-                          _groupThousands(steps),
-                          style: AppType.metricVal.copyWith(color: AppColors.onSurface),
+                        Flexible(
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(
+                              available ? _groupThousands(steps) : '—',
+                              style: AppType.metricVal.copyWith(
+                                color: available ? AppColors.onSurface : AppColors.outline,
+                              ),
+                            ),
+                          ),
                         ),
                         const SizedBox(width: 6),
-                        Text(
-                          '/ ${_groupThousands(goal)}',
-                          style: AppType.bodySm.copyWith(color: AppColors.onSurfaceVariant),
+                        Flexible(
+                          child: Text(
+                            available ? '/ ${_groupThousands(goal)}' : '',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppType.bodySm.copyWith(color: AppColors.onSurfaceVariant),
+                          ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: AppColors.secondaryContainer,
-                            borderRadius: BorderRadius.circular(999),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(Icons.trending_up, size: 12, color: AppColors.onSecondaryContainer),
-                              const SizedBox(width: 2),
-                              Text(
-                                '+12%',
-                                style: AppType.labelSm.copyWith(
-                                  color: AppColors.onSecondaryContainer,
-                                  fontWeight: FontWeight.w700,
+                    if (available)
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: AppColors.secondaryContainer,
+                              borderRadius: BorderRadius.circular(999),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.trending_up, size: 12, color: AppColors.onSecondaryContainer),
+                                const SizedBox(width: 2),
+                                Text(
+                                  '+12%',
+                                  style: AppType.labelSm.copyWith(
+                                    color: AppColors.onSecondaryContainer,
+                                    fontWeight: FontWeight.w700,
+                                  ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 6),
-                        Text('vs ayer', style: AppType.bodySm.copyWith(color: AppColors.outline)),
-                      ],
-                    ),
+                          const SizedBox(width: 6),
+                          Text('vs ayer', style: AppType.bodySm.copyWith(color: AppColors.outline)),
+                        ],
+                      )
+                    else
+                      Text(
+                        'Activa el permiso de actividad en los ajustes del teléfono',
+                        textAlign: TextAlign.left,
+style: AppType.bodySm.copyWith(color: AppColors.outline),
+                      ),
                   ],
                 ),
               ),
@@ -418,9 +402,9 @@ class _PasosCard extends StatelessWidget {
                 size: 80,
                 strokeWidth: 5,
                 center: Text(
-                  '${(percent * 100).round()}%',
+                  available ? '${(percent * 100).round()}%' : '—',
                   style: AppType.labelLg.copyWith(
-                    color: AppColors.onSurface,
+                    color: available ? AppColors.onSurface : AppColors.outline,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -537,11 +521,15 @@ class _WorkoutHeroCard extends StatelessWidget {
                         children: [
                           Icon(Icons.play_arrow_rounded, size: 22, color: AppColors.onSecondaryFixed),
                           const SizedBox(width: 8),
-                          Text(
-                            'Comenzar entrenamiento',
-                            style: AppType.labelLg.copyWith(
-                              color: AppColors.onSecondaryFixed,
-                              fontWeight: FontWeight.w700,
+                          Flexible(
+                            child: Text(
+                              'Comenzar entrenamiento',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: AppType.labelLg.copyWith(
+                                color: AppColors.onSecondaryFixed,
+                                fontWeight: FontWeight.w700,
+                              ),
                             ),
                           ),
                         ],
@@ -588,111 +576,165 @@ class _HeroInfoChip extends StatelessWidget {
   }
 }
 
-class _FeaturedWorkoutCard extends StatelessWidget {
-  const _FeaturedWorkoutCard();
+class _DiaIdealCard extends StatelessWidget {
+  const _DiaIdealCard();
 
   @override
   Widget build(BuildContext context) {
+    final state = context.watch<AppState>();
+    final entrenado = state.caloriasConsumidas > 0;
+    final metaOk = state.progresoCalorias >= 1.0;
+    final aguaOk = false;
+    final completados = [entrenado, metaOk, aguaOk].where((v) => v).length;
+
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(16),
       decoration: _cardDecoration(radius: 24),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(16),
-            child: SizedBox(
-              width: 80,
-              height: 80,
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  Image.asset('assets/images/workout.jpg', fit: BoxFit.cover),
-                  Container(color: Colors.black.withValues(alpha: 0.2)),
-                  const Center(
-                    child: Icon(Icons.play_circle_fill, color: Colors.white, size: 32),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Text(
+                  'DÍA IDEAL',
+                  style: AppType.labelLg.copyWith(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.4,
                   ),
-                ],
+                ),
               ),
-            ),
-          ),
-          const SizedBox(width: 16),
-          const Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Text(
-                      'Tendencia',
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontFamily: 'Inter',
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.primary,
-                        letterSpacing: 0.6,
-                      ),
-                    ),
-                    Text('  •  ', style: TextStyle(fontSize: 10, color: AppColors.outline)),
-                    Text(
-                      'Fuerza',
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontFamily: 'Inter',
-                        color: AppColors.outline,
-                      ),
-                    ),
-                  ],
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: AppColors.secondaryContainer,
+                  borderRadius: BorderRadius.circular(999),
                 ),
-                SizedBox(height: 4),
-                Text(
-                  'Core & Estabilidad Pro',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontFamily: 'Inter',
+                child: Text(
+                  '$completados/3 completados',
+                  style: AppType.labelSm.copyWith(
+                    color: AppColors.onSecondaryContainer,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.onSurface,
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
                 ),
-                SizedBox(height: 6),
-                Row(
-                  children: [
-                    Icon(Icons.schedule, size: 14, color: AppColors.primary),
-                    SizedBox(width: 4),
-                    Text(
-                      '30 min',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontFamily: 'Inter',
-                        color: AppColors.onSurfaceVariant,
-                      ),
-                    ),
-                    SizedBox(width: 12),
-                    Icon(Icons.equalizer, size: 14, color: AppColors.primary),
-                    SizedBox(width: 4),
-                    Text(
-                      'Intermedio',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontFamily: 'Inter',
-                        color: AppColors.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
-          InkWell(
+          const SizedBox(height: 4),
+          Text(
+            'Completa los 3 objetivos de hoy para un día perfecto.',
+            style: AppType.bodySm.copyWith(color: AppColors.outline),
+          ),
+          const SizedBox(height: 12),
+          _DiaIdealItem(
+            icon: Icons.fitness_center,
+            title: 'Entrenamiento',
+            subtitle: 'HIIT & Quema Total • 45 min',
+            done: entrenado,
             onTap: () {},
-            borderRadius: BorderRadius.circular(999),
-            child: const Padding(
-              padding: EdgeInsets.all(8),
-              child: Icon(Icons.bookmark_outline, size: 20, color: AppColors.onSurfaceVariant),
-            ),
+          ),
+          const SizedBox(height: 8),
+          _DiaIdealItem(
+            icon: Icons.set_meal_outlined,
+            title: 'Macros',
+            subtitle: '${state.caloriasConsumidas.round()} / ${state.caloriasMeta.round()} kcal',
+            done: metaOk,
+            onTap: () {},
+          ),
+          const SizedBox(height: 8),
+          _DiaIdealItem(
+            icon: Icons.water_drop_outlined,
+            title: 'Agua',
+            subtitle: '2.0 / 2.5 L',
+            done: aguaOk,
+            onTap: () {},
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _DiaIdealItem extends StatelessWidget {
+  const _DiaIdealItem({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.done,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final bool done;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final fg = done ? AppColors.primary : AppColors.onSurfaceVariant;
+    return Material(
+      color: AppColors.surfaceContainerLow,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          child: Row(
+            children: [
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: done
+                      ? AppColors.primary
+                      : AppColors.surfaceContainerHighest,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  done ? Icons.check : icon,
+                  size: 16,
+                  color: done ? Colors.white : fg,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppType.labelMd.copyWith(
+                        color: AppColors.onSurface,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 1),
+                    Text(
+                      subtitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppType.bodySm.copyWith(color: AppColors.outline),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                done ? '✓' : 'Pendiente',
+                style: AppType.labelSm.copyWith(
+                  color: done ? AppColors.primary : AppColors.outline,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

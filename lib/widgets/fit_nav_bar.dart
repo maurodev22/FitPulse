@@ -1,8 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import '../services/locale_service.dart';
 import '../theme.dart';
 
-enum FitTab { home, tacos, shop, fitness, profile }
+enum FitTab {
+  home,
+  recipes,
+  progress,
+  tips,
+  profile,
+  help;
+
+  /// Nombre estable para registros (independiente del idioma).
+  String get nombre => name;
+}
 
 class FitNavBar extends StatelessWidget {
   const FitNavBar({super.key, required this.current, this.onChanged});
@@ -12,6 +24,7 @@ class FitNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final strings = context.watch<LocaleService>().strings;
     return SafeArea(
       top: false,
       child: Container(
@@ -27,42 +40,61 @@ class FitNavBar extends StatelessWidget {
           ],
         ),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            _NavItem(
-              tab: FitTab.home,
-              icon: Icons.home,
-              label: 'Inicio',
-              selected: current == FitTab.home,
-              onTap: () => onChanged?.call(FitTab.home),
+            Flexible(
+              child: _NavItem(
+                tab: FitTab.home,
+                icon: Icons.home,
+                label: strings.navHome,
+                selected: current == FitTab.home,
+                onTap: () => onChanged?.call(FitTab.home),
+              ),
             ),
-            _NavItem(
-              tab: FitTab.tacos,
-              icon: Icons.restaurant_menu,
-              label: 'Recetas',
-              selected: current == FitTab.tacos,
-              onTap: () => onChanged?.call(FitTab.tacos),
+            Flexible(
+              child: _NavItem(
+                tab: FitTab.recipes,
+                icon: Icons.restaurant_menu,
+                label: strings.navRecipes,
+                selected: current == FitTab.recipes,
+                onTap: () => onChanged?.call(FitTab.recipes),
+              ),
             ),
-            _NavItem(
-              tab: FitTab.shop,
-              icon: Icons.insights,
-              label: 'Progreso',
-              selected: current == FitTab.shop,
-              onTap: () => onChanged?.call(FitTab.shop),
+            Flexible(
+              child: _NavItem(
+                tab: FitTab.progress,
+                icon: Icons.insights,
+                label: strings.navProgress,
+                selected: current == FitTab.progress,
+                onTap: () => onChanged?.call(FitTab.progress),
+              ),
             ),
-            _NavItem(
-              tab: FitTab.fitness,
-              icon: Icons.lightbulb_outline,
-              label: 'Consejos',
-              selected: current == FitTab.fitness,
-              onTap: () => onChanged?.call(FitTab.fitness),
+            Flexible(
+              child: _NavItem(
+                tab: FitTab.tips,
+                icon: Icons.lightbulb_outline,
+                label: strings.navTips,
+                selected: current == FitTab.tips,
+                onTap: () => onChanged?.call(FitTab.tips),
+              ),
             ),
-            _NavItem(
-              tab: FitTab.profile,
-              icon: Icons.person,
-              label: 'Perfil',
-              selected: current == FitTab.profile,
-              onTap: () => onChanged?.call(FitTab.profile),
+            Flexible(
+              child: _NavItem(
+                tab: FitTab.profile,
+                icon: Icons.person,
+                label: strings.navProfile,
+                selected: current == FitTab.profile,
+                onTap: () => onChanged?.call(FitTab.profile),
+              ),
+            ),
+            Flexible(
+              child: _NavItem(
+                tab: FitTab.help,
+                icon: Icons.help_outline,
+                label: strings.navHelp,
+                selected: current == FitTab.help,
+                onTap: () => onChanged?.call(FitTab.help),
+              ),
             ),
           ],
         ),
@@ -96,7 +128,7 @@ class _NavItem extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(999),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -104,6 +136,8 @@ class _NavItem extends StatelessWidget {
               const SizedBox(height: 2),
               Text(
                 label,
+                softWrap: false,
+                overflow: TextOverflow.ellipsis,
                 style: AppType.labelSm.copyWith(
                   color: fg,
                   fontWeight: selected ? FontWeight.w700 : FontWeight.w500,

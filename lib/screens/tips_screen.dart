@@ -7,7 +7,7 @@ import '../widgets/common.dart';
 
 /// Consejos y Bienestar: recomendaciones personalizadas según la meta del atleta.
 ///
-/// Los tips, artículos y comunidad son catálogo estático inspirado directamente
+/// Los tips y artículos son catálogo estático inspirado directamente
 /// en el HTML de Stitch (e4951ca8).
 class TipsScreen extends StatelessWidget {
   const TipsScreen({super.key});
@@ -35,7 +35,7 @@ class TipsScreen extends StatelessWidget {
                   const SizedBox(height: 24),
                   const _ArticulosRecomendados(),
                   const SizedBox(height: 24),
-                  const _ComunidadActiva(),
+                  const _AvisoSalud(),
                 ],
               ),
             ),
@@ -66,7 +66,7 @@ class _TipsHeader extends StatelessWidget {
                   border: Border.all(color: AppColors.secondaryFixed, width: 2),
                 ),
                 clipBehavior: Clip.antiAlias,
-                child: Image.asset('assets/images/avatar.jpg', fit: BoxFit.cover),
+                child: Image.asset('assets/images/avatar.webp', fit: BoxFit.cover),
               ),
               Positioned(
                 right: 0,
@@ -89,7 +89,7 @@ class _TipsHeader extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Hola, Atleta',
+                  'Consejos',
                   style: AppType.headlineSm.copyWith(fontWeight: FontWeight.w700, height: 1.1),
                 ),
                 const SizedBox(height: 2),
@@ -135,7 +135,8 @@ class _PlanCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final meta = context.watch<AppState>().profile.meta;
+    final metas = context.watch<AppState>().profile.metas;
+    final metasLabel = metas.isEmpty ? '' : 'tu meta de ${metas.join(' · ')}';
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -168,7 +169,7 @@ class _PlanCard extends StatelessWidget {
         ),
         const SizedBox(height: 4),
         Text(
-          'Recomendaciones basadas en tu meta de $meta',
+          'Recomendaciones ${metas.isEmpty ? '' : 'basadas en $metasLabel '}para ti',
           style: AppType.bodyMd.copyWith(color: AppColors.onSurfaceVariant, height: 1.5),
         ),
         const SizedBox(height: 16),
@@ -339,11 +340,15 @@ class _ArticuloDestacado extends StatelessWidget {
           const SizedBox(height: 12),
           Row(
             children: [
-              Text(
-                'Leer artículo completo',
-                style: AppType.labelMd.copyWith(
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.w700,
+              Flexible(
+                child: Text(
+                  'Leer artículo completo',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppType.labelMd.copyWith(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
               const SizedBox(width: 4),
@@ -510,10 +515,13 @@ class _ArticulosRecomendados extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              'Artículos Recomendados',
-              style: AppType.headlineSm.copyWith(fontWeight: FontWeight.w700),
+            Expanded(
+              child: Text(
+                'Artículos Recomendados',
+                style: AppType.headlineSm.copyWith(fontWeight: FontWeight.w700),
+              ),
             ),
+            const SizedBox(width: 8),
             Text(
               'Ver todos (18)',
               style: AppType.labelMd.copyWith(color: AppColors.primary, fontWeight: FontWeight.w700),
@@ -591,82 +599,29 @@ class _ArticulosRecomendados extends StatelessWidget {
   }
 }
 
-/// Sección de comunidad con botón de consulta a coaches.
-class _ComunidadActiva extends StatelessWidget {
-  const _ComunidadActiva();
+/// Tarjeta informativa: la app es orientativa y no sustituye a un
+/// profesional de la salud.
+class _AvisoSalud extends StatelessWidget {
+  const _AvisoSalud();
 
   @override
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.surfaceLowest,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: AppColors.outlineVariant.withValues(alpha: 0.3)),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          Row(
-            children: [
-              const Icon(Icons.forum, size: 20, color: AppColors.primary),
-              const SizedBox(width: 8),
-              Text(
-                'Comunidad Activa',
-                style: AppType.headlineSm.copyWith(
-                  color: AppColors.onSurface,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 6),
-          Text(
-            '¿Dudas con tu rutina?',
-            style: AppType.bodyLg.copyWith(
-              color: AppColors.onSurface,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'Nuestros entrenadores certificados y atletas responden en menos de 2 horas.',
-            style: AppType.bodySm.copyWith(color: AppColors.outline, height: 1.5),
-          ),
-          const SizedBox(height: 14),
-          SizedBox(
-            width: double.infinity,
-            child: Material(
-              color: AppColors.primary,
-              borderRadius: BorderRadius.circular(999),
-              child: InkWell(
-                onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Chat de coaches disponible próximamente')),
-                  );
-                },
-                borderRadius: BorderRadius.circular(999),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: const [
-                      Icon(Icons.chat_bubble_outline, size: 18, color: Colors.white),
-                      SizedBox(width: 8),
-                      Text(
-                        'Hacer una consulta a los Coaches',
-                        style: TextStyle(
-                          fontFamily: 'Inter',
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+          const Icon(Icons.health_and_safety_outlined, size: 20, color: AppColors.primary),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              'Estos contenidos son orientativos y no sustituyen el consejo de un profesional de la salud.',
+              style: AppType.bodySm.copyWith(color: AppColors.outline, height: 1.5),
             ),
           ),
         ],

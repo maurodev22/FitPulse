@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../services/locale_service.dart';
 import '../state/app_state.dart';
 import '../state/athlete_profile.dart';
 import '../theme.dart';
-import 'registration_screen.dart';
 
 /// Perfil y Ajustes: muestra y edita los datos del atleta de la sesión.
 class ProfileScreen extends StatefulWidget {
@@ -64,6 +64,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   _buildDatosPersonales(),
                   const SizedBox(height: 16),
                   _buildPreferencias(),
+                  const SizedBox(height: 16),
+                  _buildIdioma(),
                   const SizedBox(height: 20),
                   _buildAcciones(),
                 ],
@@ -92,11 +94,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 children: [
                   const Icon(Icons.directions_walk, size: 16, color: AppColors.primary),
                   const SizedBox(width: 6),
-                  Text(
-                    'Pasos diarios',
-                    style: AppType.labelMd.copyWith(color: AppColors.onSurfaceVariant),
+                  Expanded(
+                    child: Text(
+                      'Pasos diarios',
+                      style: AppType.labelMd.copyWith(color: AppColors.onSurfaceVariant),
+                    ),
                   ),
-                  const Spacer(),
                   Text(
                     _groupThousands(_profile.pasosMeta),
                     style: AppType.headlineSm.copyWith(color: AppColors.onSurface, fontWeight: FontWeight.w700),
@@ -104,32 +107,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ],
               ),
               const SizedBox(height: 10),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(999),
-                child: LinearProgressIndicator(
-                  value: 0.82,
-                  minHeight: 7,
-                  backgroundColor: AppColors.surfaceContainerHighest,
-                  color: AppColors.primaryContainer,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Text(
-                    'Progreso de hoy: 8,240 pasos',
-                    style: AppType.labelSm.copyWith(color: AppColors.outline),
-                  ),
-                  const Spacer(),
-                  Text(
-                    '82%',
-                    style: AppType.labelSm.copyWith(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
+              const _PasosProgresoHoy(),
             ],
           ),
         ),
@@ -147,13 +125,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
             const SizedBox(width: 10),
-            Expanded(
+            const Expanded(
               child: _MiniStat(
                 icon: Icons.favorite,
-                iconColor: AppColors.primary,
-                iconBackground: AppColors.secondaryFixed,
+                iconColor: AppColors.outline,
+                iconBackground: AppColors.surfaceContainer,
                 label: 'Cardio semanal',
-                value: '180',
+                value: '—',
                 unit: 'min',
               ),
             ),
@@ -162,11 +140,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
         const SizedBox(height: 16),
         Row(
           children: [
-            Text(
-              'Días de entrenamiento',
-              style: AppType.labelMd.copyWith(color: AppColors.onSurfaceVariant),
+            Expanded(
+              child: Text(
+                'Días de entrenamiento',
+                style: AppType.labelMd.copyWith(color: AppColors.onSurfaceVariant),
+              ),
             ),
-            const Spacer(),
             Text(
               '${_trainingDays.length} días / semana',
               style: AppType.labelMd.copyWith(color: AppColors.primary, fontWeight: FontWeight.w700),
@@ -352,6 +331,37 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  Widget _buildIdioma() {
+    final localeService = context.watch<LocaleService>();
+    return _SettingsCard(
+      children: [
+        _CardTitle(
+          icon: Icons.language,
+          title: 'Idioma / Language',
+        ),
+        const SizedBox(height: 8),
+        SegmentedButton<AppLocale>(
+          segments: const [
+            ButtonSegment(value: AppLocale.es, label: Text('Español')),
+            ButtonSegment(value: AppLocale.en, label: Text('English')),
+          ],
+          selected: {localeService.locale},
+          onSelectionChanged: (selection) {
+            if (selection.isNotEmpty) {
+              context.read<LocaleService>().setLocale(selection.first);
+            }
+          },
+          showSelectedIcon: false,
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'El idioma se aplica al instante.',
+          style: AppType.bodySm.copyWith(color: AppColors.outline),
+        ),
+      ],
+    );
+  }
+
   Widget _buildAcciones() {
     return Column(
       children: [
@@ -380,16 +390,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ),
         ),
-        const SizedBox(height: 8),
-        TextButton.icon(
-          onPressed: _cerrarSesion,
-          icon: const Icon(Icons.logout, size: 18, color: AppColors.error),
-          label: Text(
-            'Cerrar sesión',
-            style: AppType.labelMd.copyWith(color: AppColors.error, fontWeight: FontWeight.w600),
-          ),
-        ),
-        const SizedBox(height: 4),
+        const SizedBox(height: 16),
         Text(
           'FitPulse v1.0.0 (Build 1)',
           style: AppType.bodySm.copyWith(color: AppColors.outline),
@@ -408,7 +409,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
         sexo: actual.sexo,
         pesoKg: actual.pesoKg,
         alturaM: actual.alturaM,
-        meta: actual.meta,
+        metas: List.of(actual.metas),
+        tipoCuerpo: actual.tipoCuerpo,
         nivel: _fitnessLevel,
         diasEntrenamiento: _trainingDays.toList(),
         hidratacion: _hydration,
@@ -423,21 +425,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
       const SnackBar(content: Text('¡Ajustes guardados en tu dispositivo!')),
     );
   }
-
-  /// Cierra la sesión, borra la persistencia y vuelve al onboarding.
-  void _cerrarSesion() {
-    context.read<AppState>().cerrarSesion();
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute<void>(builder: (_) => const RegistrationScreen()),
-      (route) => false,
-    );
-  }
-
-  String _groupThousands(int value) => value.toString().replaceAllMapped(
-        RegExp(r'\B(?=(\d{3})+(?!\d))'),
-        (_) => ',',
-      );
 }
+
+String _groupThousands(int value) => value.toString().replaceAllMapped(
+      RegExp(r'\B(?=(\d{3})+(?!\d))'),
+      (_) => ',',
+    );
 
 class _ProfileHeader extends StatelessWidget {
   const _ProfileHeader();
@@ -459,7 +452,7 @@ class _ProfileHeader extends StatelessWidget {
                   border: Border.all(color: AppColors.secondaryFixed, width: 2),
                 ),
                 clipBehavior: Clip.antiAlias,
-                child: Image.asset('assets/images/avatar.jpg', fit: BoxFit.cover),
+                child: Image.asset('assets/images/avatar.webp', fit: BoxFit.cover),
               ),
               Positioned(
                 right: 0,
@@ -482,7 +475,7 @@ class _ProfileHeader extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Hola, Atleta',
+                  'Mi Perfil',
                   style: AppType.headlineSm.copyWith(fontWeight: FontWeight.w700, height: 1.1),
                 ),
                 const SizedBox(height: 2),
@@ -562,7 +555,7 @@ class _ProfileHero extends StatelessWidget {
                   border: Border.all(color: AppColors.secondaryFixed, width: 4),
                 ),
                 clipBehavior: Clip.antiAlias,
-                child: Image.asset('assets/images/profile.jpg', fit: BoxFit.cover),
+                child: Image.asset('assets/images/profile.webp', fit: BoxFit.cover),
               ),
               Positioned(
                 right: 0,
@@ -601,40 +594,24 @@ class _ProfileHero extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(999),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.fitness_center, size: 14, color: AppColors.primary),
-                const SizedBox(width: 4),
-                Text(
-                  'Atleta ${profile.nivel}',
-                  style: AppType.labelMd.copyWith(color: AppColors.primary, fontWeight: FontWeight.w600),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 8),
-          Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
             decoration: BoxDecoration(
               color: AppColors.surfaceContainerLow,
               borderRadius: BorderRadius.circular(999),
             ),
             child: Row(
-              mainAxisSize: MainAxisSize.min,
               children: [
                 const Text('🔥', style: TextStyle(fontSize: 14)),
                 const SizedBox(width: 4),
-                Text(
-                  '${profile.rachaDias} días en racha',
-                  style: AppType.labelMd.copyWith(
-                    color: AppColors.onSurface,
-                    fontWeight: FontWeight.w600,
+                Flexible(
+                  child: Text(
+                    '${profile.rachaDias} días en racha',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppType.labelMd.copyWith(
+                      color: AppColors.onSurface,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -644,9 +621,13 @@ class _ProfileHero extends StatelessWidget {
                   decoration: const BoxDecoration(color: AppColors.outlineVariant, shape: BoxShape.circle),
                 ),
                 const SizedBox(width: 8),
-                Text(
-                  'Plan: ${profile.meta}',
-                  style: AppType.labelMd.copyWith(color: AppColors.primary, fontWeight: FontWeight.w500),
+                Flexible(
+                  child: Text(
+                    'Plan: ${profile.metas.isEmpty ? '—' : profile.metas.join(' · ')}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppType.labelMd.copyWith(color: AppColors.primary, fontWeight: FontWeight.w500),
+                  ),
                 ),
               ],
             ),
@@ -1013,6 +994,54 @@ class _ToggleRow extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Progreso de pasos de hoy conectado al sensor real del teléfono.
+class _PasosProgresoHoy extends StatelessWidget {
+  const _PasosProgresoHoy();
+
+  @override
+  Widget build(BuildContext context) {
+    final state = context.watch<AppState>();
+    final meta = state.profile.pasosMeta;
+    final pasos = state.pasosHoy;
+    final hasMeta = meta > 0;
+    final percent = hasMeta ? (pasos / meta).clamp(0.0, 1.0) : 0.0;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(999),
+          child: LinearProgressIndicator(
+            value: state.healthDisponible && hasMeta ? percent : 0,
+            minHeight: 7,
+            backgroundColor: AppColors.surfaceContainerHighest,
+            color: AppColors.primaryContainer,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                state.healthDisponible
+                    ? 'Progreso de hoy: ${_groupThousands(pasos)} pasos'
+                    : 'Activa los datos de actividad para seguir tus pasos',
+                style: AppType.labelSm.copyWith(color: AppColors.outline),
+              ),
+            ),
+            Text(
+              state.healthDisponible ? '${(percent * 100).round()}%' : '—',
+              style: AppType.labelSm.copyWith(
+                color: AppColors.primary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }
