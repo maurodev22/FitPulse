@@ -132,6 +132,8 @@
   se ocultan banner y recompensado.
 - ✅ **App ligera**: `isMinifyEnabled` + `isShrinkResources` (R8) en el build de release;
   el APK debug sigue siendo grande a propósito (contiene símbolos de depuración).
+  **Medido en 24/09/2026**: release universal (3 ABIs) = **55.6 MB**; release solo arm64
+  (Pixel 6a, Xiaomi) = **22.5 MB** → objetivo ~28-35 MB instalado **cumplido**.
 - ✅ Tests: recompensa 1/día y persistencia de toggles (27 en total, en verde) +
   `flutter analyze` sin issues.
 

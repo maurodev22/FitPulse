@@ -182,7 +182,9 @@ Ajustes → Privacidad → Permisos del cuerpo/Actividad física → FitPulse �
 **d) App ligera (solo release)**
 - El APK `--debug` sigue siendo grande a propósito (contiene símbolos de depuración).
 - `flutter build apk --release` genera `app-release.apk` con R8 + eliminación de
-  recursos: consultar el tamaño real (objetivo ~28-40 MB instalado) y anotarlo.
+  recursos. **Medido el 24/09/2026**: universal (3 ABIs) = **55.6 MB**; solo arm64
+  (`--target-platform android-arm64`, el caso de estos dos móviles) = **22.5 MB**.
+  Anotar el tamaño del último build generado.
 
 ---
 

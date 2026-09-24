@@ -35,7 +35,7 @@ dispositivo (sin cuentas ni servidores).
 | Hotfix | ✅ | Sin "Explorar categorías" ni "Nutrición & Vitalidad"; "Evolución & Rendimiento" en 1 línea; sin coaches ni "Cerrar sesión"; `**` del manual limpiados |
 | 1 | ✅ (código) | Datos reales del cuerpo: pasos reales (pedometer) + **Health Connect solo lectura** (pulso, peso, grasa, sueño, agua, gasto activo; permiso por métrica; minSdk 26), reset diario por fecha, analytics local anónimo. "Tiempo activo" se muestra "—" en Android (el tipo EXERCISE_TIME del plugin solo existe en iOS). Falta prueba manual |
 | 2 | ✅ (código) | Catálogo de 4 entrenamientos + **reproductor con temporizador**; sesiones reales persistidas; **racha real**; **retos 3/5/7 días**; **XP/niveles**; **plan adaptativo** que recomienda el programa según tu semana. Falta prueba manual |
-| 3 | ✅ (código) | Anuncios de AdMob con **IDs de prueba** (banner todas las pestañas + recompensado +25 PTs 1/día con consentimiento local) + **Premium "Quitar anuncios"** (modo prueba; el cobro real requiere entidad fuera de Cuba) + **app ligera** (R8 en release). Falta prueba manual |
+| 3 | ✅ (código) | Anuncios de AdMob con **IDs de prueba** (banner todas las pestañas + recompensado +25 PTs 1/día con consentimiento local) + **Premium "Quitar anuncios"** (modo prueba; el cobro real requiere entidad fuera de Cuba) + **app ligera** (R8 en release; **medido: 55.6 MB universal / 22.5 MB arm64** vs 178 MB debug). Falta prueba manual |
 | 4 | ⏳ | Meal planner, lista de la compra y día libre / cheat meal |
 | 5 | ⏳ | Entrenador con cámara (ML Kit, corrección de postura on-device) |
 | 6 | ⏳ | Widgets de home screen y notificaciones locales (permiso por tipo) |
