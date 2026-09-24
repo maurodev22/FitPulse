@@ -10,6 +10,8 @@ library;
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
+import '../theme.dart';
+
 /// ID de bloque de banner de PRUEBA (Android).
 const String kAdmobBannerTestId = 'ca-app-pub-3940256099942544/6300978111';
 
@@ -33,6 +35,14 @@ Future<void> initAds() async {
 /// requiere que el banner se haya cargado correctamente.
 class FitBannerAd extends StatefulWidget {
   const FitBannerAd({super.key});
+
+  /// Cuando el anuncio de prueba no carga (sin conexión a AdMob, p. ej. en
+  /// Cuba), muestra una zona marcada "Anuncio" en lugar de colapsar a cero,
+  /// para que el layout de la publicidad sea visible y testeable.
+  ///
+  /// Se activa en `main()` (producción/pruebas manuales); los tests de widget
+  /// no llaman a `main()`, así que quedan con el comportamiento discreto.
+  static bool mostrarPlaceholderCuandoFalla = false;
 
   @override
   State<FitBannerAd> createState() => _FitBannerAdState();
@@ -62,13 +72,16 @@ class _FitBannerAdState extends State<FitBannerAd> {
           },
           onAdFailedToLoad: (ad, error) {
             ad.dispose();
+            debugPrint('[FitPulse/Ads] banner falló: código ${error.code} '
+                '(${error.domain}): ${error.message}');
             if (!mounted) return;
             setState(() => _loadFailed = true);
           },
         ),
       );
       await ad.load();
-    } catch (_) {
+    } catch (e) {
+      debugPrint('[FitPulse/Ads] banner sin soporte: $e');
       if (mounted) setState(() => _loadFailed = true);
     }
   }
@@ -82,7 +95,28 @@ class _FitBannerAdState extends State<FitBannerAd> {
   @override
   Widget build(BuildContext context) {
     final banner = _banner;
-    if (banner == null || _loadFailed) return const SizedBox.shrink();
+    if (banner == null && _loadFailed && FitBannerAd.mostrarPlaceholderCuandoFalla) {
+      // Zona de anuncio honesta cuando no hay conexión a AdMob (prueba local).
+      return Container(
+        width: double.infinity,
+        height: 50,
+        color: AppColors.surfaceContainer,
+        alignment: Alignment.center,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.campaign_outlined,
+                size: 14, color: AppColors.outline),
+            const SizedBox(width: 6),
+            Text(
+              'Zona de anuncio · sin conexión a AdMob (prueba)',
+              style: AppType.bodySm.copyWith(color: AppColors.outline),
+            ),
+          ],
+        ),
+      );
+    }
+    if (banner == null) return const SizedBox.shrink();
     return Container(
       width: double.infinity,
       color: Colors.white,

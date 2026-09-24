@@ -163,8 +163,15 @@ Ajustes → Privacidad → Permisos del cuerpo/Actividad física → FitPulse �
 > prueba de AdMob. Sin red/Play los banners sencillamente no aparecen (no rompen nada).
 
 **a) Banner en todas las pestañas**
-- Con sesión iniciada, en **Inicio** debe verse un banner de AdMob sobre la barra de
-  navegación. Cambiar de pestaña: el banner se mantiene en todas.
+- Con sesión iniciada, en **Inicio** debe verse sobre la barra de navegación **el banner
+  AdMob** o, si no carga, la **zona honesta** "Zona de anuncio · sin conexión a AdMob
+  (prueba)" (barra gris de 50 px). Cambiar de pestaña: se mantiene en todas.
+
+> **Nota Cuba (verificado 24/09/2026):** los servidores de AdMob responden **HTTP 403**
+> desde esta red (bloqueo geográfico). El banner "de prueba" jamás cargará aquí: es
+> esperado. La app lo muestra de forma honesta con el placeholder y registra el motivo
+> en logcat (`[FitPulse/Ads] banner falló: código 3 ... 403`). Los anuncios reales solo
+> se verán desde una red que alcance AdMob (fuera de Cuba).
 
 **b) Anuncio recompensado (+25 PTs, una vez por día)**
 - Pestaña **Progreso** → tarjeta "Anuncio recompensado · +25 PTs".

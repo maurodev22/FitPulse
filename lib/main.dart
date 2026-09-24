@@ -47,6 +47,9 @@ Future<void> main() async {
   if (configService.adsEnabled && !configService.premiumEnabled) {
     unawaited(initAds());
   }
+  // Zona de anuncio visible cuando el banner de prueba no carga (sin red a
+  // AdMob). Solo en la app real; los tests no llaman a main().
+  FitBannerAd.mostrarPlaceholderCuandoFalla = true;
 
   runApp(FitPulseApp(
     appState: appState,
