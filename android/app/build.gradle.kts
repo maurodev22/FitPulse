@@ -12,6 +12,10 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+        // Fase 6: flutter_local_notifications 22.x requiere core library
+        // desugaring (APIs Java 8+ en Android). El artefacto se resuelve
+        // desde el mirror de Aliyun.
+        isCoreLibraryDesugaringEnabled = true
     }
 
     lint {
@@ -47,6 +51,11 @@ android {
             isShrinkResources = true
         }
     }
+}
+
+dependencies {
+    // Fase 6: core library desugaring (ver compileOptions arriba).
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
 }
 
 kotlin {

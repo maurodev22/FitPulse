@@ -41,12 +41,12 @@ contra el estado real de la implementación Flutter. Actualizado tras las **Fase
 | 2 | Registro/Inicio con backend | Ausente | No hay cuenta ni servidor; la sesión es 100% local como se acordó. |
 | 3 | Consulta a coaches | Eliminada | Se retiró toda referencia a coaches en el hotfix aprobado. |
 | 4 | Lectura de artículos de consejos | Placeholder | Los artículos/tips son orientativos; falta persistencia de favoritos de consejos. |
-| 5 | Alertas reales de hidratación | Placeholder | Los toggles de preferencias son visuales; no programan notificaciones (previsto en Fase 6). |
+| 5 | Alertas reales de hidratación | ✅ (Fase 6) | Aviso local periódico (cada hora) programado por el toggle "Recordatorios de hidratación"; permiso de notificaciones requerido (Android 13+). |
 | 6 | Sincronización de "Tiempo Activo" completa | Parcial | El paquete `health` 13.3.2 solo expone `EXERCISE_TIME` en iOS; en Android se muestra "—" (honesto, nunca inventado). |
 | 7 | Compartir actividad | Placeholder | Solo un toggle visual. |
 | 8 | Pantalla "Ver detalles"/gráficos | Sin navegación | Enlaces tipo "Ver detalles", "Ver plan", "Ver todo" no implementan destinos. |
 | 9 | Modo oscuro | Ausente | El tema sólo define modo claro (previsto en Fase 7). |
-| 10 | Widgets y avisos locales | Ausente | Fase 6. |
+| 10 | Widgets y avisos locales | ✅ (Fase 6) | Widget de home con pasos/calorías/racha reales + avisos locales por tipo (hidratación y racha en riesgo 20:00). |
 | 11 | Exportar/importar y borrado total (GDPR) | Ausente | Fase 8. |
 
 ## Decisiones registradas
@@ -73,3 +73,15 @@ contra el estado real de la implementación Flutter. Actualizado tras las **Fase
 - **Mirrors Maven Aliyun (Fase 5)**: `google()`/`mavenCentral()` están bloqueados en Cuba;
   `settings.gradle.kts`/`build.gradle.kts` usan primero los mirrors de Aliyun (accesibles,
   igual que el mirror de pub) y dejan los repos oficiales como respaldo.
+- **Widget y avisos con datos reales (Fase 6)**: el widget de home muestra pasos del
+  sensor, calorías (gasto activo real de Health Connect; "—" sin permiso+dato) y racha del
+  historial — nunca valores inventados. Los avisos locales son notificaciones del propio
+  móvil, cada una con su toggle (permiso por tipo).
+- **Permiso de notificaciones pedido una sola vez (Fase 6)**: la sincronización al
+  arrancar es un único flujo serializado (`AvisosService.sincronizar`); un doble
+  `requestNotificationsPermission` en paralelo dejaba un aviso sin programar esperando el
+  diálogo del sistema. Si el permiso se deniega, no se programa nada (honesto).
+- **Desugaring + mirrors para plugins (Fase 6)**: `flutter_local_notifications` 22.x exige
+  core library desugaring (`desugar_jdk_libs 2.1.5`) y sus `buildscript` de Gradle no
+  heredan los mirrors del root; se añadió `~/.gradle/init.gradle` que antepone Aliyun en
+  los repositorios de todos los buildscripts.

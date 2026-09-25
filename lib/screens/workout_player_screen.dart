@@ -8,6 +8,7 @@ import '../state/pose_coach.dart';
 import '../state/workout.dart';
 import 'pose_coach_screen.dart';
 import '../services/ads_service.dart';
+import '../services/avisos_service.dart';
 import '../services/config_service.dart';
 import '../theme.dart';
 
@@ -114,6 +115,13 @@ class _WorkoutPlayerScreenState extends State<WorkoutPlayerScreen> {
       nombre: widget.program.nombre,
       duracion: DateTime.now().difference(_inicio),
       calorias: widget.program.kcalEstimadas,
+    );
+    // Fase 6: aviso de racha — hoy ya quedó cubierto; se reprograma mañana
+    // con la racha actualizada (texto con datos reales), salvo que el usuario
+    // tenga el aviso apagado (entonces solo se cancela el de hoy).
+    avisosService.sesionCompletada(
+      state.rachaDias,
+      reprogramar: state.profile.entrenamientoMatutino,
     );
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(

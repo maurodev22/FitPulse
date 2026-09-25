@@ -256,7 +256,33 @@ Ajustes → Privacidad → Permisos del cuerpo/Actividad física → FitPulse �
 
 ---
 
-## 14. Criterio de aprobación / fallo
+## 14. Fase 6 — Widget de home y avisos locales (Fase 6)
+
+**a) Widget de home (pasos, calorías, racha)**
+- Añadir el widget **FitPulse** a la pantalla de inicio del teléfono (mantén pulsado un
+  espacio vacío → Widgets → FitPulse). Debe verse una banda oscura con **Pasos**,
+  **Calorías** y **Racha** con valores reales.
+- Pasos: número real del sensor del día. Calorías: gasto activo real solo si Health
+  Connect tiene permiso + dato de hoy; en cualquier otro caso debe verse **"—"**.
+- Racha: días reales del historial (si no hay sesiones, "0 d" o "—" — nunca inventado).
+- Al tocar el widget debe abrirse FitPulse. Los valores se refrescan solos al volver a la
+  app y cada 30 min como máximo.
+
+**b) Avisos locales (permiso por tipo)**
+- Perfil → Preferencias → los toggles ahora son reales:
+  - **"Recordatorios de hidratación"** → programa una notificación 💧 cada hora.
+  - **"Aviso de racha en riesgo"** → programa una notificación 🏃 diaria a las **20:00**
+    con el texto de tu racha real.
+- La primera vez se pide **permiso de notificaciones** (una sola vez, sin doble diálogo).
+  Si se deniega, el toggle queda con un aviso honesto y no se programa nada.
+- Comprobar en la bandeja que llega el 💧 a la hora siguiente de activarlo, y que el 🏃
+  aparece a las 20:00.
+- Completar una sesión antes de las 20:00 cancela el aviso de racha de ese día (ya está
+  cubierta) y reprograma mañana con la racha actualizada.
+
+---
+
+## 15. Criterio de aprobación / fallo
 
 **PASA si:**
 - Los pasos siempre vienen del sensor real (número real, nunca ficticio).
@@ -273,6 +299,11 @@ Ajustes → Privacidad → Permisos del cuerpo/Actividad física → FitPulse �
   y muestra esqueleto + feedback real (ángulos) + contador de repeticiones.
 - Sin modelo de IA disponible, el entrenador con cámara muestra el estado honesto
   ("no disponible ahora") y la app sigue funcionando.
+- El widget de home muestra pasos reales, calorías reales solo con permiso + dato (si no,
+  "—") y la racha real del historial; al tocarlo abre la app.
+- Los avisos locales se activan/desactivan por separado (hidratación 🎵 y racha 🏃), piden
+  el permiso una sola vez y aparecen en la bandeja a la hora indicada (💧 cada hora,
+  🏃 20:00 con la racha real).
 - No aparecen tendencias inventadas ni valores de salud ficticios.
 - `flutter analyze` → 0 issues y todos los tests verdes.
 
@@ -289,6 +320,9 @@ Ajustes → Privacidad → Permisos del cuerpo/Actividad física → FitPulse �
   coinciden con la suma de sus recetas, o el día libre no está marcado en domingo.
 - El entrenador con cámara crashea, muestra correcciones inventadas sin pose detectable,
   o no maneja el permiso/cámara denegados (en lugar de mostrar el estado honesto).
+- El widget muestra calorías inventadas (sin permiso + dato real), o los avisos piden
+  permiso dos veces seguidas, o el aviso de racha no se cancela el día que se entrena, o
+  aparece un aviso con texto de racha que no coincide con el historial real.
 
 ---
 
@@ -299,4 +333,5 @@ Ajustes → Privacidad → Permisos del cuerpo/Actividad física → FitPulse �
 | 2026-09-24 | Pixel 6a | ☑ PASA (F1-F3) | F1/F2 ✅ (Health Connect, reproductor, racha, retos). F3: banner+Premium tras arreglo del placeholder ✅; **recompensado pendiente por red** (AdMob 403 en Cuba — probar fuera de Cuba). |
 |  | Pixel 6a | ☐ PASA / ☐ FALLA (F4) | Plan semanal de comidas + lista de la compra + día libre. |
 |  | Pixel 6a | ☐ PASA / ☐ FALLA (F5) | Entrenador con cámara: permiso, esqueleto, feedback y contador; estado honesto si el modelo no descarga. |
-|  | Xiaomi | ☐ PASA / ☐ FALLA | F4 y F5 (conectar Xiaomi por ADB). |
+|  | Pixel 6a | ☐ PASA / ☐ FALLA (F6) | Widget de home (pasos/calorías/racha) + avisos por tipo (hidratación cada hora, racha 20:00); permiso una sola vez. |
+|  | Xiaomi | ☐ PASA / ☐ FALLA | F4, F5 y F6 (conectar Xiaomi por ADB). |

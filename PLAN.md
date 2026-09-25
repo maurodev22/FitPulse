@@ -15,7 +15,11 @@
 | **Hotfix** (aprobado) | ✅ | Aplicado y verificado en código (sin "Explorar categorías", "Nutrición & Vitalidad", coaches ni "Cerrar sesión"; `**` del manual limpiados) |
 | Fase 1 (datos reales del cuerpo) | ✅ código | Pasos reales ✅; **Health Connect ✅** (pulso, peso, grasa, sueño, agua, gasto activo, tiempo activo; solo lectura); reinicio diario ✅; analytics local ✅. Falta prueba manual en dispositivo |
 | Fase 2 (entrenamientos + motivación) | ✅ código | Catálogo + reproductor ✅; historial real ✅; racha real ✅; retos 3/5/7 ✅; puntos/niveles ✅; plan adaptativo ✅. Falta prueba manual en dispositivo |
-| Fases 3–8 | ⏳ | Pendientes (ver detalle abajo) |
+| Fase 3 (negocio: anuncios + Premium + app ligera) | ✅ código | AdMob IDs de prueba + consentimiento local + Premium + R8; falta prueba manual en ambos móviles |
+| Fase 4 (comidas) | ✅ código | Plan semanal real (6 recetas) + lista de la compra + día libre; falta prueba manual |
+| Fase 5 (entrenador con cámara) | ✅ código | ML Kit pose on-device + estados honestos; falta prueba manual |
+| Fase 6 (extras de retención) | ✅ código | Widget de home (pasos/calorías/racha) + avisos locales por tipo; falta prueba manual |
+| Fases 7–8 | ⏳ | Pendientes (ver detalle abajo) |
 
 **Sesión** (`FUNCIONALIDADES.md`), **guía de prueba manual** (`GUIA_TESTEO_FASE1.md`) y
 **README** están pendientes de actualización con el estado de Fases 1 y 2.
@@ -191,11 +195,38 @@ fuera de Cuba (se deja la puerta abierta sin bloquear la app).
   conceder permiso, ver el esqueleto y el contador, y el estado honesto si el modelo
   no descarga (red).
 
-## 9. Fase 6 — Extras de retención ⏳
+## 9. Fase 6 — Extras de retención ✅ (código)
 
-- Widgets de home screen (pasos, calorías, racha).
-- Avisos locales (hidratación, racha en riesgo), cada uno activable/desactivable por
-  separado (permiso por tipo).
+- **Widget de home screen** (AppWidget nativo, sin plugin extra): banda horizontal con
+  **pasos reales del sensor**, **calorías** (gasto activo real de Health Connect; "—" si
+  no hay permiso + dato, nunca inventado) y **racha real** del historial.
+  - `android/.../HomeWidgetProvider.kt` + `HomeWidgetRenderer`: RemoteViews que leen un
+    snapshot JSON guardado en SharedPreferences propio; al tocar abre la app.
+  - `lib/services/home_widget_service.dart`: `HomeWidgetBridge` escucha `AppState` y
+    envía el snapshot por el canal `fitpulse/home_widget` (con throttle para no escribir
+    en cada tick de pasos); refresco también al volver a la app y cada 30 min.
+  - Layout/icono: `res/layout/home_widget_layout.xml`, `res/xml/home_widget_info.xml`,
+    `res/drawable/ic_stat_fitpulse.xml` (icono de notificación), `widget_bg.xml`.
+- **Avisos locales reales** (`flutter_local_notifications` 22.3.0, 100 % en el móvil),
+  cada uno con su toggle en Perfil (permiso por tipo):
+  - 💧 **Hidratación** cada hora (`periodicallyShow`), toggle "Recordatorios de hidratación".
+  - 🏃 **Racha en riesgo** a las 20:00 (`zonedSchedule` + `matchDateTimeComponents.time`,
+    repetible diario), con el texto de la racha REAL; se cancela el día en que se completa
+    una sesión y se reprograma mañana con la racha actualizada. Toggle "Aviso de racha".
+  - `lib/state/avisos.dart`: lógica pura testeable (próxima hora local sin librería tz,
+    instante UTC equivalente, texto de racha, snapshot JSON del widget). **5 tests**.
+  - Permiso de notificaciones (Android 13+) pedido UNA sola vez en una sincronización
+    serializada al arrancar (`AvisosService.sincronizar`); si se deniega, no se programa
+    nada (honesto). Reprogramación automática tras reinicio vía
+    `ScheduledNotificationBootReceiver`.
+- Construcción: **core library desugaring** activado (`desugar_jdk_libs 2.1.5`, requisito
+  del plugin) e `init.gradle` global con los mirrors de Aliyun para los `buildscript` de
+  los plugins (los repositorios de los plugins no heredan los del proyecto raíz).
+
+**Pendiente (manual):**
+- ⏳ Probar en Pixel 6a y Xiaomi: colocar el widget en Inicio y ver pasos/calorías/racha
+  reales; activar ambos avisos, conceder el permiso y comprobar que aparecen en la
+  bandeja a la hora indicada (hidratación cada hora, racha 20:00).
 
 ## 10. Fase 7 — Experiencia premium y accesibilidad ⏳
 
@@ -224,9 +255,9 @@ fuera de Cuba (se deja la puerta abierta sin bloquear la app).
 
 ## 13. Próximos pasos recomendados
 
-1. **Probar Fases 1-5 en los móviles** siguiendo `GUIA_TESTEO_FASE1.md`
+1. **Probar Fases 1-6 en los móviles** siguiendo `GUIA_TESTEO_FASE1.md`
    (registrar PASA/FALLA por dispositivo: Health Connect, entrenamientos, anuncios,
-   Premium, comidas y entrenador con cámara).
-2. **Actualizar README y FUNCIONALIDADES** para reflejar el estado real
-   (Fases 0/0.5/1/2/3/4/5 ✅ en código).
-3. Con la aprobación, abrir **Fase 6** (widgets de home + avisos locales).
+   Premium, comidas, entrenador con cámara y widget/avisos).
+2. Conectar el Xiaomi por ADB para instalar y probar Fases 4-6.
+3. Con la aprobación de Fases 4-6, abrir **Fase 7** (experiencia premium y
+   accesibilidad EAA/WCAG + textos es/en).

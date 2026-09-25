@@ -16,6 +16,11 @@
     <!-- Cámara (Fase 5): el entrenador de postura analiza EN EL MÓVIL con ML Kit;
          no graba ni sube nada. -->
     <uses-permission android:name="android.permission.CAMERA"/>
+    <!-- Fase 6: reprogramar avisos locales tras reiniciar el teléfono. -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"
+        android:maxSdkVersion="32"/>
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <application
         android:label="FitPulse"
         android:name="${applicationName}"
@@ -64,6 +69,32 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+        <!-- Fase 6: widget de home (pasos, calorías, racha reales). -->
+        <receiver
+            android:name=".HomeWidgetProvider"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/home_widget_info"/>
+        </receiver>
+        <!-- Fase 6: avisos locales — reprogramación tras reinicio/actualización
+             de la app (receptores del plugin flutter_local_notifications). -->
+        <receiver
+            android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver"
+            android:exported="false"/>
+        <receiver
+            android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationBootReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED"/>
+                <action android:name="android.intent.action.QUICKBOOT_POWERON"/>
+                <action android:name="com.htc.intent.action.QUICKBOOT_POWERON"/>
+            </intent-filter>
+        </receiver>
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and

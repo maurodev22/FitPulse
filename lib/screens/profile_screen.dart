@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../services/avisos_service.dart';
 import '../services/config_service.dart';
 import '../services/locale_service.dart';
 import '../state/app_state.dart';
@@ -475,16 +476,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _ToggleRow(
           icon: Icons.water_drop,
           title: 'Recordatorios de hidratación',
-          subtitle: 'Cada 90 minutos de actividad',
+          subtitle: 'Cada hora · notificación local',
           value: _hydration,
-          onChanged: (v) => setState(() => _hydration = v),
+          onChanged: (v) {
+            setState(() => _hydration = v);
+            _aplicarAvisoHidratacion(v);
+          },
         ),
         _ToggleRow(
           icon: Icons.alarm,
-          title: 'Entrenamiento matutino',
-          subtitle: 'Programado para las 07:00 AM',
+          title: 'Aviso de racha en riesgo',
+          subtitle: 'Diario a las 20:00 con tu racha real',
           value: _morningWorkout,
-          onChanged: (v) => setState(() => _morningWorkout = v),
+          onChanged: (v) {
+            setState(() => _morningWorkout = v);
+            _aplicarAvisoRacha(v);
+          },
         ),
         _ToggleRow(
           icon: Icons.watch,
@@ -578,6 +585,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
       ],
     );
+  }
+
+  /// Fase 6: aplica el recordatorio de hidratación (programa/cancela la
+  /// notificación periódica) mostrando un aviso honesto si no procede.
+  Future<void> _aplicarAvisoHidratacion(bool activar) async {
+    final r = await avisosService.setHidratacion(activar: activar);
+    if (!r.ok && mounted) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(r.mensaje)));
+    }
+  }
+
+  /// Fase 6: aplica el aviso diario de racha (20:00) con la racha real del
+  /// historial; cancela/programa según el toggle.
+  Future<void> _aplicarAvisoRacha(bool activar) async {
+    final racha = context.read<AppState>().rachaDias;
+    final r = await avisosService.setRacha(activar: activar, rachaDias: racha);
+    if (!r.ok && mounted) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(r.mensaje)));
+    }
   }
 
   /// Persiste la sesión editada con los cambios locales del formulario.

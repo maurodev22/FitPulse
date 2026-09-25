@@ -13,8 +13,10 @@ import 'screens/recipes_screen.dart';
 import 'screens/registration_screen.dart';
 import 'screens/tips_screen.dart';
 import 'services/ads_service.dart';
+import 'services/avisos_service.dart';
 import 'services/config_service.dart';
 import 'services/health_service.dart';
+import 'services/home_widget_service.dart';
 import 'services/locale_service.dart';
 import 'services/usage_log_service.dart';
 import 'state/app_state.dart';
@@ -47,6 +49,19 @@ Future<void> main() async {
   if (configService.adsEnabled && !configService.premiumEnabled) {
     unawaited(initAds());
   }
+  // Fase 6: avisos locales (hidratación + racha en riesgo) según los toggles
+  // persistidos del perfil; un único flujo serializado pide el permiso una sola
+  // vez y, si se deniega, no se programa nada (honesto, nunca se finge activo).
+  unawaited(
+    avisosService.sincronizar(
+      hidratacion: appState.isLoggedIn && appState.profile.hidratacion,
+      racha: appState.isLoggedIn && appState.profile.entrenamientoMatutino,
+      rachaDias: appState.rachaDias,
+    ),
+  );
+  // Fase 6: widget de home — snapshot con datos reales (pasos, calorías, racha).
+  final widgetBridge = HomeWidgetBridge(appState);
+  widgetBridge.sincronizarAhora();
   // Zona de anuncio visible cuando el banner de prueba no carga (sin red a
   // AdMob). Solo en la app real; los tests no llaman a main().
   FitBannerAd.mostrarPlaceholderCuandoFalla = true;

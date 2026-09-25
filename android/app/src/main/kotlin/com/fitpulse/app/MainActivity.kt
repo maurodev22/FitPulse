@@ -1,6 +1,8 @@
 package com.fitpulse.app
 
 import android.Manifest
+import android.appwidget.AppWidgetManager
+import android.content.ComponentName
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
@@ -29,6 +31,22 @@ class MainActivity : FlutterActivity() {
                     )
                     startActivity(intent)
                     result.success(null)
+                }
+                else -> result.notImplemented()
+            }
+        }
+        // Fase 6: el widget de home recibe el snapshot (pasos, calorías, racha)
+        // y se repinta al instante.
+        MethodChannel(
+            flutterEngine.dartExecutor.binaryMessenger,
+            "fitpulse/home_widget"
+        ).setMethodCallHandler { call, result ->
+            when (call.method) {
+                "actualizar" -> {
+                    val datos = call.argument<String>("datos") ?: ""
+                    HomeWidgetRenderer.guardar(this, datos)
+                    HomeWidgetProvider.forzarActualizacion(this)
+                    result.success(true)
                 }
                 else -> result.notImplemented()
             }
