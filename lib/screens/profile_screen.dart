@@ -71,6 +71,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   const SizedBox(height: 16),
                   _buildPreferencias(),
                   const SizedBox(height: 16),
+                  _buildTema(),
                   _buildIdioma(),
                   const SizedBox(height: 20),
                   _buildAcciones(),
@@ -85,23 +86,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Widget _buildPremium() {
     final config = context.watch<ConfigService>();
+    final strings = context.watch<LocaleService>().strings;
     final activo = config.premiumEnabled;
     return _SettingsCard(
       children: [
-        const _CardTitle(icon: Icons.workspace_premium, title: 'FitPulse Premium'),
+        _CardTitle(icon: Icons.workspace_premium, title: strings.pfPremium),
         const SizedBox(height: 8),
         Text(
-          activo
-              ? 'Premium activo: los anuncios están desactivados. 🎉'
-              : 'Quita los anuncios de por vida con una compra única.',
+          activo ? strings.pfPremiumActivo : strings.pfPremiumQuitar,
           style: AppType.bodySm.copyWith(color: AppColors.onSurfaceVariant),
         ),
         const SizedBox(height: 12),
         // Consentimiento local de anuncios (Fase 3): el usuario puede apagarlos.
         _ToggleRow(
           icon: Icons.campaign_outlined,
-          title: 'Anuncios habilitados',
-          subtitle: 'Banners y recompensados con IDs de prueba de AdMob',
+          title: strings.pfAnunciosHabilitados,
+          subtitle: strings.pfAnunciosSub,
           value: config.adsEnabled,
           onChanged: (v) => config.setAds(v),
         ),
@@ -111,17 +111,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
           child: FilledButton.tonal(
             onPressed: () => config.setPremium(!activo),
             child: Text(
-              activo
-                  ? 'Desactivar Premium (modo prueba)'
-                  : 'Activar Premium (modo prueba)',
+              activo ? strings.pfDesactivarPremium : strings.pfActivarPremium,
             ),
           ),
         ),
         const SizedBox(height: 8),
         Text(
-          'El cobro real requiere Google Play con una cuenta fuera de Cuba '
-          '(ver PLAN.md, Fase 3). Este botón activa Premium localmente para '
-          'probar que los anuncios se ocultan.',
+          strings.pfPremiumNota,
           style: AppType.bodySm.copyWith(color: AppColors.outline),
         ),
       ],
@@ -129,9 +125,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildMetasActividad() {
+    final strings = context.watch<LocaleService>().strings;
     return _SettingsCard(
       children: [
-        const _CardTitle(icon: Icons.track_changes, title: 'Metas de Actividad', action: _IconAction(icon: Icons.edit)),
+        _CardTitle(
+          icon: Icons.track_changes,
+          title: strings.pfMetasActividad,
+          action: _IconAction(icon: Icons.edit),
+        ),
         const SizedBox(height: 12),
         Container(
           padding: const EdgeInsets.all(12),
@@ -143,11 +144,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
             children: [
               Row(
                 children: [
-                  const Icon(Icons.directions_walk, size: 16, color: AppColors.primary),
+                  Icon(Icons.directions_walk, size: 16, color: AppColors.primary),
                   const SizedBox(width: 6),
                   Expanded(
                     child: Text(
-                      'Pasos diarios',
+                      strings.pfPasosDiarios,
                       style: AppType.labelMd.copyWith(color: AppColors.onSurfaceVariant),
                     ),
                   ),
@@ -172,7 +173,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   icon: Icons.local_fire_department,
                   iconColor: AppColors.error,
                   iconBackground: AppColors.errorContainer,
-                  label: 'Calorías activas',
+                  label: strings.pfCaloriasActivas,
                   value: gasto?.toStringAsFixed(0) ?? '—',
                   unit: 'kcal',
                 );
@@ -186,7 +187,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   icon: Icons.favorite,
                   iconColor: AppColors.outline,
                   iconBackground: AppColors.surfaceContainer,
-                  label: 'Cardio semanal',
+                  label: strings.pfCardioSemanal,
                   value: minutos > 0 ? '$minutos' : '—',
                   unit: 'min',
                 );
@@ -199,13 +200,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
           children: [
             Expanded(
               child: Text(
-                'Días de entrenamiento',
+                strings.pfDiasEntrenamiento,
                 style: AppType.labelMd.copyWith(color: AppColors.onSurfaceVariant),
               ),
             ),
-            Text(
-              '${_trainingDays.length} días / semana',
-              style: AppType.labelMd.copyWith(color: AppColors.primary, fontWeight: FontWeight.w700),
+            Flexible(
+              child: Text(
+                strings.pfDiasSemana(_trainingDays.length),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppType.labelMd.copyWith(color: AppColors.primary, fontWeight: FontWeight.w700),
+              ),
             ),
           ],
         ),
@@ -242,7 +247,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       : null,
                 ),
                 child: Text(
-                  d,
+                  // El valor sigue siendo la inicial en español; solo se
+                  // traduce la letra pintada.
+                  strings.diaInicial(d),
                   style: AppType.labelMd.copyWith(
                     color: active ? AppColors.onPrimary : AppColors.onSurfaceVariant,
                     fontWeight: active ? FontWeight.w700 : FontWeight.w500,
@@ -257,9 +264,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildConectarSalud() {
+    final strings = context.watch<LocaleService>().strings;
     return _SettingsCard(
       children: [
-        const _CardTitle(icon: Icons.monitor_heart_outlined, title: 'Datos de salud'),
+        _CardTitle(icon: Icons.monitor_heart_outlined, title: strings.pfDatosSalud),
         const SizedBox(height: 8),
         Builder(builder: (context) {
           final state = context.watch<AppState>();
@@ -277,21 +285,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
               children: [
                 _ToggleRow(
                   icon: Icons.watch,
-                  title: 'Health Connect',
-                  subtitle: 'Instala la app Google Health Connect para sincronizar',
+                  title: strings.healthConnect,
+                  subtitle: strings.pfInstalaHealth,
                   value: _healthKit,
                   onChanged: (v) => setState(() => _healthKit = v),
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Sin Health Connect, pulso, sueño y grasa se muestran como "—" (nunca inventados).',
+                  strings.pfSinHealth,
                   style: AppType.bodySm.copyWith(color: AppColors.outline),
                 ),
               ],
             );
           }
           if (pidiendo) {
-            return const Padding(
+            return Padding(
               padding: EdgeInsets.symmetric(vertical: 12),
               child: Row(
                 children: [
@@ -303,7 +311,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      'Concediendo permisos en la pantalla de Health Connect…',
+                      strings.pfConcediendoPermisos,
                       style: TextStyle(color: AppColors.onSurfaceVariant),
                     ),
                   ),
@@ -332,9 +340,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            conectado
-                                ? 'Health Connect conectado'
-                                : 'Health Connect disponible',
+                            conectado ? strings.pfConectado : strings.pfDisponible,
                             style: AppType.labelMd.copyWith(
                               color: AppColors.onSurface,
                               fontWeight: FontWeight.w700,
@@ -348,10 +354,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       spacing: 6,
                       runSpacing: 6,
                       children: [
-                        _PermisoChip(ok: pulsoOk, label: 'Pulso'),
-                        _PermisoChip(ok: aguaOk, label: 'Agua'),
-                        _PermisoChip(ok: grasaOk, label: 'Grasa'),
-                        _PermisoChip(ok: suenioOk, label: 'Sueño'),
+                        _PermisoChip(ok: pulsoOk, label: strings.homePulso),
+                        _PermisoChip(ok: aguaOk, label: strings.homeAgua),
+                        _PermisoChip(ok: grasaOk, label: strings.pfGrasaPermiso),
+                        _PermisoChip(ok: suenioOk, label: strings.pfSuenio),
                       ],
                     ),
                   ],
@@ -364,7 +370,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   onPressed: () =>
                       context.read<AppState>().solicitarPermisosHealthConnect(),
                   icon: const Icon(Icons.link, size: 18),
-                  label: const Text('Abrir permisos de Health Connect'),
+                  label: Text(strings.pfAbrirPermisos),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppColors.primary,
                     side: BorderSide(color: AppColors.primary.withValues(alpha: 0.5)),
@@ -382,24 +388,37 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildDatosPersonales() {
+    final strings = context.watch<LocaleService>().strings;
     return _SettingsCard(
       children: [
-        const _CardTitle(icon: Icons.person_pin, title: 'Datos Personales'),
-        const SizedBox(height: 12),
-        _TextField(label: 'Nombre completo', icon: Icons.badge, value: _profile.nombre),
-        const SizedBox(height: 12),
-        _TextField(label: 'Peso', icon: Icons.scale, value: '${_profile.pesoKg} kg'),
-        const SizedBox(height: 12),
-        _TextField(label: 'Altura', icon: Icons.straighten, value: '${_profile.alturaM} m'),
+        _CardTitle(icon: Icons.person_pin, title: strings.profilePersonalData),
         const SizedBox(height: 12),
         _TextField(
-          label: 'IMC',
+          label: strings.pfNombreCompleto,
+          icon: Icons.badge,
+          value: _profile.nombre,
+        ),
+        const SizedBox(height: 12),
+        _TextField(
+          label: strings.regWeightLabel,
+          icon: Icons.scale,
+          value: '${_profile.pesoKg} kg',
+        ),
+        const SizedBox(height: 12),
+        _TextField(
+          label: strings.regHeightLabel,
+          icon: Icons.straighten,
+          value: '${_profile.alturaM} m',
+        ),
+        const SizedBox(height: 12),
+        _TextField(
+          label: strings.pfImc,
           icon: Icons.insights,
-          value: '${_profile.imcFormateado} — ${_profile.imcCategoria}',
+          value: '${_profile.imcFormateado} — ${strings.imcNombre(_profile.imcCategoria)}',
         ),
         const SizedBox(height: 16),
         Text(
-          'Nivel de condición física',
+          strings.pfNivelCondicion,
           style: AppType.labelMd.copyWith(color: AppColors.onSurfaceVariant, fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 8),
@@ -432,7 +451,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           : null,
                     ),
                     child: Text(
-                      level,
+                      // Se guarda/selecciona el valor en español; solo se
+                      // traduce la etiqueta pintada.
+                      strings.nivelName(level),
                       style: AppType.labelMd.copyWith(
                         color: selected ? AppColors.onPrimary : AppColors.onSurfaceVariant,
                         fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
@@ -446,7 +467,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
         const SizedBox(height: 16),
         Text(
-          'Tipo de entrenamiento preferido',
+          strings.pfTipoEntrenamiento,
           style: AppType.labelMd.copyWith(color: AppColors.onSurfaceVariant, fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 8),
@@ -454,12 +475,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
           spacing: 8,
           runSpacing: 8,
           children: [
-            const _PreferenceTag(icon: Icons.bolt, label: 'HIIT'),
-            const _PreferenceTag(icon: Icons.fitness_center, label: 'Fuerza funcional'),
-            const _PreferenceTag(icon: Icons.directions_run, label: 'Running'),
+            _PreferenceTag(icon: Icons.bolt, label: strings.favoritoName('HIIT')),
+            _PreferenceTag(
+              icon: Icons.fitness_center,
+              label: strings.favoritoName('Fuerza funcional'),
+            ),
+            _PreferenceTag(
+              icon: Icons.directions_run,
+              label: strings.favoritoName('Running'),
+            ),
             _AddPreferenceTag(onTap: () {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Selecciona tu próximo entrenamiento favorito')),
+                SnackBar(content: Text(strings.pfSeleccionaFavorito)),
               );
             }),
           ],
@@ -469,14 +496,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildPreferencias() {
+    final strings = context.watch<LocaleService>().strings;
     return _SettingsCard(
       children: [
-        const _CardTitle(icon: Icons.tune, title: 'Preferencias & Sincronización'),
+        _CardTitle(icon: Icons.tune, title: strings.pfPreferencias),
         const SizedBox(height: 8),
         _ToggleRow(
           icon: Icons.water_drop,
-          title: 'Recordatorios de hidratación',
-          subtitle: 'Cada hora · notificación local',
+          title: strings.pfRecordatoriosHidratacion,
+          subtitle: strings.pfCadaHora,
           value: _hydration,
           onChanged: (v) {
             setState(() => _hydration = v);
@@ -485,8 +513,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
         _ToggleRow(
           icon: Icons.alarm,
-          title: 'Aviso de racha en riesgo',
-          subtitle: 'Diario a las 20:00 con tu racha real',
+          title: strings.pfAvisoRacha,
+          subtitle: strings.pfDiario20,
           value: _morningWorkout,
           onChanged: (v) {
             setState(() => _morningWorkout = v);
@@ -495,22 +523,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
         _ToggleRow(
           icon: Icons.watch,
-          title: 'HealthKit / Smartwatch',
-          subtitle: 'Sincronización en segundo plano',
+          title: strings.pfHealthKit,
+          subtitle: strings.pfSincronizacion,
           value: _healthKit,
           onChanged: (v) => setState(() => _healthKit = v),
         ),
         _ToggleRow(
           icon: Icons.vibration,
-          title: 'Vibración háptica',
-          subtitle: 'Avisos de cambio de intervalo',
+          title: strings.pfVibracion,
+          subtitle: strings.pfAvisosIntervalo,
           value: _haptic,
           onChanged: (v) => setState(() => _haptic = v),
         ),
         _ToggleRow(
           icon: Icons.group,
-          title: 'Compartir actividad',
-          subtitle: 'Visible solo para amigos seguidos',
+          title: strings.pfCompartirActividad,
+          subtitle: strings.pfVisibleAmigos,
           value: _shareActivity,
           iconColor: AppColors.outline,
           onChanged: (v) => setState(() => _shareActivity = v),
@@ -519,19 +547,64 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  /// Fase 7: selector de tema (sistema / claro / oscuro), persistido y de
+  /// aplicación inmediata. La paleta activa la resuelve el MaterialApp.
+  Widget _buildTema() {
+    final config = context.watch<ConfigService>();
+    final strings = context.watch<LocaleService>().strings;
+    return _SettingsCard(
+      children: [
+        _CardTitle(
+          icon: Icons.dark_mode_outlined,
+          title: strings.pfTemaApp,
+        ),
+        const SizedBox(height: 8),
+        SegmentedButton<AppThemeMode>(
+          segments: const [
+            ButtonSegment(
+              value: AppThemeMode.system,
+              icon: Icon(Icons.brightness_auto_outlined, size: 18),
+            ),
+            ButtonSegment(
+              value: AppThemeMode.light,
+              icon: Icon(Icons.light_mode_outlined, size: 18),
+            ),
+            ButtonSegment(
+              value: AppThemeMode.dark,
+              icon: Icon(Icons.dark_mode_outlined, size: 18),
+            ),
+          ],
+          selected: {config.themeMode},
+          onSelectionChanged: (selection) {
+            if (selection.isNotEmpty) {
+              context.read<ConfigService>().setThemeMode(selection.first);
+            }
+          },
+          showSelectedIcon: false,
+        ),
+        const SizedBox(height: 8),
+        Text(
+          strings.pfSeAplicaTema,
+          style: AppType.bodySm.copyWith(color: AppColors.outline),
+        ),
+      ],
+    );
+  }
+
   Widget _buildIdioma() {
     final localeService = context.watch<LocaleService>();
+    final strings = localeService.strings;
     return _SettingsCard(
       children: [
         _CardTitle(
           icon: Icons.language,
-          title: 'Idioma / Language',
+          title: strings.pfIdioma,
         ),
         const SizedBox(height: 8),
         SegmentedButton<AppLocale>(
-          segments: const [
-            ButtonSegment(value: AppLocale.es, label: Text('Español')),
-            ButtonSegment(value: AppLocale.en, label: Text('English')),
+          segments: [
+            ButtonSegment(value: AppLocale.es, label: Text(strings.pfIdiomaEs)),
+            ButtonSegment(value: AppLocale.en, label: Text(strings.pfIdiomaEn)),
           ],
           selected: {localeService.locale},
           onSelectionChanged: (selection) {
@@ -543,7 +616,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
         const SizedBox(height: 8),
         Text(
-          'El idioma se aplica al instante.',
+          strings.pfSeAplicaIdioma,
           style: AppType.bodySm.copyWith(color: AppColors.outline),
         ),
       ],
@@ -551,6 +624,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildAcciones() {
+    final strings = context.watch<LocaleService>().strings;
     return Column(
       children: [
         SizedBox(
@@ -566,11 +640,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.save, size: 20, color: AppColors.onPrimary),
+                    Icon(Icons.save, size: 20, color: AppColors.onPrimary),
                     const SizedBox(width: 8),
-                    Text(
-                      'Guardar cambios',
-                      style: AppType.labelLg.copyWith(color: AppColors.onPrimary, fontWeight: FontWeight.w700),
+                    Flexible(
+                      child: Text(
+                        strings.pfGuardarCambios,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppType.labelLg.copyWith(color: AppColors.onPrimary, fontWeight: FontWeight.w700),
+                      ),
                     ),
                   ],
                 ),
@@ -580,7 +658,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
         const SizedBox(height: 16),
         Text(
-          'FitPulse v1.0.0 (Build 1)',
+          strings.pfVersion,
           style: AppType.bodySm.copyWith(color: AppColors.outline),
         ),
       ],
@@ -631,7 +709,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
     );
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('¡Ajustes guardados en tu dispositivo!')),
+      SnackBar(content: Text(context.read<LocaleService>().strings.pfAjustesGuardados)),
     );
   }
 }
@@ -646,9 +724,10 @@ class _ProfileHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final strings = context.watch<LocaleService>().strings;
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
-      decoration: const BoxDecoration(color: AppColors.surface),
+      decoration: BoxDecoration(color: AppColors.surface),
       child: Row(
         children: [
           Expanded(
@@ -656,12 +735,12 @@ class _ProfileHeader extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Mi Perfil',
+                  strings.pfMiPerfil,
                   style: AppType.headlineSm.copyWith(fontWeight: FontWeight.w700, height: 1.1),
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  'Supera tus límites hoy',
+                  strings.pfSuperaLimites,
                   style: AppType.bodySm.copyWith(color: AppColors.onSurfaceVariant),
                 ),
               ],
@@ -678,7 +757,7 @@ class _ProfileHeader extends StatelessWidget {
                 const Text('🔥', style: TextStyle(fontSize: 14)),
                 const SizedBox(width: 4),
                 Text(
-                  '${context.watch<AppState>().rachaDias} días',
+                  strings.rachaDias(context.watch<AppState>().rachaDias),
                   style: AppType.labelMd.copyWith(color: AppColors.primary, fontWeight: FontWeight.w700),
                 ),
               ],
@@ -688,11 +767,11 @@ class _ProfileHeader extends StatelessWidget {
           InkWell(
             onTap: () {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Configuración general disponible próximamente')),
+                SnackBar(content: Text(strings.pfConfiguracionProx)),
               );
             },
             borderRadius: BorderRadius.circular(999),
-            child: const Padding(
+            child: Padding(
               padding: EdgeInsets.all(10),
               child: Icon(Icons.settings_outlined, size: 22, color: AppColors.onSurfaceVariant),
             ),
@@ -710,6 +789,7 @@ class _ProfileHero extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final strings = context.watch<LocaleService>().strings;
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -744,18 +824,18 @@ class _ProfileHero extends StatelessWidget {
                 child: InkWell(
                   onTap: () {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Edición de foto próximamente')),
+                      SnackBar(content: Text(strings.pfEdicionFoto)),
                     );
                   },
                   customBorder: const CircleBorder(),
                   child: Container(
                     width: 32,
                     height: 32,
-                    decoration: const BoxDecoration(
+                    decoration: BoxDecoration(
                       color: AppColors.primary,
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(Icons.photo_camera, size: 16, color: AppColors.onPrimary),
+                    child: Icon(Icons.photo_camera, size: 16, color: AppColors.onPrimary),
                   ),
                 ),
               ),
@@ -765,12 +845,17 @@ class _ProfileHero extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(
-                profile.nombre,
-                style: AppType.headlineMd.copyWith(color: AppColors.onSurface, fontWeight: FontWeight.w700),
+              Flexible(
+                child: Text(
+                  profile.nombre,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                  style: AppType.headlineMd.copyWith(color: AppColors.onSurface, fontWeight: FontWeight.w700),
+                ),
               ),
               const SizedBox(width: 6),
-              const Icon(Icons.verified, size: 18, color: AppColors.primary),
+              Icon(Icons.verified, size: 18, color: AppColors.primary),
             ],
           ),
           const SizedBox(height: 8),
@@ -786,7 +871,7 @@ class _ProfileHero extends StatelessWidget {
                 const SizedBox(width: 4),
                 Flexible(
                   child: Text(
-                    '${context.watch<AppState>().rachaDias} días en racha',
+                    strings.pfRachaEnRacha(context.watch<AppState>().rachaDias),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: AppType.labelMd.copyWith(
@@ -799,12 +884,14 @@ class _ProfileHero extends StatelessWidget {
                 Container(
                   width: 4,
                   height: 4,
-                  decoration: const BoxDecoration(color: AppColors.outlineVariant, shape: BoxShape.circle),
+                  decoration: BoxDecoration(color: AppColors.outlineVariant, shape: BoxShape.circle),
                 ),
                 const SizedBox(width: 8),
                 Flexible(
                   child: Text(
-                    'Plan: ${profile.metas.isEmpty ? '—' : profile.metas.join(' · ')}',
+                    // Las metas se guardan en español; solo se traduce el
+                    // texto pintado.
+                    '${strings.pfPlan}${profile.metas.isEmpty ? '—' : profile.metas.map(strings.metaName).join(' · ')}',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: AppType.labelMd.copyWith(color: AppColors.primary, fontWeight: FontWeight.w500),
@@ -822,10 +909,18 @@ class _ProfileHero extends StatelessWidget {
             ),
             child: Row(
               children: [
-                _QuickStat(label: 'Peso', value: profile.pesoKg.toStringAsFixed(1), unit: 'kg'),
-                _QuickStat(label: 'Altura', value: profile.alturaM.toStringAsFixed(2), unit: 'm'),
                 _QuickStat(
-                  label: '% Grasa',
+                  label: strings.regWeightLabel,
+                  value: profile.pesoKg.toStringAsFixed(1),
+                  unit: 'kg',
+                ),
+                _QuickStat(
+                  label: strings.regHeightLabel,
+                  value: profile.alturaM.toStringAsFixed(2),
+                  unit: 'm',
+                ),
+                _QuickStat(
+                  label: strings.pfGrasaPct,
                   value: (() {
                     final grasa = context.watch<AppState>().grasaHoy;
                     return grasa?.toStringAsFixed(1) ?? '—';
@@ -833,7 +928,13 @@ class _ProfileHero extends StatelessWidget {
                   unit: '%',
                   valueColor: AppColors.primary,
                 ),
-                _QuickStat(label: 'IMC', value: profile.imcFormateado, unit: profile.imc < 25 && profile.imc >= 18.5 ? 'Óptimo' : profile.imcCategoria),
+                _QuickStat(
+                  label: strings.pfImc,
+                  value: profile.imcFormateado,
+                  unit: profile.imc < 25 && profile.imc >= 18.5
+                      ? strings.pfOptimo
+                      : strings.imcNombre(profile.imcCategoria),
+                ),
               ],
             ),
           ),
@@ -848,13 +949,13 @@ class _QuickStat extends StatelessWidget {
     required this.label,
     required this.value,
     required this.unit,
-    this.valueColor = AppColors.onSurface,
+    this.valueColor,
   });
 
   final String label;
   final String value;
   final String unit;
-  final Color valueColor;
+  final Color? valueColor;
 
   @override
   Widget build(BuildContext context) {
@@ -868,7 +969,7 @@ class _QuickStat extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             value,
-            style: AppType.headlineSm.copyWith(color: valueColor, fontWeight: FontWeight.w800),
+            style: AppType.headlineSm.copyWith(color: valueColor ?? AppColors.onSurface, fontWeight: FontWeight.w800),
           ),
           Text(
             unit,
@@ -1080,12 +1181,16 @@ class _PreferenceTag extends StatelessWidget {
         children: [
           Icon(icon, size: 14, color: AppColors.primary),
           const SizedBox(width: 4),
-          Text(
-            label,
-            style: AppType.labelMd.copyWith(color: AppColors.primary, fontWeight: FontWeight.w600),
+          Flexible(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AppType.labelMd.copyWith(color: AppColors.primary, fontWeight: FontWeight.w600),
+            ),
           ),
           const SizedBox(width: 4),
-          const Icon(Icons.close, size: 14, color: AppColors.outline),
+          Icon(Icons.close, size: 14, color: AppColors.outline),
         ],
       ),
     );
@@ -1099,6 +1204,7 @@ class _AddPreferenceTag extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final strings = context.watch<LocaleService>().strings;
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(999),
@@ -1111,10 +1217,10 @@ class _AddPreferenceTag extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.add, size: 14, color: AppColors.onSurfaceVariant),
+            Icon(Icons.add, size: 14, color: AppColors.onSurfaceVariant),
             const SizedBox(width: 4),
             Text(
-              'Añadir',
+              strings.pfAnadir,
               style: AppType.labelMd.copyWith(color: AppColors.onSurfaceVariant),
             ),
           ],
@@ -1131,7 +1237,7 @@ class _ToggleRow extends StatelessWidget {
     required this.subtitle,
     required this.value,
     required this.onChanged,
-    this.iconColor = AppColors.primary,
+    this.iconColor,
   });
 
   final IconData icon;
@@ -1139,7 +1245,7 @@ class _ToggleRow extends StatelessWidget {
   final String subtitle;
   final bool value;
   final ValueChanged<bool> onChanged;
-  final Color iconColor;
+  final Color? iconColor;
 
   @override
   Widget build(BuildContext context) {
@@ -1154,7 +1260,7 @@ class _ToggleRow extends StatelessWidget {
               color: AppColors.surfaceContainerLow,
               shape: BoxShape.circle,
             ),
-            child: Icon(icon, size: 18, color: iconColor),
+            child: Icon(icon, size: 18, color: iconColor ?? AppColors.primary),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -1231,6 +1337,7 @@ class _PasosProgresoHoy extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final state = context.watch<AppState>();
+    final strings = context.watch<LocaleService>().strings;
     final meta = state.profile.pasosMeta;
     final pasos = state.pasosHoy;
     final hasMeta = meta > 0;
@@ -1253,8 +1360,8 @@ class _PasosProgresoHoy extends StatelessWidget {
             Expanded(
               child: Text(
                 state.healthDisponible
-                    ? 'Progreso de hoy: ${_groupThousands(pasos)} pasos'
-                    : 'Activa los datos de actividad para seguir tus pasos',
+                    ? strings.pfProgresoPasos(_groupThousands(pasos))
+                    : strings.pfActivaDatos,
                 style: AppType.labelSm.copyWith(color: AppColors.outline),
               ),
             ),

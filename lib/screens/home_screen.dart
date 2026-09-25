@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../services/locale_service.dart';
 import '../state/app_state.dart';
 import '../state/workout.dart';
 import '../theme.dart';
@@ -47,13 +48,17 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildResumenHoy() {
     final state = context.watch<AppState>();
+    final strings = context.watch<LocaleService>().strings;
     final pasosDisponible = state.healthDisponible;
     final pulso = state.pulsoHoy;
     final pulsoConPermiso = state.pulsoConPermiso;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SectionHeader(title: 'Resumen de hoy', actionLabel: 'Ver detalles'),
+        SectionHeader(
+          title: strings.homeResumenHoy,
+          actionLabel: strings.homeVerDetalles,
+        ),
         const SizedBox(height: 12),
         Row(
           children: [
@@ -75,14 +80,14 @@ class _HomeScreenState extends State<HomeScreen> {
             Expanded(
               child: MetricCard(
                 stat: MetricStat(
-                  label: 'Calorías',
+                  label: strings.homeCalorias,
                   value: state.caloriasConsumidas.round().toString(),
                   unit: 'kcal',
                   icon: Icons.local_fire_department,
                   iconColor: AppColors.primary,
                   iconBackground: AppColors.surfaceContainer,
                 ),
-                subtitle: 'Meta: ${state.caloriasMeta.round()} kcal',
+                subtitle: strings.homeMetaKcal(state.caloriasMeta.round()),
                 progress: state.progresoCalorias,
               ),
             ),
@@ -90,7 +95,7 @@ class _HomeScreenState extends State<HomeScreen> {
             Expanded(
               child: MetricCard(
                 stat: MetricStat(
-                  label: 'Pulso',
+                  label: strings.homePulso,
                   value: pulso?.toString() ?? '—',
                   unit: 'bpm',
                   icon: Icons.favorite,
@@ -100,12 +105,12 @@ class _HomeScreenState extends State<HomeScreen> {
                       : AppColors.surfaceContainerHighest,
                 ),
                 subtitle: pulso != null
-                    ? 'Última lectura de hoy'
+                    ? strings.homeUltimaLectura
                     : (pulsoConPermiso
-                        ? 'Sin lectura de hoy'
+                        ? strings.homeSinLectura
                         : (state.healthConnectDisponible
-                            ? 'Conecta Health Connect'
-                            : 'Requiere Health Connect')),
+                            ? strings.homeConectaHealth
+                            : strings.requiereHealthConnect)),
                 subtitleColor:
                     pulso != null ? AppColors.primary : AppColors.outline,
                 radius: 24,
@@ -116,7 +121,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         const SizedBox(height: 12),
         Text(
-          'Solo orientativo · consulta a un médico antes de cambiar tu rutina',
+          strings.homeOrientativo,
           style: AppType.labelSm.copyWith(color: AppColors.outline),
         ),
       ],
@@ -124,6 +129,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildEntrenamientoHoy() {
+    final strings = context.watch<LocaleService>().strings;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -131,7 +137,7 @@ class _HomeScreenState extends State<HomeScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Expanded(
-              child: Text('Entrenamiento de hoy', style: AppType.headlineSm.copyWith(fontWeight: FontWeight.w700)),
+              child: Text(strings.homeEntrenamientoHoy, style: AppType.headlineSm.copyWith(fontWeight: FontWeight.w700)),
             ),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -140,7 +146,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 borderRadius: BorderRadius.circular(999),
               ),
               child: Text(
-                'Sugerido',
+                strings.homeSugerido,
                 style: AppType.labelSm.copyWith(
                   color: AppColors.onSecondaryContainer,
                   fontWeight: FontWeight.w700,
@@ -164,10 +170,11 @@ class _HomeHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     // Saludo personalizado con el nombre del atleta de la sesión.
     final state = context.watch<AppState>();
+    final strings = context.watch<LocaleService>().strings;
     final nombre = state.profile.nombre.split(' ').first;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-      decoration: const BoxDecoration(color: AppColors.surface),
+      decoration: BoxDecoration(color: AppColors.surface),
       child: Row(
         children: [
           Stack(
@@ -206,7 +213,7 @@ class _HomeHeader extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Hola, $nombre',
+                  strings.homeHola(nombre),
                   style: AppType.headlineSm.copyWith(
                     fontWeight: FontWeight.w700,
                     height: 1.1,
@@ -214,7 +221,7 @@ class _HomeHeader extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  '¿Listo para superar tus límites hoy?',
+                  strings.homeListo,
                   style: AppType.bodySm.copyWith(color: AppColors.onSurfaceVariant),
                 ),
               ],
@@ -233,7 +240,7 @@ class _HomeHeader extends StatelessWidget {
                 const Text('🔥', style: TextStyle(fontSize: 14)),
                 const SizedBox(width: 4),
                 Text(
-                  '${state.rachaDias} días',
+                  strings.rachaDias(state.rachaDias),
                   style: AppType.labelMd.copyWith(
                     color: AppColors.primary,
                     fontWeight: FontWeight.w700,
@@ -305,6 +312,7 @@ class _PasosCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final strings = context.watch<LocaleService>().strings;
     final percent = available && goal > 0 ? steps / goal : 0.0;
     return Material(
       color: AppColors.surfaceLowest,
@@ -334,10 +342,10 @@ class _PasosCard extends StatelessWidget {
                   children: [
                     Row(
                       children: [
-                        const Icon(Icons.directions_walk, size: 18, color: AppColors.primary),
+                        Icon(Icons.directions_walk, size: 18, color: AppColors.primary),
                         const SizedBox(width: 6),
                         Text(
-                          'Pasos',
+                          strings.homePasos,
                           style: AppType.labelMd.copyWith(
                             color: AppColors.outline,
                             fontWeight: FontWeight.w600,
@@ -376,7 +384,7 @@ class _PasosCard extends StatelessWidget {
                     const SizedBox(height: 8),
                     if (!available)
                       Text(
-                        'Activa el permiso de actividad en los ajustes del teléfono',
+                        strings.homeActivaPermiso,
                         textAlign: TextAlign.left,
                         style: AppType.bodySm.copyWith(color: AppColors.outline),
                       ),
@@ -415,16 +423,17 @@ class _WorkoutHeroCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final strings = context.watch<LocaleService>().strings;
     final intensidad = program.intensidad.toUpperCase();
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
-        gradient: const LinearGradient(
+        gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFF003824), AppColors.primary, Color(0xFF003D27)],
+          colors: [Color(0xFF003824), Color(0xFF005C41), Color(0xFF003D27)],
         ),
         boxShadow: [
           BoxShadow(
@@ -464,7 +473,10 @@ class _WorkoutHeroCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'RECOMENDADO PARA TI • ${program.duracionEtiqueta.toUpperCase()} • INTENSIDAD $intensidad',
+                strings.homeRecomendado(
+                  program.duracionEtiqueta.toUpperCase(),
+                  intensidad,
+                ),
                 style: AppType.labelSm.copyWith(
                   color: AppColors.secondaryFixed,
                   fontWeight: FontWeight.w700,
@@ -518,7 +530,7 @@ class _WorkoutHeroCard extends StatelessWidget {
                           const SizedBox(width: 8),
                           Flexible(
                             child: Text(
-                              'Comenzar entrenamiento',
+                              strings.homeComenzar,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: AppType.labelLg.copyWith(
@@ -561,9 +573,13 @@ class _HeroInfoChip extends StatelessWidget {
         children: [
           Icon(icon, size: 14, color: AppColors.secondaryFixed),
           const SizedBox(width: 4),
-          Text(
-            label,
-            style: AppType.labelMd.copyWith(color: Colors.white, fontWeight: FontWeight.w600),
+          Flexible(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AppType.labelMd.copyWith(color: Colors.white, fontWeight: FontWeight.w600),
+            ),
           ),
         ],
       ),
@@ -577,6 +593,7 @@ class _DiaIdealCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final state = context.watch<AppState>();
+    final strings = context.watch<LocaleService>().strings;
     final entrenado = state.entrenadoHoy;
     final metaOk = state.progresoCalorias >= 1.0;
     final aguaActual = state.aguaHoy;
@@ -596,7 +613,7 @@ class _DiaIdealCard extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  'DÍA IDEAL',
+                  strings.homeDiaIdeal,
                   style: AppType.labelLg.copyWith(
                     color: AppColors.primary,
                     fontWeight: FontWeight.w800,
@@ -604,17 +621,21 @@ class _DiaIdealCard extends StatelessWidget {
                   ),
                 ),
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: AppColors.secondaryContainer,
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: Text(
-                  '$completados/3 completados',
-                  style: AppType.labelSm.copyWith(
-                    color: AppColors.onSecondaryContainer,
-                    fontWeight: FontWeight.w700,
+              Flexible(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppColors.secondaryContainer,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Text(
+                    strings.homeCompletados(completados),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppType.labelSm.copyWith(
+                      color: AppColors.onSecondaryContainer,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
               ),
@@ -622,13 +643,13 @@ class _DiaIdealCard extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            'Completa los 3 objetivos de hoy para un día perfecto.',
+            strings.homeCompletaObjetivos,
             style: AppType.bodySm.copyWith(color: AppColors.outline),
           ),
           const SizedBox(height: 12),
           _DiaIdealItem(
             icon: Icons.fitness_center,
-            title: 'Entrenamiento',
+            title: strings.homeEntrenamiento,
             subtitle: '${recomendado.nombre} • ${recomendado.duracionEtiqueta}',
             done: entrenado,
             onTap: () {
@@ -642,7 +663,7 @@ class _DiaIdealCard extends StatelessWidget {
           const SizedBox(height: 8),
           _DiaIdealItem(
             icon: Icons.set_meal_outlined,
-            title: 'Macros',
+            title: strings.homeMacros,
             subtitle: '${state.caloriasConsumidas.round()} / ${state.caloriasMeta.round()} kcal',
             done: metaOk,
             onTap: () {},
@@ -650,10 +671,10 @@ class _DiaIdealCard extends StatelessWidget {
           const SizedBox(height: 8),
           _DiaIdealItem(
             icon: Icons.water_drop_outlined,
-            title: 'Agua',
+            title: strings.homeAgua,
             subtitle: state.aguaConPermiso && aguaActual != null
                 ? '${aguaActual.toStringAsFixed(1)} / $aguaObjetivo L'
-                : 'Objetivo: $aguaObjetivo L',
+                : strings.homeObjetivoAgua(aguaObjetivo.toString()),
             done: aguaOk,
             onTap: () {},
           ),
@@ -680,6 +701,7 @@ class _DiaIdealItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final strings = context.watch<LocaleService>().strings;
     final fg = done ? AppColors.primary : AppColors.onSurfaceVariant;
     return Material(
       color: AppColors.surfaceContainerLow,
@@ -732,7 +754,7 @@ class _DiaIdealItem extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               Text(
-                done ? '✓' : 'Pendiente',
+                done ? '✓' : strings.homePendiente,
                 style: AppType.labelSm.copyWith(
                   color: done ? AppColors.primary : AppColors.outline,
                   fontWeight: FontWeight.w700,

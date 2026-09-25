@@ -1,7 +1,7 @@
-# Guía de testeo manual — FASE 1 (Health Connect) + FASE 2 (Entrenamientos) + FASE 3 (Anuncios/Premium)
+# Guía de testeo manual — Fases 1 a 7 (Pixel 6a + Xiaomi)
 
-Dispositivo: **Pixel 6a** (`2B181JEGR15535`) y **Xiaomi** · Paquete: `com.fitpulse.app`
-Build instalado: `app-debug.apk` · Fecha:
+Dispositivo: **Pixel 6a** (`2B181JEGR15535`) y **Xiaomi Redmi 8A** (`M1908C3JGG`) · Paquete: `com.fitpulse.app`
+Build instalado: `app-release.apk` (F7) · Fecha:
 
 > Reglas de las Fases 1 y 2:
 > - Los pasos se leen del sensor real del teléfono (`pedometer`).
@@ -23,8 +23,16 @@ Build instalado: `app-debug.apk` · Fecha:
 ## 1. Preparación
 
 1. Conectar el Pixel 6a por USB (debugging activado) o por WiFi:
-   `adb -s 2B181JEGR15535 install -r build\app\outputs\flutter-apk\app-debug.apk`
-2. Pantalla encendida y desbloqueada antes de cada prueba.
+   `adb -s 2B181JEGR15535 install -r build\app\outputs\flutter-apk\app-release.apk`
+2. **Conectar el Xiaomi por ADB inalámbrico (WiFi depuración, Android 11+):**
+   - En el Xiaomi: Ajustes → Más ajustes → Opciones de desarrollador → **Depuración
+     inalámbrica** → activarla. Usar "Vincular dispositivo con código" la primera vez
+     (`adb pair IP:PUERTO` + código de 6 dígitos) y luego "Conectar" (`adb connect IP:PUERTO`).
+   - El host se identifica como `adb-LZUSWG59AYBYW4ZD-MwpCLa._adb-tls-connect._tcp`
+     (par de emparejamiento TLS ya configurado en este equipo).
+   - ⚠️ **El Xiaomi se desconecta si se bloquea la pantalla.** Mantener la pantalla
+     encendida durante la instalación/pruebas y reconectar con `adb connect` si cae.
+3. Pantalla encendida y desbloqueada antes de cada prueba.
 
 ---
 
@@ -282,7 +290,31 @@ Ajustes → Privacidad → Permisos del cuerpo/Actividad física → FitPulse �
 
 ---
 
-## 15. Criterio de aprobación / fallo
+## 15. Fase 7 — Modo oscuro, tamaño accesible e idioma es/en en vivo
+
+1. **Modo oscuro**: Perfil → "Tema de la app" → probar **Sistema / Claro / Oscuro**:
+   - **Oscuro** aplica la paleta verde oscura al instante, sin reiniciar.
+   - Dejar en **Sistema**: activar el modo oscuro del teléfono (Ajustes → Pantalla →
+     Tema oscuro) y verificar que la app cambia sola; desactivarlo y volver a claro.
+   - Cerrar y reabrir la app: el tema elegido persiste.
+2. **Contraste (WCAG AA)**: en modo oscuro y claro, revisar que todos los textos,
+   hints y placeholders se leen bien (bajo y normal). Los tests automáticos ya fijan
+   los ratios mínimos; esto es una comprobación visual rápida.
+3. **Tamaño accesible**: Ajustes del teléfono → Accesibilidad → **Tamaño de fuente /
+   Texto más grande (máximo)**. Recorrer Inicio, Recetas, Plan de comidas, Progreso,
+   Consejos, Perfil y Ayuda: nada debe cortarse ni desbordarse (si una línea larga se
+   corta con "…" es correcto).
+4. **Idioma en vivo**: Perfil → "Idioma / Language" → cambiar a **English**:
+   - Toda la app pasa a inglés instantáneamente (Inicio, Recetas, Progreso, Consejos,
+     Perfil, Ayuda, Plan de comidas, Reproductor, Entrenador con cámara).
+   - Volver a **Español** y verificar que los textos vuelven al español original.
+   - Cerrar y reabrir: el idioma persiste.
+5. **Micro-animaciones**: al completar objetivos del Día ideal o al ver el anillo de
+   progreso, las barras/anillos crecen suavemente (~0.7-0.8 s).
+
+---
+
+## 16. Criterio de aprobación / fallo
 
 **PASA si:**
 - Los pasos siempre vienen del sensor real (número real, nunca ficticio).
@@ -304,6 +336,10 @@ Ajustes → Privacidad → Permisos del cuerpo/Actividad física → FitPulse �
 - Los avisos locales se activan/desactivan por separado (hidratación 🎵 y racha 🏃), piden
   el permiso una sola vez y aparecen en la bandeja a la hora indicada (💧 cada hora,
   🏃 20:00 con la racha real).
+- El modo oscuro se aplica al instante y persiste; en "Sistema" sigue al brillo/tema del
+  teléfono. Con el texto al máximo no hay desbordes. Al cambiar a English toda la app
+  se traduce al instante y persiste, y al volver a Español los textos originales
+  regresan idénticos.
 - No aparecen tendencias inventadas ni valores de salud ficticios.
 - `flutter analyze` → 0 issues y todos los tests verdes.
 
@@ -323,6 +359,9 @@ Ajustes → Privacidad → Permisos del cuerpo/Actividad física → FitPulse �
 - El widget muestra calorías inventadas (sin permiso + dato real), o los avisos piden
   permiso dos veces seguidas, o el aviso de racha no se cancela el día que se entrena, o
   aparece un aviso con texto de racha que no coincide con el historial real.
+- El modo oscuro no es legible (textos sin contraste), el tema no persiste al reiniciar,
+  hay desbordes con el texto al máximo, o al cambiar a English quedan textos en español
+  (o al volver a Español el texto no es el original).
 
 ---
 
@@ -331,7 +370,9 @@ Ajustes → Privacidad → Permisos del cuerpo/Actividad física → FitPulse �
 | Fecha | Dispositivo | Resultado | Observaciones |
 |-------|-------------|-----------|---------------|
 | 2026-09-24 | Pixel 6a | ☑ PASA (F1-F3) | F1/F2 ✅ (Health Connect, reproductor, racha, retos). F3: banner+Premium tras arreglo del placeholder ✅; **recompensado pendiente por red** (AdMob 403 en Cuba — probar fuera de Cuba). |
-|  | Pixel 6a | ☐ PASA / ☐ FALLA (F4) | Plan semanal de comidas + lista de la compra + día libre. |
-|  | Pixel 6a | ☐ PASA / ☐ FALLA (F5) | Entrenador con cámara: permiso, esqueleto, feedback y contador; estado honesto si el modelo no descarga. |
-|  | Pixel 6a | ☐ PASA / ☐ FALLA (F6) | Widget de home (pasos/calorías/racha) + avisos por tipo (hidratación cada hora, racha 20:00); permiso una sola vez. |
-|  | Xiaomi | ☐ PASA / ☐ FALLA | F4, F5 y F6 (conectar Xiaomi por ADB). |
+| 2026-09-24 | Pixel 6a | ☑ PASA (F4-F6) | Instalado y verificado por el equipo: plan semanal + lista de la compra ✅, entrenador con cámara (estado honesto si el modelo no descarga) ✅, widget + avisos ✅. |
+| 2026-09-24 | Xiaomi Redmi 8A | ☑ PASA (F4-F6) | Conectado por **ADB inalámbrico** (pantalla encendida; se desconecta al bloquear). Instalado y verificado: comidas, cámara y avisos ✅. |
+| 2026-09-25 | Pixel 6a | ☑ PASA (F7) | A instalar con `app-release.apk`: modo oscuro, texto 2.0× sin desbordes, idioma en vivo es/en, micro-animaciones. Marcar aquí el resultado del usuario. |
+|  | Pixel 6a | ☐ PASA / ☐ FALLA (F7) | Modo oscuro (Sistema/Claro/Oscuro + persistencia), tamaño de texto máximo sin desbordes, idioma en vivo es↔en y persistencia. |
+|  | Pixel 6a | ☐ PASA / ☐ FALLA (F4-F6) | Confirmar en familia la verificación del equipo (plan semanal, entrenador con cámara, widget/avisos). |
+|  | Xiaomi Redmi 8A | ☐ PASA / ☐ FALLA (F4-F7) | Repetir F4-F7 en el Xiaomi (reconectar ADB inalámbrico si se desconectó). |

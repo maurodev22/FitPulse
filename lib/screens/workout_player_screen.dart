@@ -10,6 +10,7 @@ import 'pose_coach_screen.dart';
 import '../services/ads_service.dart';
 import '../services/avisos_service.dart';
 import '../services/config_service.dart';
+import '../services/locale_service.dart';
 import '../theme.dart';
 
 /// Reproductor de entrenamiento (Fase 2).
@@ -110,6 +111,7 @@ class _WorkoutPlayerScreenState extends State<WorkoutPlayerScreen> {
   void _finalizar() {
     _terminado = true;
     _timer?.cancel();
+    final strings = context.read<LocaleService>().strings;
     final state = context.read<AppState>();
     state.registrarSesionCompletada(
       nombre: widget.program.nombre,
@@ -125,7 +127,7 @@ class _WorkoutPlayerScreenState extends State<WorkoutPlayerScreen> {
     );
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Sesión completada: ${widget.program.nombre} (+50 pts)'),
+        content: Text(strings.wpSesionCompletada(widget.program.nombre)),
       ),
     );
     Navigator.of(context).pop();
@@ -150,9 +152,10 @@ class _WorkoutPlayerScreenState extends State<WorkoutPlayerScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final strings = context.watch<LocaleService>().strings;
     final total = widget.program.ejercicios.length;
     final progreso = (total == 0) ? 0.0 : (_indice + (_enDescanso ? 0 : 1)) / total;
-    final intensidad = widget.program.intensidad.toUpperCase();
+    final intensidad = strings.wpIntensidad(widget.program.intensidad);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -164,7 +167,7 @@ class _WorkoutPlayerScreenState extends State<WorkoutPlayerScreen> {
             _timer?.cancel();
             Navigator.of(context).pop();
           },
-          icon: const Icon(Icons.close, color: AppColors.onSurfaceVariant),
+          icon: Icon(Icons.close, color: AppColors.onSurfaceVariant),
         ),
         title: Text(
           widget.program.nombre,
@@ -206,7 +209,7 @@ class _WorkoutPlayerScreenState extends State<WorkoutPlayerScreen> {
                   ),
                   const SizedBox(width: 12),
                   Text(
-                    '$intensidad · ${widget.program.duracionEtiqueta}',
+                    '$intensidad · ${strings.wpMin(widget.program.duracionMin)}',
                     style: AppType.labelSm.copyWith(color: AppColors.outline),
                   ),
                 ],
@@ -229,7 +232,7 @@ class _WorkoutPlayerScreenState extends State<WorkoutPlayerScreen> {
                 child: Column(
                   children: [
                     Text(
-                      _enDescanso ? 'DESCANSO' : 'EJERCICIO',
+                      _enDescanso ? strings.wpDescanso : strings.wpEjercicio,
                       style: AppType.labelMd.copyWith(
                         color: _enDescanso
                             ? AppColors.secondaryFixed
@@ -270,7 +273,7 @@ class _WorkoutPlayerScreenState extends State<WorkoutPlayerScreen> {
                     if (_ejercicio.repeticiones.isNotEmpty) ...[
                       const SizedBox(height: 6),
                       Text(
-                        _ejercicio.repeticiones,
+                        strings.wpRepeticiones(_ejercicio.repeticiones),
                         style: AppType.bodyMd.copyWith(
                           color: AppColors.onSurfaceVariant,
                         ),
@@ -280,13 +283,13 @@ class _WorkoutPlayerScreenState extends State<WorkoutPlayerScreen> {
                       const SizedBox(height: 14),
                       TextButton.icon(
                         onPressed: _abrirEntrenadorCamara,
-                        icon: const Icon(
+                        icon: Icon(
                           Icons.videocam_outlined,
                           size: 18,
                           color: AppColors.primary,
                         ),
-                        label: const Text(
-                          'Corregir postura con cámara',
+                        label: Text(
+                          strings.wpCorregirPostura,
                           style: TextStyle(
                             color: AppColors.primary,
                             fontWeight: FontWeight.w700,
@@ -306,13 +309,13 @@ class _WorkoutPlayerScreenState extends State<WorkoutPlayerScreen> {
                       onPressed: _saltar,
                       style: OutlinedButton.styleFrom(
                         foregroundColor: AppColors.onSurfaceVariant,
-                        side: const BorderSide(color: AppColors.outlineVariant),
+                        side: BorderSide(color: AppColors.outlineVariant),
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(999),
                         ),
                       ),
-                      child: Text('Saltar', style: AppType.labelLg),
+                      child: Text(strings.wpSaltar, style: AppType.labelLg),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -333,7 +336,7 @@ class _WorkoutPlayerScreenState extends State<WorkoutPlayerScreen> {
                         size: 22,
                       ),
                       label: Text(
-                        _pausado ? 'Reanudar' : 'Pausar',
+                        _pausado ? strings.wpReanudar : strings.wpPausar,
                         style: AppType.labelLg.copyWith(
                           fontWeight: FontWeight.w700,
                         ),
@@ -345,8 +348,8 @@ class _WorkoutPlayerScreenState extends State<WorkoutPlayerScreen> {
               const SizedBox(height: 12),
               TextButton(
                 onPressed: _terminado ? null : _finalizar,
-                child: const Text(
-                  'Terminar sesión',
+                child: Text(
+                  strings.wpTerminar,
                   style: TextStyle(
                     color: AppColors.error,
                     fontWeight: FontWeight.w600,

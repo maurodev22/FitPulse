@@ -86,9 +86,10 @@ class _HelpHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final strings = context.watch<LocaleService>().strings;
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
-      decoration: const BoxDecoration(color: AppColors.surface),
+      decoration: BoxDecoration(color: AppColors.surface),
       child: Row(
         children: [
           Container(
@@ -98,7 +99,7 @@ class _HelpHeader extends StatelessWidget {
               color: AppColors.primaryContainer,
               borderRadius: BorderRadius.circular(16),
             ),
-            child: const Icon(Icons.live_help, color: AppColors.onPrimary, size: 24),
+            child: Icon(Icons.live_help, color: AppColors.onPrimary, size: 24),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -106,12 +107,12 @@ class _HelpHeader extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Help & Support',
+                  strings.helpHeaderTitle,
                   style: AppType.headlineSm.copyWith(fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  'Manual de usuario y preguntas frecuentes',
+                  strings.helpHeaderSubtitle,
                   style: AppType.bodySm.copyWith(color: AppColors.onSurfaceVariant),
                 ),
               ],
@@ -242,7 +243,7 @@ class _ManualBody extends StatelessWidget {
                 width: 5,
                 height: 5,
                 margin: const EdgeInsets.only(top: 6),
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   color: AppColors.secondaryFixedDim,
                   shape: BoxShape.circle,
                 ),

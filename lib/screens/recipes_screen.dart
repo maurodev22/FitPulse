@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../services/locale_service.dart';
 import '../state/app_state.dart';
 import '../state/meal_plan.dart';
 import '../state/recetas_catalog.dart';
@@ -37,6 +38,7 @@ class _RecipesScreenState extends State<RecipesScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final strings = context.watch<LocaleService>().strings;
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -55,7 +57,7 @@ class _RecipesScreenState extends State<RecipesScreen> {
                     onChanged: (_) => setState(() {}),
                   ),
                   const SizedBox(height: 16),
-                  _buildCategoryPills(),
+                  _buildCategoryPills(strings),
                   const SizedBox(height: 20),
                   const _MacroSummaryCard(),
                   const SizedBox(height: 16),
@@ -78,7 +80,7 @@ class _RecipesScreenState extends State<RecipesScreen> {
     );
   }
 
-  Widget _buildCategoryPills() {
+  Widget _buildCategoryPills(AppStrings strings) {
     return SizedBox(
       height: 32,
       child: ListView.separated(
@@ -104,7 +106,7 @@ class _RecipesScreenState extends State<RecipesScreen> {
                   border: selected ? null : Border.all(color: AppColors.outlineVariant),
                 ),
                 child: Text(
-                  label,
+                  strings.recetaCategoria(label),
                   style: AppType.labelMd.copyWith(
                     color: textColor,
                     fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
@@ -136,6 +138,7 @@ class _PlanSemanalCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final strings = context.watch<LocaleService>().strings;
     final perfil = context.watch<AppState>().profile;
     return Material(
       color: AppColors.surface,
@@ -169,7 +172,7 @@ class _PlanSemanalCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Plan semanal de comidas',
+                      strings.recPlanSemanal,
                       style: AppType.labelMd.copyWith(
                         color: AppColors.onSurface,
                         fontWeight: FontWeight.w700,
@@ -177,14 +180,13 @@ class _PlanSemanalCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      'Según tu meta (${perfil.caloriasMeta.round()} kcal/día) + lista '
-                      'de la compra. Día libre el domingo 🍕',
+                      strings.recPlanSemanalDesc(perfil.caloriasMeta.round()),
                       style: AppType.bodySm.copyWith(color: AppColors.onSurfaceVariant),
                     ),
                   ],
                 ),
               ),
-              const Icon(Icons.chevron_right, color: AppColors.outline),
+              Icon(Icons.chevron_right, color: AppColors.outline),
             ],
           ),
         ),
@@ -198,6 +200,7 @@ class _RecipesHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final strings = context.watch<LocaleService>().strings;
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 4),
       decoration: BoxDecoration(
@@ -214,7 +217,7 @@ class _RecipesHeader extends StatelessWidget {
           const SizedBox(width: 10),
           Expanded(
             child: Text(
-              'Recetas',
+              strings.recHeader,
               style: AppType.headlineSm.copyWith(
                 fontWeight: FontWeight.w800,
                 height: 1.15,
@@ -235,6 +238,7 @@ class _SearchBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final strings = context.watch<LocaleService>().strings;
     return Container(
       height: 44,
       decoration: BoxDecoration(
@@ -244,7 +248,7 @@ class _SearchBar extends StatelessWidget {
       child: Row(
         children: [
           const SizedBox(width: 14),
-          const Icon(Icons.search, size: 20, color: AppColors.outline),
+          Icon(Icons.search, size: 20, color: AppColors.outline),
           const SizedBox(width: 10),
           Expanded(
             child: TextField(
@@ -252,7 +256,7 @@ class _SearchBar extends StatelessWidget {
               onChanged: onChanged,
               style: AppType.bodyMd.copyWith(color: AppColors.onSurface),
               decoration: InputDecoration(
-                hintText: 'Buscar ingredientes, calorías o platos...',
+                hintText: strings.recBuscar,
                 hintStyle: AppType.bodySm.copyWith(color: Colors.grey),
                 border: InputBorder.none,
                 isDense: true,
@@ -260,7 +264,7 @@ class _SearchBar extends StatelessWidget {
               ),
             ),
           ),
-          const Padding(
+          Padding(
             padding: EdgeInsets.only(right: 10),
             child: Icon(Icons.tune, size: 20, color: AppColors.outline),
           ),
@@ -276,6 +280,7 @@ class _MacroSummaryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Balance del día proveniente del estado persistido.
+    final strings = context.watch<LocaleService>().strings;
     final state = context.watch<AppState>();
     final kcal = state.caloriasConsumidas.round();
     final meta = state.caloriasMeta.round();
@@ -309,7 +314,7 @@ class _MacroSummaryCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'BALANCE NUTRICIONAL DE HOY',
+                    strings.recBalanceHoy,
                     style: AppType.labelSm.copyWith(
                       color: AppColors.secondaryFixed,
                       fontWeight: FontWeight.w700,
@@ -334,7 +339,7 @@ class _MacroSummaryCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(999),
                 ),
                 child: Text(
-                  '$pct% completado',
+                  strings.recPorciento(pct),
                   style: AppType.labelSm.copyWith(
                     color: Colors.white,
                     fontWeight: FontWeight.w700,
@@ -348,7 +353,7 @@ class _MacroSummaryCard extends StatelessWidget {
             children: [
               Expanded(
                 child: _MacroCell(
-                  label: 'Proteínas',
+                  label: strings.recProteinas,
                   value: '${state.proteinasConsumidas.round()}g',
                   goal: '140g',
                 ),
@@ -356,7 +361,7 @@ class _MacroSummaryCard extends StatelessWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: _MacroCell(
-                  label: 'Carbos',
+                  label: strings.recCarbos,
                   value: '${state.carbosConsumidos.round()}g',
                   goal: '190g',
                 ),
@@ -364,7 +369,7 @@ class _MacroSummaryCard extends StatelessWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: _MacroCell(
-                  label: 'Grasas',
+                  label: strings.recGrasas,
                   value: '${state.grasasConsumidas.round()}g',
                   goal: '55g',
                 ),
@@ -433,11 +438,16 @@ class _FeaturedRecipeSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final strings = context.watch<LocaleService>().strings;
     final recipe = featuredRecipe;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SectionHeader(title: 'Recomendada para Definir', actionLabel: 'Ver plan', uppercase: true),
+        SectionHeader(
+          title: strings.recRecomendadaDefinir,
+          actionLabel: strings.recVerPlan,
+          uppercase: true,
+        ),
         const SizedBox(height: 12),
         _RecipeCard(recipe: recipe),
       ],
@@ -453,6 +463,7 @@ class _RecipeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final strings = context.watch<LocaleService>().strings;
     final state = context.watch<AppState>();
     final esFavorita = state.favoritas.contains(recipe.nombre);
     return Container(
@@ -518,10 +529,10 @@ class _RecipeCard extends StatelessWidget {
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.timer, size: 16, color: AppColors.secondaryFixed),
+                        Icon(Icons.timer, size: 16, color: AppColors.primary),
                         const SizedBox(width: 4),
                         Text(
-                          '${recipe.minutos} min',
+                          strings.recMin(recipe.minutos),
                           style: AppType.labelMd.copyWith(
                             color: Colors.white,
                             fontWeight: FontWeight.w600,
@@ -560,7 +571,7 @@ class _RecipeCard extends StatelessWidget {
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
-                        '${recipe.calorias.round()} kcal',
+                        strings.recKcal(recipe.calorias.round()),
                         style: AppType.labelSm.copyWith(
                           color: AppColors.primary,
                           fontWeight: FontWeight.w800,
@@ -580,11 +591,11 @@ class _RecipeCard extends StatelessWidget {
                   runSpacing: 6,
                   crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
-                    _MacroTag(text: '💪 ${recipe.proteinas.round()}g Prot'),
-                    const Text('  •  ', style: TextStyle(color: AppColors.outline, fontSize: 11)),
-                    _MacroTag(text: '🥑 ${recipe.grasas.round()}g Grasas'),
-                    const Text('  •  ', style: TextStyle(color: AppColors.outline, fontSize: 11)),
-                    _MacroTag(text: '🌾 ${recipe.carbos.round()}g Carb'),
+                    _MacroTag(text: strings.recProtTag(recipe.proteinas)),
+                    Text('  •  ', style: TextStyle(color: AppColors.outline, fontSize: 11)),
+                    _MacroTag(text: strings.recGrasasTag(recipe.grasas)),
+                    Text('  •  ', style: TextStyle(color: AppColors.outline, fontSize: 11)),
+                    _MacroTag(text: strings.recCarbTag(recipe.carbos)),
                   ],
                 ),
                 const SizedBox(height: 12),
@@ -596,19 +607,19 @@ class _RecipeCard extends StatelessWidget {
                     child: InkWell(
                       onTap: () => _registrar(context),
                       borderRadius: BorderRadius.circular(999),
-                      child: const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 12),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.add_circle_outline, size: 18, color: Colors.white),
-                            SizedBox(width: 6),
+                            const Icon(Icons.add_circle_outline, size: 18, color: Colors.white),
+                            const SizedBox(width: 6),
                             Flexible(
                               child: Text(
-                                'Registrar en mi balance',
+                                strings.recRegistrarBalance,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
+                                style: const TextStyle(
                                   fontFamily: 'Inter',
                                   fontSize: 13,
                                   fontWeight: FontWeight.w700,
@@ -632,6 +643,7 @@ class _RecipeCard extends StatelessWidget {
 
   /// Suma los macros de la receta al balance diario persistido.
   void _registrar(BuildContext context) {
+    final strings = context.read<LocaleService>().strings;
     context.read<AppState>().registrarConsumo(
           calorias: recipe.calorias,
           proteinas: recipe.proteinas,
@@ -639,7 +651,7 @@ class _RecipeCard extends StatelessWidget {
           grasas: recipe.grasas,
         );
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('${recipe.nombre} registrada (+${recipe.calorias.round()} kcal)')),
+      SnackBar(content: Text(strings.recRegistrada(recipe.nombre, recipe.calorias.round()))),
     );
   }
 }
@@ -668,12 +680,13 @@ class _QuickOptionsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final strings = context.watch<LocaleService>().strings;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SectionHeader(
-          title: 'Opciones Rápidas',
-          actionLabel: 'Ver todas',
+          title: strings.recOpcionesRapidas,
+          actionLabel: strings.recVerTodas,
           onAction: onVerTodas,
           uppercase: true,
         ),
@@ -702,6 +715,7 @@ class _QuickRecipeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final strings = context.watch<LocaleService>().strings;
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: _recipeCardDecoration(),
@@ -729,7 +743,7 @@ class _QuickRecipeCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
-                    '${recipe.minutos} min',
+                    strings.recMin(recipe.minutos),
                     style: AppType.labelSm.copyWith(
                       color: Colors.white,
                       fontWeight: FontWeight.w700,
@@ -751,7 +765,7 @@ class _QuickRecipeCard extends StatelessWidget {
           ),
           const SizedBox(height: 2),
           Text(
-            '${recipe.calorias.round()} kcal • ${recipe.proteinas.round()}g Prot',
+            strings.recKcalProt(recipe.calorias.round(), recipe.proteinas),
             style: AppType.labelSm.copyWith(
               color: AppColors.primary,
               fontWeight: FontWeight.w800,
@@ -776,7 +790,9 @@ class _QuickRecipeCard extends StatelessWidget {
                       );
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('${recipe.nombre} registrada (+${recipe.calorias.round()} kcal)'),
+                      content: Text(
+                        strings.recRegistrada(recipe.nombre, recipe.calorias.round()),
+                      ),
                     ),
                   );
                 },
@@ -785,13 +801,17 @@ class _QuickRecipeCard extends StatelessWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.add, size: 15, color: AppColors.primary),
+                      Icon(Icons.add, size: 15, color: AppColors.primary),
                       const SizedBox(width: 4),
-                      Text(
-                        'Registrar',
-                        style: AppType.labelSm.copyWith(
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.w700,
+                      Flexible(
+                        child: Text(
+                          strings.recRegistrar,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppType.labelSm.copyWith(
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                       ),
                     ],
@@ -833,11 +853,12 @@ class _RecetasCatalogScreenState extends State<RecetasCatalogScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final strings = context.watch<LocaleService>().strings;
     final recetas = filtrarRecetas(widget.recetasIniciales, _query, _categoria);
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: Text('Todos los platos', style: AppType.headlineSm.copyWith(fontWeight: FontWeight.w800)),
+        title: Text(strings.recTodosLosPlatos, style: AppType.headlineSm.copyWith(fontWeight: FontWeight.w800)),
       ),
       body: SafeArea(
         child: Column(
@@ -847,8 +868,8 @@ class _RecetasCatalogScreenState extends State<RecetasCatalogScreen> {
               child: TextField(
                 onChanged: (v) => setState(() => _query = v),
                 decoration: InputDecoration(
-                  hintText: 'Buscar en el catálogo...',
-                  prefixIcon: const Icon(Icons.search, color: AppColors.outline),
+                  hintText: strings.recBuscarCatalogo,
+                  prefixIcon: Icon(Icons.search, color: AppColors.outline),
                   filled: true,
                   fillColor: const Color(0xFFF0F4F1),
                   border: OutlineInputBorder(
@@ -868,7 +889,7 @@ class _RecetasCatalogScreenState extends State<RecetasCatalogScreen> {
                     Padding(
                       padding: const EdgeInsets.only(right: 8),
                       child: _Chip(
-                        label: c,
+                        label: strings.recetaCategoria(c),
                         selected: c == _categoria,
                         onTap: () => setState(() => _categoria = c),
                       ),
@@ -879,9 +900,9 @@ class _RecetasCatalogScreenState extends State<RecetasCatalogScreen> {
             const SizedBox(height: 8),
             Expanded(
               child: recetas.isEmpty
-                  ? const Center(
+                  ? Center(
                       child: Text(
-                        'Sin resultados para tu búsqueda',
+                        strings.recSinResultados,
                         style: TextStyle(color: AppColors.outline),
                       ),
                     )

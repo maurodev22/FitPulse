@@ -98,19 +98,47 @@ class FitPulseApp extends StatelessWidget {
         ),
       ],
       child: Consumer<LocaleService>(
-        builder: (context, locale, _) => MaterialApp(
-          title: 'FitPulse',
-          debugShowCheckedModeBanner: false,
-          locale: locale.locale == AppLocale.en ? const Locale('en') : const Locale('es'),
-          supportedLocales: const [Locale('es'), Locale('en')],
-          localizationsDelegates: const [
-            GlobalMaterialLocalizations.delegate,
-            GlobalWidgetsLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate,
-          ],
-          theme: buildFitPulseTheme(),
-          scrollBehavior: const NoGlowScrollBehavior(),
-          home: const _Bootstrap(),
+        builder: (context, locale, _) => Consumer<ConfigService>(
+          builder: (context, config, _) {
+            final es = locale.locale == AppLocale.es;
+            return MaterialApp(
+              title: 'FitPulse',
+              debugShowCheckedModeBanner: false,
+              locale: es ? const Locale('es') : const Locale('en'),
+              supportedLocales: const [Locale('es'), Locale('en')],
+              localizationsDelegates: const [
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+              // Fase 7: tema claro/oscuro con paleta WCAG AA; el modo sigue al
+              // sistema o se fuerza desde Perfil (persistido en ConfigService).
+              theme: buildFitPulseTheme(brightness: Brightness.light),
+              darkTheme: buildFitPulseTheme(brightness: Brightness.dark),
+              themeMode: switch (config.themeMode) {
+                AppThemeMode.system => ThemeMode.system,
+                AppThemeMode.light => ThemeMode.light,
+                AppThemeMode.dark => ThemeMode.dark,
+              },
+              builder: (context, child) {
+                // Sincroniza la paleta activa con el tema resuelto para que
+                // AppColors (usado en todo el UI) devuelva colores correctos.
+                final oscuro = switch (config.themeMode) {
+                  AppThemeMode.dark => true,
+                  AppThemeMode.light => false,
+                  AppThemeMode.system =>
+                    MediaQuery.maybeOf(context)?.platformBrightness ==
+                        Brightness.dark,
+                };
+                AppColors.activate(
+                  oscuro ? darkFitPalette : lightFitPalette,
+                );
+                return child!;
+              },
+              scrollBehavior: const NoGlowScrollBehavior(),
+              home: const _Bootstrap(),
+            );
+          },
         ),
       ),
     );

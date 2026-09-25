@@ -40,7 +40,7 @@ class _EulaScreenState extends State<EulaScreen> {
                       color: AppColors.secondaryContainer,
                       borderRadius: BorderRadius.circular(20),
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.shield_outlined,
                       size: 32,
                       color: AppColors.onSecondaryContainer,

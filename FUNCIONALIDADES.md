@@ -26,7 +26,7 @@ contra el estado real de la implementación Flutter. Actualizado tras las **Fase
 | 16 | Registro de uso anónimo | `UsageLogService` | Máx. 200 eventos locales `{t, c, a, d}`, sin red ni identificadores. |
 | 17 | Diseño y tema | `theme.dart` + `common.dart` | Sistema de colores Material 3 verde y tipografías Plus Jakarta Sans / Inter. `SectionHeader` unificado. |
 | 18 | Android con identidad propia | `android/` | Namespace e ID de paquete `com.fitpulse.app`, `minSdk 26`, permisos `READ_*` de Health Connect en manifest, `INTERNET` solo para anuncios, R8 activado en release (app ligera). |
-| 19 | Tests | `test/state_test.dart`, `test/widget_test.dart`, `test/responsive_test.dart`, `test/meal_plan_test.dart` | Cubren onboarding, dashboard, pestañas, Health Connect (mock), racha, retos, niveles, plan adaptativo, reproductor (registro de sesión), recompensa 1/día, toggles de anuncios/premium y el plan semanal de comidas; responsividad 360-411 dp. **34 en verde.** |
+| 19 | Tests | `test/state_test.dart`, `test/widget_test.dart`, `test/responsive_test.dart`, `test/meal_plan_test.dart`, `test/pose_coach_test.dart`, `test/avisos_test.dart`, `test/theme_test.dart`, `test/accessibilidad_test.dart` | Cubren onboarding, dashboard, pestañas, Health Connect (mock), racha, retos, niveles, plan adaptativo, reproductor (registro de sesión), recompensa 1/día, toggles de anuncios/premium, plan semanal de comidas, pose coach, avisos locales, **contraste WCAG AA de ambas paletas** y **ausencia de desbordes a escala 2.0×**. Responsividad 360-411 dp. **55 en verde.** |
 | 20 | Documentación | `README.md`, `PLAN.md`, `FUNCIONALIDADES.md`, `GUIA_TESTEO_FASE1.md` | Plan por fases, estado real, funcionalidades y guía de prueba manual. |
 | 21 | **Anuncios (IDs de prueba)** | `lib/services/ads_service.dart` + `google_mobile_ads` 9.1.0 | Banner inferior en todas las pestañas y en el reproductor; **recompensado** en Progreso: +25 PTs una vez al día (persistido por fecha). Degradación elegante si no hay Play Services/red (placeholder honesto). Toggle "Anuncios habilitados" en Perfil (consentimiento local). |
 | 22 | **Premium "Quitar anuncios"** | `ProfileScreen` + `ConfigService` | Tarjeta con estado y botón "Activar/Desactivar Premium (modo prueba)". Con Premium activo se ocultan banner y recompensado. El cobro real requiere Google Play con entidad fuera de Cuba (ver PLAN.md). |
@@ -45,7 +45,7 @@ contra el estado real de la implementación Flutter. Actualizado tras las **Fase
 | 6 | Sincronización de "Tiempo Activo" completa | Parcial | El paquete `health` 13.3.2 solo expone `EXERCISE_TIME` en iOS; en Android se muestra "—" (honesto, nunca inventado). |
 | 7 | Compartir actividad | Placeholder | Solo un toggle visual. |
 | 8 | Pantalla "Ver detalles"/gráficos | Sin navegación | Enlaces tipo "Ver detalles", "Ver plan", "Ver todo" no implementan destinos. |
-| 9 | Modo oscuro | Ausente | El tema sólo define modo claro (previsto en Fase 7). |
+| 9 | Modo oscuro, contraste/tamaño accesibles e i18n | ✅ (Fase 7) | Selector de tema (Sistema/Claro/Oscuro) persistido + paleta oscura verde propia; contraste WCAG AA verificado por test; sin desbordes a escala de texto 2.0×; textos completos es/en en las 11 pantallas con cambio en vivo desde Perfil → Idioma. |
 | 10 | Widgets y avisos locales | ✅ (Fase 6) | Widget de home con pasos/calorías/racha reales + avisos locales por tipo (hidratación y racha en riesgo 20:00). |
 | 11 | Exportar/importar y borrado total (GDPR) | Ausente | Fase 8. |
 

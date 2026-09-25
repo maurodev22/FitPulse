@@ -1,6 +1,9 @@
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+/// Modo de tema de la app (Fase 7): sigue al sistema o fuerza claro/oscuro.
+enum AppThemeMode { system, light, dark }
+
 /// Versión de los Términos y EULA. Si cambia, se vuelve a pedir la
 /// aceptación al usuario en el siguiente arranque.
 const int kEulaVersion = 1;
@@ -19,11 +22,15 @@ class ConfigService extends ChangeNotifier {
   static const _adsKey = 'fitpulse_config_ads_v1';
   static const _premiumKey = 'fitpulse_config_premium_v1';
   static const _mockSensorsKey = 'fitpulse_config_mock_sensors_v1';
+  static const _themeKey = 'fitpulse_theme_v1';
 
   SharedPreferences? _prefs;
 
   /// Versión del EULA aceptada por el usuario (0 si aún no acepta).
   int eulaAcceptedVersion = 0;
+
+  /// Modo de tema elegido (Fase 7). Por defecto sigue al sistema.
+  AppThemeMode _themeMode = AppThemeMode.system;
 
   /// Feature-flags. Por defecto en modo simulado mientras no existan
   /// sensores reales ni monetización activa.
@@ -34,6 +41,9 @@ class ConfigService extends ChangeNotifier {
   /// Si el usuario ya aceptó la versión vigente de los Términos/EULA.
   bool get eulaAccepted => eulaAcceptedVersion >= kEulaVersion;
 
+  /// Modo de tema persistido (sistema / claro / oscuro).
+  AppThemeMode get themeMode => _themeMode;
+
   /// Carga la configuración persistida del dispositivo.
   Future<void> init() async {
     _prefs = await SharedPreferences.getInstance();
@@ -41,7 +51,23 @@ class ConfigService extends ChangeNotifier {
     adsEnabled = (_prefs!.getInt(_adsKey) ?? 1) == 1;
     premiumEnabled = (_prefs!.getInt(_premiumKey) ?? 0) == 1;
     mockSensorsEnabled = (_prefs!.getInt(_mockSensorsKey) ?? 1) == 1;
+    _themeMode = _leerModoTema(_prefs!.getString(_themeKey));
     notifyListeners();
+  }
+
+  static AppThemeMode _leerModoTema(String? nombre) {
+    for (final modo in AppThemeMode.values) {
+      if (modo.name == nombre) return modo;
+    }
+    return AppThemeMode.system;
+  }
+
+  /// Cambia el modo de tema en vivo y lo persiste.
+  Future<void> setThemeMode(AppThemeMode modo) async {
+    if (modo == _themeMode) return;
+    _themeMode = modo;
+    notifyListeners();
+    await _prefs?.setString(_themeKey, modo.name);
   }
 
   /// Registra la aceptación del EULA con la versión vigente.

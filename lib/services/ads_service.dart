@@ -105,7 +105,7 @@ class _FitBannerAdState extends State<FitBannerAd> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.campaign_outlined,
+            Icon(Icons.campaign_outlined,
                 size: 14, color: AppColors.outline),
             const SizedBox(width: 6),
             Text(

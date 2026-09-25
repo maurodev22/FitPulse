@@ -18,24 +18,30 @@ class AppProgressRing extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: size,
-      height: size,
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          CircularProgressIndicator(
-            value: progress.clamp(0, 1),
-            strokeWidth: strokeWidth,
-            strokeCap: StrokeCap.round,
-            color: AppColors.primary,
-            backgroundColor: AppColors.surfaceContainer,
-          ),
-          if (center != null)
-            Center(
-              child: IgnorePointer(child: center),
+    // Fase 7: micro-animación — el anillo crece suavemente hasta el valor.
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0, end: progress.clamp(0, 1)),
+      duration: const Duration(milliseconds: 800),
+      curve: Curves.easeOutCubic,
+      builder: (context, value, _) => SizedBox(
+        width: size,
+        height: size,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            CircularProgressIndicator(
+              value: value,
+              strokeWidth: strokeWidth,
+              strokeCap: StrokeCap.round,
+              color: AppColors.primary,
+              backgroundColor: AppColors.surfaceContainer,
             ),
-        ],
+            if (center != null)
+              Center(
+                child: IgnorePointer(child: center),
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -46,7 +52,7 @@ class MetricStat {
     required this.label,
     required this.value,
     required this.unit,
-    this.valueColor = AppColors.onSurface,
+    this.valueColor,
     this.icon,
     this.iconColor,
     this.iconBackground,
@@ -55,7 +61,7 @@ class MetricStat {
   final String label;
   final String value;
   final String unit;
-  final Color valueColor;
+  final Color? valueColor;
   final IconData? icon;
   final Color? iconColor;
   final Color? iconBackground;
@@ -66,14 +72,14 @@ class MetricCard extends StatelessWidget {
     super.key,
     required this.stat,
     this.subtitle,
-    this.subtitleColor = AppColors.outline,
+    this.subtitleColor,
     this.progress,
     this.radius = 24,
   });
 
   final MetricStat stat;
   final String? subtitle;
-  final Color subtitleColor;
+  final Color? subtitleColor;
   final double? progress;
   final double radius;
 
@@ -116,25 +122,34 @@ class MetricCard extends StatelessWidget {
             textBaseline: TextBaseline.alphabetic,
             children: [
               Text(stat.value, style: AppType.headlineMd.copyWith(
-                color: stat.valueColor, fontWeight: FontWeight.w800)),
+                color: stat.valueColor ?? AppColors.onSurface, fontWeight: FontWeight.w800)),
               const SizedBox(width: 4),
-              Text(stat.unit, style: AppType.labelSm.copyWith(
-                color: AppColors.onSurfaceVariant, fontWeight: FontWeight.w700)),
+              Flexible(
+                child: Text(stat.unit, maxLines: 1, overflow: TextOverflow.ellipsis,
+                  style: AppType.labelSm.copyWith(
+                    color: AppColors.onSurfaceVariant, fontWeight: FontWeight.w700)),
+              ),
             ],
           ),
           if (subtitle != null) ...[
             const SizedBox(height: 2),
-            Text(subtitle!, style: AppType.bodySm.copyWith(color: subtitleColor)),
+            Text(subtitle!, style: AppType.bodySm.copyWith(color: subtitleColor ?? AppColors.outline)),
           ],
           if (progress != null) ...[
             const SizedBox(height: 12),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(999),
-              child: LinearProgressIndicator(
-                value: progress!.clamp(0, 1),
-                minHeight: 6,
-                backgroundColor: AppColors.surfaceContainer,
-                color: AppColors.primary,
+            // Fase 7: micro-animación — la barra crece suavemente.
+            TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0, end: progress!.clamp(0, 1)),
+              duration: const Duration(milliseconds: 700),
+              curve: Curves.easeOutCubic,
+              builder: (context, value, _) => ClipRRect(
+                borderRadius: BorderRadius.circular(999),
+                child: LinearProgressIndicator(
+                  value: value,
+                  minHeight: 6,
+                  backgroundColor: AppColors.surfaceContainer,
+                  color: AppColors.primary,
+                ),
               ),
             ),
           ],
@@ -203,7 +218,7 @@ class SectionHeader extends StatelessWidget {
                 children: [
                   Text(actionLabel!, style: AppType.labelMd.copyWith(
                     color: AppColors.primary, fontWeight: FontWeight.w600)),
-                  const Icon(Icons.chevron_right, size: 16, color: AppColors.primary),
+                  Icon(Icons.chevron_right, size: 16, color: AppColors.primary),
                 ],
               ),
             ),
@@ -246,7 +261,7 @@ class CategoryChip extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               if (selected) ...[
-                const Icon(Icons.check, size: 14, color: AppColors.onPrimary),
+                Icon(Icons.check, size: 14, color: AppColors.onPrimary),
                 const SizedBox(width: 6),
               ],
               if (icon != null && !selected) ...[

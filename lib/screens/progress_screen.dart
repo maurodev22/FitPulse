@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../services/locale_service.dart';
 import '../state/app_state.dart';
 import '../state/workout.dart';
 import '../services/ads_service.dart';
@@ -17,11 +18,10 @@ import '../widgets/common.dart';
 class ProgressScreen extends StatelessWidget {
   const ProgressScreen({super.key});
 
-  static const _diasSemana = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
-
   @override
   Widget build(BuildContext context) {
     final state = context.watch<AppState>();
+    final strings = context.watch<LocaleService>().strings;
     final profile = state.profile;
     final hayHistorial = state.historial.isNotEmpty;
     return Scaffold(
@@ -42,7 +42,7 @@ class ProgressScreen extends StatelessWidget {
                     child: FittedBox(
                       fit: BoxFit.scaleDown,
                       child: Text(
-                        'Evolución & Rendimiento',
+                        strings.prEvolucion,
                         maxLines: 1,
                         style: AppType.headlineLg.copyWith(
                           color: AppColors.onSurface,
@@ -55,25 +55,26 @@ class ProgressScreen extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     hayHistorial
-                        ? 'Racha actual: ${state.rachaDias} días · Nivel ${state.nivel}'
-                        : 'Registra tu primer entrenamiento para ver datos reales',
+                        ? strings.prRachaNivel(state.rachaDias, state.nivel)
+                        : strings.prRegistraPrimero,
                     style: AppType.bodyMd.copyWith(color: AppColors.onSurfaceVariant),
                   ),
                   const SizedBox(height: 16),
                   const _PeriodTabs(),
                   const SizedBox(height: 16),
-                  _buildPesoCard(profile.pesoKg),
+                  _buildPesoCard(profile.pesoKg, strings),
                   const SizedBox(height: 12),
                   Row(
                     children: [
                       Expanded(
                         child: _SmallStat(
                           icon: Icons.opacity,
-                          label: 'Grasa Corporal',
+                          label: strings.prGrasa,
                           value: state.grasaHoy?.toStringAsFixed(1) ?? '—',
                           unit: state.grasaHoy != null ? '%' : '',
                           trend: _textoTrend(
                             context,
+                            strings,
                             conPermiso: state.grasaConPermiso,
                             valor: state.grasaHoy,
                           ),
@@ -86,10 +87,10 @@ class ProgressScreen extends StatelessWidget {
                       Expanded(
                         child: _SmallStat(
                           icon: Icons.insights,
-                          label: 'Índice IMC',
+                          label: strings.prImcIndex,
                           value: profile.imcFormateado,
                           unit: '',
-                          trend: 'De tu perfil',
+                          trend: strings.deTuPerfil,
                           trendColor: AppColors.primary,
                         ),
                       ),
@@ -101,11 +102,12 @@ class ProgressScreen extends StatelessWidget {
                       Expanded(
                         child: _SmallStat(
                           icon: Icons.local_fire_department,
-                          label: 'Gasto Activo',
+                          label: strings.prGastoActivo,
                           value: state.gastoActivoHoy?.round().toString() ?? '—',
                           unit: state.gastoActivoHoy != null ? 'kcal' : '',
                           trend: _textoTrend(
                             context,
+                            strings,
                             conPermiso: state.gastoActivoConPermiso,
                             valor: state.gastoActivoHoy,
                           ),
@@ -118,11 +120,12 @@ class ProgressScreen extends StatelessWidget {
                       Expanded(
                         child: _SmallStat(
                           icon: Icons.schedule,
-                          label: 'Tiempo Activo',
+                          label: strings.prTiempoActivo,
                           value: state.tiempoActivoMin?.toString() ?? '—',
                           unit: state.tiempoActivoMin != null ? 'min' : '',
                           trend: _textoActivo(
                             context,
+                            strings,
                             valor: state.tiempoActivoMin,
                           ),
                           trendColor: state.tiempoActivoMin != null
@@ -134,21 +137,21 @@ class ProgressScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    _textoFuenteMetrricas(context),
-                    style: const TextStyle(
+                    _textoFuenteMetrricas(context, strings),
+                    style: TextStyle(
                       fontSize: 12,
                       fontFamily: 'Inter',
                       color: AppColors.outline,
                     ),
                   ),
                   const SizedBox(height: 12),
-                  _buildRetoCard(state),
+                  _buildRetoCard(state, strings),
                   const SizedBox(height: 12),
-                  _buildNivelCard(state),
+                  _buildNivelCard(state, strings),
                   const SizedBox(height: 12),
                   _buildRecompensaAnuncio(context),
                   const SizedBox(height: 12),
-                  _buildSemanaCard(state, profile.diasEntrenamiento.length),
+                  _buildSemanaCard(state, profile.diasEntrenamiento.length, strings),
                   const SizedBox(height: 12),
                   _ConsistenciaBanner(
                     porcentaje: hayHistorial
@@ -161,13 +164,16 @@ class ProgressScreen extends StatelessWidget {
                     hayHistorial: hayHistorial,
                   ),
                   const SizedBox(height: 20),
-                  const SectionHeader(title: 'Sesiones Recientes', actionLabel: 'Ver todo'),
+                  SectionHeader(
+                    title: strings.prSesionesRecientes,
+                    actionLabel: strings.prVerTodo,
+                  ),
                   const SizedBox(height: 12),
-                  _buildSesiones(state),
+                  _buildSesiones(state, strings),
                   const SizedBox(height: 20),
-                  const SectionHeader(title: 'Insignias & Logros'),
+                  SectionHeader(title: strings.prInsignias),
                   const SizedBox(height: 12),
-                  _buildInsignias(state),
+                  _buildInsignias(state, strings),
                 ],
               ),
             ),
@@ -178,44 +184,43 @@ class ProgressScreen extends StatelessWidget {
   }
 
   String _textoTrend(
-    BuildContext context, {
+    BuildContext context,
+    AppStrings strings, {
     required bool conPermiso,
     required Object? valor,
   }) {
-    if (valor != null) return 'Health Connect';
-    if (conPermiso) return 'Sin datos de hoy';
+    if (valor != null) return strings.healthConnect;
+    if (conPermiso) return strings.prSinDatosHoy;
     if (context.read<AppState>().healthConnectDisponible) {
-      return 'Concede el permiso';
+      return strings.prConcedePermiso;
     }
-    return 'Requiere Health Connect';
+    return strings.requiereHealthConnect;
   }
 
   /// Nota honesta del "Tiempo Activo": el paquete `health` 13.3.2 solo expone
   /// EXERCISE_TIME en iOS, así que en Android nunca hay dato → siempre "—".
-  String _textoActivo(BuildContext context, {required Object? valor}) {
-    if (valor != null) return 'Health Connect';
-    return 'Solo iOS · en Android no hay dato';
+  String _textoActivo(BuildContext context, AppStrings strings, {required Object? valor}) {
+    if (valor != null) return strings.healthConnect;
+    return strings.prSoloIOS;
   }
 
-  String _textoFuenteMetrricas(BuildContext context) {
+  String _textoFuenteMetrricas(BuildContext context, AppStrings strings) {
     final state = context.read<AppState>();
     if (!state.healthConnectDisponible) {
-      return 'Grasa y gasto activo vienen de Health Connect. Instala la app de '
-          'Google para desbloquearlos (nunca mostramos datos inventados).';
+      return strings.prFuente1;
     }
     final concedidas = [
-      if (state.grasaConPermiso) 'grasa',
-      if (state.gastoActivoConPermiso) 'gasto activo',
+      if (state.grasaConPermiso) strings.prMetricaGrasa,
+      if (state.gastoActivoConPermiso) strings.prMetricaGastoActivo,
     ];
     if (concedidas.isEmpty) {
-      return 'Concede los permisos en Health Connect para ver grasa y gasto '
-          'activo reales.';
+      return strings.prFuente2;
     }
-    return 'Métricas de hoy vía Health Connect: ${concedidas.join(', ')}.';
+    return strings.prFuente3(concedidas.join(', '));
   }
 
   /// Tarjeta principal de evolución de peso corporal con mini gráfico.
-  Widget _buildPesoCard(double peso) {
+  Widget _buildPesoCard(double peso, AppStrings strings) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: _cardDecoration(),
@@ -224,11 +229,11 @@ class ProgressScreen extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Icon(Icons.monitor_weight, size: 18, color: AppColors.primary),
+              Icon(Icons.monitor_weight, size: 18, color: AppColors.primary),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  'Peso Corporal',
+                  strings.prPesoCorporal,
                   style: AppType.labelMd.copyWith(
                     color: AppColors.outline,
                     fontWeight: FontWeight.w600,
@@ -236,11 +241,15 @@ class ProgressScreen extends StatelessWidget {
                   ),
                 ),
               ),
-              Text(
-                'De tu perfil',
-                style: AppType.labelMd.copyWith(
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.w700,
+              Flexible(
+                child: Text(
+                  strings.deTuPerfil,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppType.labelMd.copyWith(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
             ],
@@ -262,13 +271,13 @@ class ProgressScreen extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12),
-          _MiniWeightChart(label: 'Registra tu peso cada semana'),
+          _MiniWeightChart(label: strings.prRegistraPeso),
         ],
       ),
     );
   }
 
-  Widget _buildRetoCard(AppState state) {
+  Widget _buildRetoCard(AppState state, AppStrings strings) {
     final objetivo = state.retoObjetivo;
     final progreso = state.retoProgreso;
     final completado = state.retoCompletado;
@@ -281,11 +290,11 @@ class ProgressScreen extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Icon(Icons.emoji_events, size: 18, color: AppColors.primary),
+              Icon(Icons.emoji_events, size: 18, color: AppColors.primary),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  'Reto actual',
+                  strings.prRetoActual,
                   style: AppType.labelMd.copyWith(
                     color: AppColors.onSurface,
                     fontWeight: FontWeight.w700,
@@ -293,7 +302,9 @@ class ProgressScreen extends StatelessWidget {
                 ),
               ),
               Text(
-                completado ? '¡Completado!' : '$progreso/$objetivo días',
+                completado
+                    ? strings.prCompletado
+                    : strings.prRetoDias(progreso, objetivo),
                 style: AppType.labelMd.copyWith(
                   color: completado ? AppColors.primary : AppColors.outline,
                   fontWeight: FontWeight.w800,
@@ -304,9 +315,8 @@ class ProgressScreen extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             completado
-                ? 'Conseguiste $objetivo días seguidos. Sigue para el reto de '
-                    '$siguiente días (+100 pts).'
-                : 'Entrena $objetivo días seguidos y gana +100 pts extra.',
+                ? strings.prRetoCompletado(objetivo, siguiente)
+                : strings.prRetoActivo(objetivo),
             style: AppType.bodySm.copyWith(color: AppColors.outline),
           ),
           const SizedBox(height: 12),
@@ -324,7 +334,7 @@ class ProgressScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildNivelCard(AppState state) {
+  Widget _buildNivelCard(AppState state, AppStrings strings) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: _cardDecoration(),
@@ -333,11 +343,11 @@ class ProgressScreen extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Icon(Icons.workspace_premium, size: 18, color: AppColors.primary),
+              Icon(Icons.workspace_premium, size: 18, color: AppColors.primary),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  'Nivel ${state.nivel} · ${state.nombreNivel}',
+                  strings.prNivel(state.nivel, state.nombreNivel),
                   style: AppType.labelMd.copyWith(
                     color: AppColors.onSurface,
                     fontWeight: FontWeight.w700,
@@ -345,7 +355,7 @@ class ProgressScreen extends StatelessWidget {
                 ),
               ),
               Text(
-                '${state.xp} pts',
+                strings.prPts(state.xp),
                 style: AppType.labelMd.copyWith(
                   color: AppColors.primary,
                   fontWeight: FontWeight.w800,
@@ -355,7 +365,7 @@ class ProgressScreen extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            '+50 pts por sesión completada · ${300 - (state.xp % 300)} pts para nivel ${state.nivel + 1}',
+            strings.prPtsParaNivel(300 - (state.xp % 300), state.nivel + 1),
             style: AppType.bodySm.copyWith(color: AppColors.outline),
           ),
           const SizedBox(height: 12),
@@ -378,6 +388,7 @@ class ProgressScreen extends StatelessWidget {
   /// Se oculta si el usuario tiene Premium. Siempre usa el ID de prueba de
   /// AdMob; el cobro real requiere cuenta fuera de Cuba (ver PLAN.md).
   Widget _buildRecompensaAnuncio(BuildContext context) {
+    final strings = context.watch<LocaleService>().strings;
     final config = context.watch<ConfigService>();
     if (config.premiumEnabled) return const SizedBox.shrink();
 
@@ -392,8 +403,8 @@ class ProgressScreen extends StatelessWidget {
           final aplicada = await appState.aplicarRecompensaAnuncio();
           messenger.showSnackBar(SnackBar(
             content: Text(aplicada
-                ? '¡+${AppState.ptsRecompensaAnuncio} PTs ganados!'
-                : 'Recompensa de hoy ya recibida.'),
+                ? strings.prPTsGanados(AppState.ptsRecompensaAnuncio)
+                : strings.prRecompensaYaRecibida),
           ));
         },
         onError: (mensaje) {
@@ -410,11 +421,11 @@ class ProgressScreen extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Icon(Icons.play_circle_outline, size: 18, color: AppColors.primary),
+              Icon(Icons.play_circle_outline, size: 18, color: AppColors.primary),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  'Anuncio recompensado',
+                  strings.prAnuncioRecompensado,
                   style: AppType.labelMd.copyWith(
                     color: AppColors.onSurface,
                     fontWeight: FontWeight.w700,
@@ -422,7 +433,7 @@ class ProgressScreen extends StatelessWidget {
                 ),
               ),
               Text(
-                '+${AppState.ptsRecompensaAnuncio} PTs',
+                strings.prPTs(AppState.ptsRecompensaAnuncio),
                 style: AppType.labelMd.copyWith(
                   color: AppColors.primary,
                   fontWeight: FontWeight.w800,
@@ -432,9 +443,7 @@ class ProgressScreen extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            disponible
-                ? 'Gana puntos extra viendo un anuncio (una vez por día).'
-                : 'Recompensa de hoy recibida. Vuelve mañana por más. 👏',
+            disponible ? strings.prAnuncioGana : strings.prAnuncioRecibida,
             style: AppType.bodySm.copyWith(color: AppColors.outline),
           ),
           const SizedBox(height: 12),
@@ -442,7 +451,9 @@ class ProgressScreen extends StatelessWidget {
             width: double.infinity,
             child: FilledButton.tonal(
               onPressed: disponible ? verAnuncio : null,
-              child: Text(disponible ? 'Ver anuncio y ganar +25' : 'Recibido hoy'),
+              child: Text(
+                disponible ? strings.prVerAnuncio : strings.prRecibidoHoy,
+              ),
             ),
           ),
         ],
@@ -450,9 +461,10 @@ class ProgressScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSemanaCard(AppState state, int diasMeta) {
+  Widget _buildSemanaCard(AppState state, int diasMeta, AppStrings strings) {
     final entrenados = state.diasSemanaEntrenados;
     final total = diasMeta > 0 ? diasMeta : 5;
+    final dias = strings.diasIniciales;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: _cardDecoration(),
@@ -463,7 +475,7 @@ class ProgressScreen extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  'Semana de entrenamiento',
+                  strings.prSemana,
                   style: AppType.labelMd.copyWith(
                     color: AppColors.onSurface,
                     fontWeight: FontWeight.w700,
@@ -471,7 +483,7 @@ class ProgressScreen extends StatelessWidget {
                 ),
               ),
               Text(
-                '${state.diasEntrenadosSemana}/$total días',
+                strings.prSemanaDias(state.diasEntrenadosSemana, total),
                 style: AppType.labelMd.copyWith(
                   color: AppColors.primary,
                   fontWeight: FontWeight.w700,
@@ -482,7 +494,7 @@ class ProgressScreen extends StatelessWidget {
           const SizedBox(height: 14),
           Row(
             children: [
-              for (var i = 0; i < _diasSemana.length; i++)
+              for (var i = 0; i < dias.length; i++)
                 Expanded(
                   child: Column(
                     children: [
@@ -505,7 +517,7 @@ class ProgressScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        _diasSemana[i],
+                        dias[i],
                         textAlign: TextAlign.center,
                         style: AppType.labelSm.copyWith(color: AppColors.outline),
                       ),
@@ -517,13 +529,13 @@ class ProgressScreen extends StatelessWidget {
           const Divider(height: 24),
           Row(
             children: [
-              const Icon(Icons.history, size: 14, color: AppColors.primary),
+              Icon(Icons.history, size: 14, color: AppColors.primary),
               const SizedBox(width: 4),
               Flexible(
                 child: Text(
                   state.minutosEntrenadosSemana > 0
-                      ? '${state.minutosEntrenadosSemana} min entrenados esta semana'
-                      : 'Sin sesiones registradas esta semana',
+                      ? strings.prMinSemana(state.minutosEntrenadosSemana)
+                      : strings.prSinSesionesSemana,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: AppType.labelMd.copyWith(
@@ -539,7 +551,7 @@ class ProgressScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSesiones(AppState state) {
+  Widget _buildSesiones(AppState state, AppStrings strings) {
     final recientes = state.historial.take(3).toList();
     if (recientes.isEmpty) {
       return Container(
@@ -548,10 +560,10 @@ class ProgressScreen extends StatelessWidget {
         decoration: _cardDecoration(radius: 16),
         child: Column(
           children: [
-            const Icon(Icons.fitness_center, size: 28, color: AppColors.outline),
+            Icon(Icons.fitness_center, size: 28, color: AppColors.outline),
             const SizedBox(height: 8),
             Text(
-              'Aún no hay sesiones registradas',
+              strings.prSinSesiones,
               style: AppType.labelMd.copyWith(
                 color: AppColors.onSurface,
                 fontWeight: FontWeight.w700,
@@ -559,7 +571,7 @@ class ProgressScreen extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             Text(
-              'Completa tu primer entrenamiento desde Inicio para registrarlo aquí.',
+              strings.prSinSesionesHint,
               textAlign: TextAlign.center,
               style: AppType.bodySm.copyWith(color: AppColors.outline),
             ),
@@ -569,23 +581,43 @@ class ProgressScreen extends StatelessWidget {
     }
     return Column(
       children: [
-        for (final s in recientes) _SesionRow.fromSesion(s),
+        for (final s in recientes) _SesionRow.fromSesion(s, strings),
       ],
     );
   }
 
-  Widget _buildInsignias(AppState state) {
+  Widget _buildInsignias(AppState state, AppStrings strings) {
     final insignias = <({IconData icono, String nombre, String detalle})>[
       if (state.historial.isNotEmpty)
-        (icono: Icons.fitness_center, nombre: 'Primera Sesión', detalle: 'Completada'),
+        (
+          icono: Icons.fitness_center,
+          nombre: strings.prPrimeraSesion,
+          detalle: strings.prCompletada
+        ),
       if (state.rachaMaxima >= 3)
-        (icono: Icons.local_fire_department, nombre: 'Racha 3 Días', detalle: 'Constancia'),
+        (
+          icono: Icons.local_fire_department,
+          nombre: strings.prRacha3,
+          detalle: strings.prConstancia
+        ),
       if (state.rachaMaxima >= 7)
-        (icono: Icons.whatshot, nombre: 'Racha 7 Días', detalle: 'Disciplina'),
+        (
+          icono: Icons.whatshot,
+          nombre: strings.prRacha7,
+          detalle: strings.prDisciplina
+        ),
       if (state.nivel >= 2)
-        (icono: Icons.workspace_premium, nombre: 'Nivel ${state.nivel}', detalle: state.nombreNivel),
+        (
+          icono: Icons.workspace_premium,
+          nombre: strings.prInsigniaNivel(state.nivel),
+          detalle: strings.nivelName(state.nombreNivel)
+        ),
       if (state.retoCompletado)
-        (icono: Icons.emoji_events, nombre: 'Reto ${state.retoObjetivo} Días', detalle: '¡Completado!'),
+        (
+          icono: Icons.emoji_events,
+          nombre: strings.prInsigniaReto(state.retoObjetivo),
+          detalle: strings.prCompletado
+        ),
     ];
     if (insignias.isEmpty) {
       return Container(
@@ -594,10 +626,10 @@ class ProgressScreen extends StatelessWidget {
         decoration: _cardDecoration(radius: 16),
         child: Column(
           children: [
-            const Icon(Icons.emoji_events_outlined, size: 28, color: AppColors.outline),
+            Icon(Icons.emoji_events_outlined, size: 28, color: AppColors.outline),
             const SizedBox(height: 8),
             Text(
-              'Completa tu primer entrenamiento para desbloquear insignias',
+              strings.prDesbloqueaInsignias,
               textAlign: TextAlign.center,
               style: AppType.bodySm.copyWith(color: AppColors.outline),
             ),
@@ -645,9 +677,10 @@ class _ProgressHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final state = context.watch<AppState>();
+    final strings = context.watch<LocaleService>().strings;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-      decoration: const BoxDecoration(color: AppColors.surface),
+      decoration: BoxDecoration(color: AppColors.surface),
       child: Row(
         children: [
           Expanded(
@@ -655,12 +688,12 @@ class _ProgressHeader extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Progreso',
+                  strings.navProgress,
                   style: AppType.headlineSm.copyWith(fontWeight: FontWeight.w700, height: 1.1),
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  state.entrenadoHoy ? '¡Día completado!' : 'Listo para entrenar',
+                  state.entrenadoHoy ? strings.prDiaCompletado : strings.listoParaEntrenar,
                   style: AppType.bodySm.copyWith(color: AppColors.onSurfaceVariant),
                 ),
               ],
@@ -678,7 +711,7 @@ class _ProgressHeader extends StatelessWidget {
                 const Text('🔥', style: TextStyle(fontSize: 14)),
                 const SizedBox(width: 4),
                 Text(
-                  '${state.rachaDias} días',
+                  strings.rachaDias(state.rachaDias),
                   style: AppType.labelMd.copyWith(
                     color: AppColors.primary,
                     fontWeight: FontWeight.w700,
@@ -690,7 +723,7 @@ class _ProgressHeader extends StatelessWidget {
           const SizedBox(width: 4),
           IconButton(
             onPressed: () {},
-            icon: const Icon(Icons.notifications_outlined, size: 22, color: AppColors.onSurfaceVariant),
+            icon: Icon(Icons.notifications_outlined, size: 22, color: AppColors.onSurfaceVariant),
           ),
         ],
       ),
@@ -701,10 +734,15 @@ class _ProgressHeader extends StatelessWidget {
 class _PeriodTabs extends StatelessWidget {
   const _PeriodTabs();
 
-  static const _periodos = ['Semanal', 'Mensual', 'Año'];
-
   @override
   Widget build(BuildContext context) {
+    final strings = context.watch<LocaleService>().strings;
+    final periodos = [
+      strings.prPeriodoSemanal,
+      strings.prPeriodoMensual,
+      strings.prPeriodoAno,
+    ];
+    final seleccionado = strings.prPeriodoSemanal;
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
@@ -713,19 +751,19 @@ class _PeriodTabs extends StatelessWidget {
       ),
       child: Row(
         children: [
-          for (final p in _periodos)
+          for (final p in periodos)
             Expanded(
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color: p == 'Semanal' ? AppColors.primary : Colors.transparent,
+                  color: p == seleccionado ? AppColors.primary : Colors.transparent,
                   borderRadius: BorderRadius.circular(999),
                 ),
                 child: Text(
                   p,
                   style: AppType.labelMd.copyWith(
-                    color: p == 'Semanal' ? Colors.white : AppColors.onSurfaceVariant,
+                    color: p == seleccionado ? Colors.white : AppColors.onSurfaceVariant,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -744,7 +782,7 @@ class _SmallStat extends StatelessWidget {
     required this.value,
     required this.unit,
     required this.trend,
-    this.trendColor = AppColors.error,
+    this.trendColor,
   });
 
   final IconData icon;
@@ -752,7 +790,7 @@ class _SmallStat extends StatelessWidget {
   final String value;
   final String unit;
   final String trend;
-  final Color trendColor;
+  final Color? trendColor;
 
   @override
   Widget build(BuildContext context) {
@@ -801,7 +839,7 @@ class _SmallStat extends StatelessWidget {
           Text(
             trend,
             style: AppType.labelSm.copyWith(
-              color: trendColor,
+              color: trendColor ?? AppColors.error,
               fontWeight: FontWeight.w700,
             ),
           ),
@@ -860,16 +898,17 @@ class _ConsistenciaBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final strings = context.watch<LocaleService>().strings;
     final pct = (porcentaje * 100).round();
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
-        gradient: const LinearGradient(
+        gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFF003824), AppColors.primary, Color(0xFF003D27)],
+          colors: [Color(0xFF003824), Color(0xFF005C41), Color(0xFF003D27)],
         ),
       ),
       child: Column(
@@ -877,11 +916,13 @@ class _ConsistenciaBanner extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Icon(Icons.workspace_premium, color: AppColors.secondaryFixed, size: 20),
+              Icon(Icons.workspace_premium, color: AppColors.secondaryFixed, size: 20),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  hayHistorial ? '¡Consistencia Imparable!' : 'Empieza tu racha',
+                  hayHistorial
+                      ? strings.prConsistenciaTitulo
+                      : strings.prEmpiezaRacha,
                   style: AppType.headlineSm.copyWith(
                     color: Colors.white,
                     fontWeight: FontWeight.w800,
@@ -893,8 +934,8 @@ class _ConsistenciaBanner extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             hayHistorial
-                ? 'Completaste el $pct% de tu entrenamiento programado esta semana.'
-                : 'Completa tu primer entrenamiento esta semana para activar tu racha.',
+                ? strings.prConsistenciaPct(pct)
+                : strings.prActivaRacha,
             style: AppType.bodySm.copyWith(color: Colors.white.withValues(alpha: 0.85)),
           ),
           const SizedBox(height: 12),
@@ -916,17 +957,17 @@ class _ConsistenciaBanner extends StatelessWidget {
 class _SesionRow extends StatelessWidget {
   const _SesionRow({required this.icon, required this.titulo, required this.detalle});
 
-  factory _SesionRow.fromSesion(WorkoutSession s) {
+  factory _SesionRow.fromSesion(WorkoutSession s, AppStrings strings) {
     final ahora = DateTime.now();
     final hoy = DateTime(ahora.year, ahora.month, ahora.day);
     final dia = DateTime(s.fecha.year, s.fecha.month, s.fecha.day);
     final diff = hoy.difference(dia).inDays;
     final cuando = diff == 0
-        ? 'Hoy'
+        ? strings.prHoy
         : diff == 1
-            ? 'Ayer'
+            ? strings.prAyer
             : diff < 7
-                ? 'Hace $diff días'
+                ? strings.prHaceDias(diff)
                 : '${s.fecha.day}/${s.fecha.month}';
     return _SesionRow(
       icon: Icons.fitness_center,
@@ -976,7 +1017,7 @@ class _SesionRow extends StatelessWidget {
               ],
             ),
           ),
-          const Icon(Icons.check_circle, size: 20, color: AppColors.primary),
+          Icon(Icons.check_circle, size: 20, color: AppColors.primary),
         ],
       ),
     );

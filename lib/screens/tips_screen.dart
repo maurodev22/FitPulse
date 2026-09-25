@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../services/locale_service.dart';
 import '../state/app_state.dart';
 import '../theme.dart';
 import '../widgets/common.dart';
@@ -51,9 +52,10 @@ class _TipsHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final strings = context.watch<LocaleService>().strings;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-      decoration: const BoxDecoration(color: AppColors.surface),
+      decoration: BoxDecoration(color: AppColors.surface),
       child: Row(
         children: [
           Expanded(
@@ -61,12 +63,12 @@ class _TipsHeader extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Consejos',
+                  strings.navTips,
                   style: AppType.headlineSm.copyWith(fontWeight: FontWeight.w700, height: 1.1),
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  'Listo para entrenar',
+                  strings.listoParaEntrenar,
                   style: AppType.bodySm.copyWith(color: AppColors.onSurfaceVariant),
                 ),
               ],
@@ -84,7 +86,7 @@ class _TipsHeader extends StatelessWidget {
                 const Text('🔥', style: TextStyle(fontSize: 14)),
                 const SizedBox(width: 4),
                 Text(
-                  '${context.watch<AppState>().rachaDias} días',
+                  strings.rachaDias(context.watch<AppState>().rachaDias),
                   style: AppType.labelMd.copyWith(color: AppColors.primary, fontWeight: FontWeight.w700),
                 ),
               ],
@@ -93,7 +95,7 @@ class _TipsHeader extends StatelessWidget {
           const SizedBox(width: 4),
           IconButton(
             onPressed: () {},
-            icon: const Icon(Icons.notifications_outlined, size: 22, color: AppColors.onSurfaceVariant),
+            icon: Icon(Icons.notifications_outlined, size: 22, color: AppColors.onSurfaceVariant),
           ),
         ],
       ),
@@ -107,8 +109,11 @@ class _PlanCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final strings = context.watch<LocaleService>().strings;
     final metas = context.watch<AppState>().profile.metas;
-    final metasLabel = metas.isEmpty ? '' : 'tu meta de ${metas.join(' · ')}';
+    final metasVisibles = metas.map(strings.metaName).join(' · ');
+    final metasLabel =
+        metas.isEmpty ? '' : strings.tipsTuMetaDe(metasVisibles);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -121,18 +126,22 @@ class _PlanCard extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.spa, size: 14, color: AppColors.primary),
+              Icon(Icons.spa, size: 14, color: AppColors.primary),
               const SizedBox(width: 6),
-              Text(
-                'Plan Personalizado',
-                style: AppType.labelMd.copyWith(color: AppColors.primary, fontWeight: FontWeight.w700),
+              Flexible(
+                child: Text(
+                  strings.tipsPlanPersonalizado,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppType.labelMd.copyWith(color: AppColors.primary, fontWeight: FontWeight.w700),
+                ),
               ),
             ],
           ),
         ),
         const SizedBox(height: 12),
         Text(
-          'Consejos & Bienestar',
+          strings.tipsConsejosBienestar,
           style: AppType.headlineLg.copyWith(
             color: AppColors.onSurface,
             fontWeight: FontWeight.w800,
@@ -141,7 +150,9 @@ class _PlanCard extends StatelessWidget {
         ),
         const SizedBox(height: 4),
         Text(
-          'Recomendaciones ${metas.isEmpty ? '' : 'basadas en $metasLabel '}para ti',
+          strings.tipsRecomendaciones(
+            metas.isEmpty ? '' : '${strings.tipsBasadasEn} $metasLabel',
+          ),
           style: AppType.bodyMd.copyWith(color: AppColors.onSurfaceVariant, height: 1.5),
         ),
         const SizedBox(height: 16),
@@ -154,14 +165,14 @@ class _PlanCard extends StatelessWidget {
                   color: const Color(0xFFF0F4F1),
                   borderRadius: BorderRadius.circular(14),
                 ),
-                child: const Row(
+                child: Row(
                   children: [
                     SizedBox(width: 14),
                     Icon(Icons.search, size: 20, color: AppColors.outline),
                     SizedBox(width: 10),
                     Expanded(
                       child: Text(
-                        'Buscar consejos...',
+                        strings.tipsBuscar,
                         style: TextStyle(color: Colors.grey, fontSize: 13),
                       ),
                     ),
@@ -178,7 +189,7 @@ class _PlanCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: AppColors.outlineVariant),
               ),
-              child: const Icon(Icons.tune, size: 18, color: AppColors.outline),
+              child: Icon(Icons.tune, size: 18, color: AppColors.outline),
             ),
           ],
         ),
@@ -187,16 +198,16 @@ class _PlanCard extends StatelessWidget {
           height: 32,
           child: ListView(
             scrollDirection: Axis.horizontal,
-            children: const [
-              _CategoryPill(label: 'Todos', selected: true),
-              SizedBox(width: 8),
-              _CategoryPill(label: 'Nutrición'),
-              SizedBox(width: 8),
-              _CategoryPill(label: 'Recuperación'),
-              SizedBox(width: 8),
-              _CategoryPill(label: 'Técnica'),
-              SizedBox(width: 8),
-              _CategoryPill(label: 'Mentalidad'),
+            children: [
+              _CategoryPill(label: strings.tipsCategoria('Todos'), selected: true),
+              const SizedBox(width: 8),
+              _CategoryPill(label: strings.tipsCategoria('Nutrición')),
+              const SizedBox(width: 8),
+              _CategoryPill(label: strings.tipsCategoria('Recuperación')),
+              const SizedBox(width: 8),
+              _CategoryPill(label: strings.tipsCategoria('Técnica')),
+              const SizedBox(width: 8),
+              _CategoryPill(label: strings.tipsCategoria('Mentalidad')),
             ],
           ),
         ),
@@ -247,6 +258,7 @@ class _ArticuloDestacado extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final strings = context.watch<LocaleService>().strings;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
@@ -267,18 +279,22 @@ class _ArticuloDestacado extends StatelessWidget {
         children: [
           Row(
             children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: AppColors.secondaryContainer.withValues(alpha: 0.3),
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: Text(
-                  'HOY • RECUPERACIÓN',
-                  style: AppType.labelSm.copyWith(
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 0.4,
+              Flexible(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppColors.secondaryContainer.withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Text(
+                    strings.tipsHoyRecuperacion,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppType.labelSm.copyWith(
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0.4,
+                    ),
                   ),
                 ),
               ),
@@ -287,17 +303,17 @@ class _ArticuloDestacado extends StatelessWidget {
           const SizedBox(height: 10),
           Row(
             children: [
-              const Icon(Icons.schedule, size: 14, color: AppColors.outline),
+              Icon(Icons.schedule, size: 14, color: AppColors.outline),
               const SizedBox(width: 4),
               Text(
-                '3 min',
+                strings.tipsMin(3),
                 style: AppType.labelMd.copyWith(color: AppColors.outline),
               ),
             ],
           ),
           const SizedBox(height: 6),
           Text(
-            'La importancia de los descansos activos para no perder masa muscular',
+            strings.tipsArticulo1Titulo,
             style: AppType.bodyLg.copyWith(
               color: AppColors.onSurface,
               fontWeight: FontWeight.w700,
@@ -306,7 +322,7 @@ class _ArticuloDestacado extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'Caminar ligero o realizar estiramientos dinámicos en tus días libres promueve la eliminación de lactato y acelera la síntesis proteica sin fatiga adicional.',
+            strings.tipsArticulo1Cuerpo,
             style: AppType.bodySm.copyWith(color: AppColors.outline, height: 1.5),
           ),
           const SizedBox(height: 12),
@@ -314,7 +330,7 @@ class _ArticuloDestacado extends StatelessWidget {
             children: [
               Flexible(
                 child: Text(
-                  'Leer artículo completo',
+                  strings.tipsLeerArticulo,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: AppType.labelMd.copyWith(
@@ -324,9 +340,9 @@ class _ArticuloDestacado extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 4),
-              const Icon(Icons.arrow_forward, size: 16, color: AppColors.primary),
+              Icon(Icons.arrow_forward, size: 16, color: AppColors.primary),
               const Spacer(),
-              const Icon(Icons.bookmark_outline, size: 20, color: AppColors.onSurfaceVariant),
+              Icon(Icons.bookmark_outline, size: 20, color: AppColors.onSurfaceVariant),
             ],
           ),
         ],
@@ -339,48 +355,51 @@ class _ArticuloDestacado extends StatelessWidget {
 class _TipsDeslizables extends StatelessWidget {
   const _TipsDeslizables();
 
-  static const _tips = [
-    _Tip(
-      icon: Icons.water_drop,
-      titulo: 'Hidratación Óptima',
-      subtitulo: 'Pre-entreno',
-      descripcion: 'Bebe 500ml de agua 30 min antes de entrenar para mantener la volemia y potencia muscular.',
-    ),
-    _Tip(
-      icon: Icons.restaurant,
-      titulo: 'Ventana Anabólica',
-      subtitulo: 'Post-HIIT',
-      descripcion: 'Consume 25-30g de proteína de rápida asimilación tras tus sesiones HIIT para frenar el catabolismo.',
-    ),
-    _Tip(
-      icon: Icons.bedtime,
-      titulo: 'Sueño Profundo',
-      subtitulo: 'Regeneración',
-      descripcion: 'Garantiza 7-8 horas de reposo; la hormona de crecimiento nocturna maximiza la quema lipídica.',
-    ),
-  ];
-
   @override
   Widget build(BuildContext context) {
+    final strings = context.watch<LocaleService>().strings;
+    // Catálogo traducido en vivo (el texto vive en AppStrings).
+    final tips = [
+      _Tip(
+        icon: Icons.water_drop,
+        titulo: strings.tipsTip1Titulo,
+        subtitulo: strings.tipsTip1Sub,
+        descripcion: strings.tipsTip1Desc,
+      ),
+      _Tip(
+        icon: Icons.restaurant,
+        titulo: strings.tipsTip2Titulo,
+        subtitulo: strings.tipsTip2Sub,
+        descripcion: strings.tipsTip2Desc,
+      ),
+      _Tip(
+        icon: Icons.bedtime,
+        titulo: strings.tipsTip3Titulo,
+        subtitulo: strings.tipsTip3Sub,
+        descripcion: strings.tipsTip3Desc,
+      ),
+    ];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SectionHeader(title: 'Tips de Alto Impacto', uppercase: true),
+        SectionHeader(title: strings.tipsAltoImpacto, uppercase: true),
         const SizedBox(height: 6),
         Text(
-          'Desliza para ver más',
+          strings.tipsDesliza,
           style: AppType.labelMd.copyWith(color: AppColors.outline),
         ),
         const SizedBox(height: 12),
         SizedBox(
-          height: 200,
+          // F7: la altura de los tips escala con el tamaño de texto para no
+          // recortar el contenido cuando el usuario sube la escala (accesible).
+          height: 200 * MediaQuery.textScalerOf(context).scale(1.0),
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
-            itemCount: _tips.length,
+            itemCount: tips.length,
             separatorBuilder: (_, _) => const SizedBox(width: 12),
             itemBuilder: (context, i) => SizedBox(
               width: 240,
-              child: _TipCard(tip: _tips[i]),
+              child: _TipCard(tip: tips[i]),
             ),
           ),
         ),
@@ -450,7 +469,7 @@ class _TipCard extends StatelessWidget {
                   ],
                 ),
               ),
-              const Icon(Icons.favorite_border, size: 18, color: AppColors.onSurfaceVariant),
+              Icon(Icons.favorite_border, size: 18, color: AppColors.onSurfaceVariant),
             ],
           ),
           const SizedBox(height: 10),
@@ -473,14 +492,33 @@ class _TipCard extends StatelessWidget {
 class _ArticulosRecomendados extends StatelessWidget {
   const _ArticulosRecomendados();
 
-  static const _articulos = [
-    (Icons.restaurant_menu, 'Nutrición', '4 min', '5 Errores comunes al calcular tu déficit calórico', 'No pesas los aceites o subestimas las salsas.'),
-    (Icons.fitness_center, 'Fuerza', '5 min', 'Cómo mejorar tu técnica de sentadilla profunda', 'Alineación del fémur, movilidad de tobillos.'),
-    (Icons.spa, 'Bienestar', '3 min', 'Respiración diafragmática para bajar el cortisol', 'Técnica box-breathing de 4 tiempos.'),
-  ];
-
   @override
   Widget build(BuildContext context) {
+    final strings = context.watch<LocaleService>().strings;
+    // Catálogo traducido en vivo (el texto vive en AppStrings).
+    final articulos = [
+      (
+        Icons.restaurant_menu,
+        strings.tipsCategoria('Nutrición'),
+        strings.tipsMin(4),
+        strings.tipsArt1Titulo,
+        strings.tipsArt1Cuerpo,
+      ),
+      (
+        Icons.fitness_center,
+        strings.tipsCatFuerza,
+        strings.tipsMin(5),
+        strings.tipsArt2Titulo,
+        strings.tipsArt2Cuerpo,
+      ),
+      (
+        Icons.spa,
+        strings.tipsCatBienestar,
+        strings.tipsMin(3),
+        strings.tipsArt3Titulo,
+        strings.tipsArt3Cuerpo,
+      ),
+    ];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -489,19 +527,23 @@ class _ArticulosRecomendados extends StatelessWidget {
           children: [
             Expanded(
               child: Text(
-                'Artículos Recomendados',
+                strings.tipsArticulosRecomendados,
                 style: AppType.headlineSm.copyWith(fontWeight: FontWeight.w700),
               ),
             ),
             const SizedBox(width: 8),
-            Text(
-              'Ver todos (18)',
-              style: AppType.labelMd.copyWith(color: AppColors.primary, fontWeight: FontWeight.w700),
+            Flexible(
+              child: Text(
+                strings.tipsVerTodos(18),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppType.labelMd.copyWith(color: AppColors.primary, fontWeight: FontWeight.w700),
+              ),
             ),
           ],
         ),
         const SizedBox(height: 12),
-        for (final a in _articulos)
+        for (final a in articulos)
           Container(
             margin: const EdgeInsets.only(bottom: 10),
             padding: const EdgeInsets.all(14),
@@ -528,11 +570,15 @@ class _ArticulosRecomendados extends StatelessWidget {
                     children: [
                       Row(
                         children: [
-                          Text(
-                            a.$2,
-                            style: AppType.labelMd.copyWith(
-                              color: AppColors.onSurface,
-                              fontWeight: FontWeight.w600,
+                          Flexible(
+                            child: Text(
+                              a.$2,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: AppType.labelMd.copyWith(
+                                color: AppColors.onSurface,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ),
                           Text(
@@ -541,7 +587,14 @@ class _ArticulosRecomendados extends StatelessWidget {
                           ),
                           Icon(Icons.timer, size: 12, color: AppColors.outline),
                           const SizedBox(width: 2),
-                          Text(a.$3, style: AppType.labelSm.copyWith(color: AppColors.outline)),
+                          Flexible(
+                            child: Text(
+                              a.$3,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: AppType.labelSm.copyWith(color: AppColors.outline),
+                            ),
+                          ),
                         ],
                       ),
                       const SizedBox(height: 4),
@@ -562,7 +615,7 @@ class _ArticulosRecomendados extends StatelessWidget {
                     ],
                   ),
                 ),
-                const Icon(Icons.chevron_right, size: 20, color: AppColors.outline),
+                Icon(Icons.chevron_right, size: 20, color: AppColors.outline),
               ],
             ),
           ),
@@ -578,6 +631,7 @@ class _AvisoSalud extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final strings = context.watch<LocaleService>().strings;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
@@ -588,11 +642,11 @@ class _AvisoSalud extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const Icon(Icons.health_and_safety_outlined, size: 20, color: AppColors.primary),
+          Icon(Icons.health_and_safety_outlined, size: 20, color: AppColors.primary),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              'Estos contenidos son orientativos y no sustituyen el consejo de un profesional de la salud.',
+              strings.tipsAvisoSalud,
               style: AppType.bodySm.copyWith(color: AppColors.outline, height: 1.5),
             ),
           ),

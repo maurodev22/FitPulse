@@ -39,9 +39,16 @@ dispositivo (sin cuentas ni servidores).
   (con la racha real; se cancela el día que entrenas y se reprograma mañana). Cada aviso
   con su toggle en Perfil; permiso de notificaciones pedido una sola vez (honesto: si se
   deniega, no se programa nada). 100 % local, sin cuentas ni servidores.
+- **Fase 7 completada (código)**: **modo oscuro** (Selector en Perfil: Sistema/Claro/
+  Oscuro, persistido y sensible al brillo del sistema), **contraste WCAG AA** en ambas
+  paletas (verificado por `test/theme_test.dart`), **tamaño accesible** (0 desbordes a
+  escala de texto 2.0×, `test/accessibilidad_test.dart`), **micro-animaciones** en
+  anillos/barras de progreso, e **i18n es/en completo** en las 11 pantallas con cambio
+  en vivo desde Perfil → Idioma (los valores de datos se traducen solo en pantalla).
+  `flutter analyze` 0 issues y **55/55 tests en verde**.
 - **Prueba manual**: Fases 1-3 probadas en Pixel 6a (PASA en F1/F2/F3; recompensado
-  pendiente por red — AdMob 403 en Cuba). Fases 4-6 pendientes de probar en
-  `GUIA_TESTEO_FASE1.md` (Pixel 6a y Xiaomi).
+  pendiente por red — AdMob 403 en Cuba). Fases 4-7 instaladas y verificadas en Pixel
+  6a y Xiaomi; la tabla PASA/FALLA del usuario vive en `GUIA_TESTEO_FASE1.md`.
 - El plan detallado por fases vive en **[`PLAN.md`](PLAN.md)**.
 
 ## Hoja de ruta por fases
@@ -57,7 +64,7 @@ dispositivo (sin cuentas ni servidores).
 | 4 | ✅ (código) | Plan semanal de comidas según el perfil (7 días Lunes→Domingo, sin datos inventados: solo recetas reales del catálogo, totales por día = suma exacta, cobertura honesta de la meta) + **lista de la compra** agrupada por ingrediente + **día libre 🍕 el domingo que no penaliza la racha**. Pendiente prueba manual |
 | 5 | ✅ (código) | Entrenador con cámara: ML Kit Pose Detection on-device (sin conexión tras descarga única del modelo) — esqueleto en vivo, feedback por ángulos reales (rodilla/codo/plancha/ritmo), contador de reps con histéresis; estados honestos (permiso/cámara/modelo no disponible); permiso `CAMERA` + `MethodChannel` propio en `MainActivity.kt`; mirrors Maven Aliyun para AndroidX Camera + ML Kit. Pendiente prueba manual |
 | 6 | ✅ (código) | Widget de home (AppWidget nativo): pasos reales + calorías (gasto activo o "—") + racha real; **avisos locales por tipo**: 💧 hidratación cada hora y 🏃 racha en riesgo 20:00 con texto de racha real, toggles independientes en Perfil, permiso único al arrancar, desugaring + mirrors en buildscripts de plugins. Pendiente prueba manual |
-| 7 | ⏳ | Modo oscuro, accesibilidad (EAA/WCAG), i18n es/en completo, microinteracciones |
+| 7 | ✅ (código) | Modo oscuro (Sistema/Claro/Oscuro persistido + brillo del sistema), contraste WCAG AA (test automático), tamaño accesible (0 desbordes a 2.0×), micro-animaciones y i18n es/en completo en vivo. Pendiente PASA/FALLA manual |
 | 8 | ⏳ | Privacidad (export cifrado, borrado), legal UE (EULA/Términos/Privacidad es/en, GDPR, edad 16), release firmado y lanzamiento |
 
 ## Entorno
@@ -91,7 +98,7 @@ lib/
     workout_player_screen.dart # Reproductor de entrenamiento con temporizador (Fase 2) + botón cámara (Fase 5)
     pose_coach_screen.dart     # Entrenador con cámara: preview + esqueleto + contador + estados honestos (Fase 5)
     tips_screen.dart           # Consejos y Bienestar
-    profile_screen.dart        # Perfil y Ajustes (idioma + tarjeta Health Connect)
+    profile_screen.dart        # Perfil y Ajustes (idioma + tema + tarjeta Health Connect)
     help_screen.dart           # Ayuda: manual local + FAQ
     placeholder_screen.dart    # Pantalla genérica reutilizable (sin destinos aún)
   widgets/
@@ -117,6 +124,10 @@ test/
                                # racha, retos, XP/niveles y plan adaptativo (Fases 1-2);
                                # recompensa 1/día y toggles ads/premium (Fase 3)
   avisos_test.dart             # Lógica pura Fase 6: próxima hora local, texto de racha, snapshot widget
+  meal_plan_test.dart          # Plan semanal de comidas: determinismo y referencias reales (Fase 4)
+  pose_coach_test.dart         # Lógica pura del entrenador de postura (Fase 5)
+  theme_test.dart              # Contraste WCAG AA de ambas paletas + activación oscura (Fase 7)
+  accessibilidad_test.dart     # Sin desbordes a escala de texto 2.0× en todas las secciones (Fase 7)
 
 assets/
   docs/                        # Manual de usuario es/en (markdown local)

@@ -83,9 +83,13 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   }
 
   bool _validate() {
-    final nombreError = Validators.validarNombre(_nombreController.text);
-    final sexoError = _sexo == null ? 'Selecciona un sexo biológico' : null;
-    final metaError = _metas.isEmpty ? 'Selecciona al menos una meta principal' : null;
+    final strings = context.read<LocaleService>().strings;
+    final nombreError = _localizaNombreError(
+      Validators.validarNombre(_nombreController.text),
+      strings,
+    );
+    final sexoError = _sexo == null ? strings.errSexRequired : null;
+    final metaError = _metas.isEmpty ? strings.regMetaAtLeast : null;
     setState(() {
       _nombreError = nombreError;
       _sexoError = sexoError;
@@ -93,6 +97,17 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     });
     return nombreError == null && sexoError == null && metaError == null;
   }
+
+  /// Traduce el mensaje ES de [Validators] con los getters `err*` oficiales.
+  /// En español el texto resultante es idéntico al original.
+  String? _localizaNombreError(String? es, AppStrings s) => switch (es) {
+        'Escribe tu nombre completo' => s.errNameEmpty,
+        'El nombre solo admite letras y espacios' => s.errNameInvalid,
+        'El nombre debe tener al menos 3 caracteres' => s.errNameShort,
+        'El nombre no puede superar 60 caracteres' => s.errNameLong,
+        null => null,
+        _ => es,
+      };
 
   @override
   Widget build(BuildContext context) {
@@ -127,6 +142,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   }
 
   Widget _buildAvatarPicker() {
+    final strings = context.watch<LocaleService>().strings;
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -153,7 +169,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Foto de perfil',
+                  strings.regFotoTitulo,
                   style: AppType.labelLg.copyWith(
                     color: AppColors.onSurface,
                     fontWeight: FontWeight.w700,
@@ -161,7 +177,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  'Añade una foto para identificarte',
+                  strings.regFotoHint,
                   style: AppType.bodySm.copyWith(color: AppColors.outline),
                 ),
                 const SizedBox(height: 6),
@@ -173,13 +189,17 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.upload, size: 15, color: AppColors.primary),
+                        Icon(Icons.upload, size: 15, color: AppColors.primary),
                         const SizedBox(width: 4),
-                        Text(
-                          'Subir imagen',
-                          style: AppType.labelMd.copyWith(
-                            color: AppColors.primary,
-                            fontWeight: FontWeight.w700,
+                        Flexible(
+                          child: Text(
+                            strings.regSubirImagen,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppType.labelMd.copyWith(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
                         ),
                       ],
@@ -195,12 +215,13 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   }
 
   Widget _buildForm() {
+    final strings = context.watch<LocaleService>().strings;
     return Form(
       key: _formKey,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _fieldLabel('Nombre Completo', required: true, icon: Icons.person),
+          _fieldLabel(strings.regNameLabel, required: true, icon: Icons.person),
           const SizedBox(height: 6),
           TextFormField(
             controller: _nombreController,
@@ -210,7 +231,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
               fontWeight: FontWeight.w600,
             ),
             decoration: InputDecoration(
-              hintText: 'Escribe tu nombre',
+              hintText: strings.regNameHint,
               hintStyle: AppType.bodyMd.copyWith(color: Colors.grey),
               filled: true,
               fillColor: AppColors.surfaceLowest,
@@ -225,7 +246,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(14),
-                borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+                borderSide: BorderSide(color: AppColors.primary, width: 1.5),
               ),
               errorText: _nombreError,
               errorStyle: AppType.bodySm.copyWith(color: AppColors.error),
@@ -239,7 +260,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _fieldLabel('Edad', required: true, icon: Icons.cake),
+                    _fieldLabel(strings.regAgeLabel, required: true, icon: Icons.cake),
                     const SizedBox(height: 4),
                     _wheelCard(
                       WheelNumberPicker(
@@ -247,7 +268,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                         max: Validators.maxEdad.toDouble(),
                         step: 1,
                         decimals: 0,
-                        semanticsUnit: 'años',
+                        semanticsUnit: strings.regYears,
                         initialValue: _edad,
                         onChanged: (v) => setState(() => _edad = v),
                       ),
@@ -260,7 +281,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _fieldLabel('Sexo biológico', required: true, icon: Icons.wc),
+                    _fieldLabel(strings.regSexLabel, required: true, icon: Icons.wc),
                     const SizedBox(height: 6),
                     _dropdown(
                       _sexo,
@@ -268,8 +289,8 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                         _sexo = v;
                         _sexoError = null;
                       }),
-                      const ['Femenino', 'Masculino', 'Otro'],
-                      hint: 'Selecciona',
+                      strings.regSexos,
+                      hint: strings.regSexoHint,
                       error: _sexoError,
                     ),
                   ],
@@ -285,7 +306,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _fieldLabel('Peso', required: true, icon: Icons.scale),
+                    _fieldLabel(strings.regWeightLabel, required: true, icon: Icons.scale),
                     const SizedBox(height: 4),
                     _wheelCard(
                       WheelNumberPicker(
@@ -306,7 +327,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _fieldLabel('Altura', required: true, icon: Icons.straighten),
+                    _fieldLabel(strings.regHeightLabel, required: true, icon: Icons.straighten),
                     const SizedBox(height: 4),
                     _wheelCard(
                       WheelNumberPicker(
@@ -327,10 +348,10 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
           const SizedBox(height: 16),
           _BmiBar(imc: _imcEnVivo),
           const SizedBox(height: 20),
-          _fieldLabel('Meta Principal', required: true, icon: Icons.flag),
+          _fieldLabel(strings.regMetaLabel, required: true, icon: Icons.flag),
           const SizedBox(height: 4),
           Text(
-            'Elige hasta 2 metas',
+            strings.regEligeMetas,
             style: AppType.bodySm.copyWith(color: AppColors.outline),
           ),
           const SizedBox(height: 10),
@@ -348,7 +369,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                         _metas.remove(entry.key);
                         _metaLimite = null;
                       } else if (_metas.length >= 2) {
-                        _metaLimite = 'Máximo 2 metas seleccionadas';
+                        _metaLimite = strings.regMetaLimite;
                       } else {
                         _metas.add(entry.key);
                         _metaLimite = null;
@@ -374,10 +395,10 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
             ),
           ],
           const SizedBox(height: 20),
-          _fieldLabel('Tipo de cuerpo', icon: Icons.accessibility_new),
+          _fieldLabel(strings.regBodyTypeLabel, icon: Icons.accessibility_new),
           const SizedBox(height: 4),
           Text(
-            'Ayuda a personalizar la perspectiva visual (informativo)',
+            strings.regTipoCuerpoHint,
             style: AppType.bodySm.copyWith(color: AppColors.outline),
           ),
           const SizedBox(height: 10),
@@ -387,7 +408,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
             children: TipoCuerpo.opciones
                 .map(
                   (tipo) => ChoiceChip(
-                    label: Text(tipo),
+                    label: Text(_tipoCuerpoLabel(tipo, strings)),
                     selected: _tipoCuerpo == tipo,
                     selectedColor: AppColors.secondaryContainer,
                     onSelected: (_) => setState(() => _tipoCuerpo = tipo),
@@ -405,6 +426,10 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       ),
     );
   }
+
+  /// Traduce SOLO la etiqueta; el valor guardado sigue siendo el ES original.
+  String _tipoCuerpoLabel(String es, AppStrings s) =>
+      es == TipoCuerpo.noLoSe ? s.regDontKnow : s.tipoCuerpoName(es);
 
   Widget _wheelCard(Widget wheel) {
     return Container(
@@ -447,6 +472,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
 
   Widget _dropdown(String? value, ValueChanged<String?> onChanged, List<String> options,
       {String? hint, String? error}) {
+    final strings = context.watch<LocaleService>().strings;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14),
       decoration: BoxDecoration(
@@ -463,13 +489,17 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
             hint ?? '',
             style: AppType.bodyMd.copyWith(color: Colors.grey),
           ),
-          icon: const Icon(Icons.expand_more, size: 18, color: AppColors.onSurfaceVariant),
+          icon: Icon(Icons.expand_more, size: 18, color: AppColors.onSurfaceVariant),
           style: AppType.bodyMd.copyWith(
             color: AppColors.onSurface,
             fontWeight: FontWeight.w600,
           ),
           items: options
-              .map((o) => DropdownMenuItem(value: o, child: Text(o)))
+              .map((o) => DropdownMenuItem(
+                    // `value` conserva el dato ES; solo la etiqueta se traduce.
+                    value: o,
+                    child: Text(strings.sexoName(o)),
+                  ))
               .toList(),
           onChanged: onChanged,
         ),
@@ -483,6 +513,7 @@ class _RegHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final strings = context.watch<LocaleService>().strings;
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 14),
       decoration: BoxDecoration(
@@ -501,12 +532,18 @@ class _RegHeader extends StatelessWidget {
                 color: AppColors.onSurface,
               ),
               const Spacer(),
-              Text(
-                'CREA TU PERFIL',
-                style: AppType.labelSm.copyWith(
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.6,
+              Flexible(
+                child: Text(
+                  strings.regCreaPerfil,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  softWrap: false,
+                  textAlign: TextAlign.end,
+                  style: AppType.labelSm.copyWith(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.6,
+                  ),
                 ),
               ),
             ],
@@ -514,7 +551,7 @@ class _RegHeader extends StatelessWidget {
           const SizedBox(height: 10),
           ClipRRect(
             borderRadius: BorderRadius.circular(999),
-            child: const LinearProgressIndicator(
+            child: LinearProgressIndicator(
               value: 0.5,
               minHeight: 6,
               backgroundColor: Color(0xFFE3EBE6),
@@ -544,7 +581,7 @@ class _WelcomeBlock extends StatelessWidget {
           ),
           child: Row(
             children: [
-              const Icon(Icons.fitness_center, size: 15, color: AppColors.primary),
+              Icon(Icons.fitness_center, size: 15, color: AppColors.primary),
               const SizedBox(width: 6),
               Expanded(
                 child: Text(
@@ -585,9 +622,11 @@ class _BmiBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final strings = context.watch<LocaleService>().strings;
     final valid = imc > 0;
-    final categoria = valid ? _categoriaImc(imc) : '...';
-    final (badge, badColor) = valid ? _estadoImc(imc) : ('—', Colors.grey);
+    final categoria = valid ? _categoriaImc(strings, imc) : '...';
+    final (badge, badColor) =
+        valid ? _estadoImc(strings, imc) : ('—', Colors.grey);
 
     final borderColor = valid ? badColor : AppColors.outlineVariant;
     return Container(
@@ -606,7 +645,9 @@ class _BmiBar extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  valid ? 'IMC en vivo: ${imc.toStringAsFixed(1)}' : 'IMC en vivo —',
+                  valid
+                      ? strings.regImcEnVivo(imc)
+                      : strings.regImcEnVivoDash,
                   style: TextStyle(
                     fontFamily: 'Inter',
                     fontSize: 12,
@@ -615,7 +656,7 @@ class _BmiBar extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  valid ? categoria : 'Gira las ruedas de peso y altura',
+                  valid ? categoria : strings.regImcGira,
                   style: TextStyle(
                     fontFamily: 'Inter',
                     fontSize: 11,
@@ -645,18 +686,18 @@ class _BmiBar extends StatelessWidget {
     );
   }
 
-  String _categoriaImc(double v) {
-    if (v < 18.5) return 'Bajo peso';
-    if (v < 25) return 'Rango normal y saludable';
-    if (v < 30) return 'Sobrepeso';
-    return 'Obesidad';
+  String _categoriaImc(AppStrings s, double v) {
+    if (v < 18.5) return s.regImcBajo;
+    if (v < 25) return s.regImcRango;
+    if (v < 30) return s.regImcSobrepeso;
+    return s.regImcObesidad;
   }
 
-  (String, Color) _estadoImc(double v) {
-    if (v < 18.5) return ('BAJO', AppColors.error);
-    if (v < 25) return ('ÓPTIMO', const Color(0xFF059669));
-    if (v < 30) return ('ALTO', const Color(0xFFB45309));
-    return ('MUY ALTO', AppColors.error);
+  (String, Color) _estadoImc(AppStrings s, double v) {
+    if (v < 18.5) return (s.regImcBadgeBajo, AppColors.error);
+    if (v < 25) return (s.regImcOptimal, const Color(0xFF059669));
+    if (v < 30) return (s.regImcBadgeAlto, const Color(0xFFB45309));
+    return (s.regImcBadgeMuyAlto, AppColors.error);
   }
 }
 
@@ -675,6 +716,7 @@ class _MetaChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final strings = context.watch<LocaleService>().strings;
     final bg = selected ? AppColors.primary : AppColors.surfaceLowest;
     final fg = selected ? Colors.white : AppColors.onSurface;
     return SizedBox(
@@ -706,7 +748,8 @@ class _MetaChip extends StatelessWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    label,
+                    // `label` es el valor ES de la meta (dato); la vista va traducida.
+                    strings.metaName(label),
                     style: AppType.labelMd.copyWith(
                       color: fg,
                       fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
@@ -732,6 +775,7 @@ class _RegFooter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final strings = context.watch<LocaleService>().strings;
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
       decoration: BoxDecoration(
@@ -751,15 +795,15 @@ class _RegFooter extends StatelessWidget {
               child: InkWell(
                 onTap: onSave,
                 borderRadius: BorderRadius.circular(18),
-                child: const Row(
+                child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Flexible(
                       child: Text(
-                        'Guardar y Entrar al Dashboard',
+                        strings.regSave,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontFamily: 'Inter',
                           fontSize: 14,
                           fontWeight: FontWeight.w700,
@@ -767,8 +811,8 @@ class _RegFooter extends StatelessWidget {
                         ),
                       ),
                     ),
-                    SizedBox(width: 8),
-                    Icon(Icons.arrow_forward, size: 18, color: Colors.white),
+                    const SizedBox(width: 8),
+                    const Icon(Icons.arrow_forward, size: 18, color: Colors.white),
                   ],
                 ),
               ),
@@ -776,7 +820,7 @@ class _RegFooter extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'Podrás editar estos valores en cualquier momento desde tu Perfil.',
+            strings.regFooterHint,
             style: AppType.labelSm.copyWith(
               color: AppColors.onSurfaceVariant,
               fontWeight: FontWeight.w500,

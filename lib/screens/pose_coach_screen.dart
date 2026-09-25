@@ -1,7 +1,9 @@
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 
+import '../services/locale_service.dart';
 import '../services/pose_coach_service.dart';
 import '../state/pose_coach.dart';
 import '../theme.dart';
@@ -119,7 +121,7 @@ class _PoseCoachScreenState extends State<PoseCoachScreen> {
       await control.startImageStream(_procesarMarco);
       setState(() {
         _estado = _EstadoCoach.listo;
-        _mensaje = 'Coloca tu cuerpo en el encuadre';
+        _mensaje = context.read<LocaleService>().strings.pcColocaEncuadre;
       });
     } catch (_) {
       if (!mounted) return;
@@ -157,10 +159,9 @@ class _PoseCoachScreenState extends State<PoseCoachScreen> {
     }
   }
 
-  static const _noModeloMsg =
-      'El modelo de IA de Google no está disponible ahora (requiere Play '
-      'Services y una descarga única). Sin él no se puede activar el '
-      'entrenador con cámara.';
+  /// Mensaje honesto cuando el modelo de IA no está disponible. Se traduce
+  /// desde AppStrings (antes era un literal estático en español).
+  String get _noModeloMsg => context.watch<LocaleService>().strings.pcNoModelo;
 
   /// Convierte coordenadas de píxel (marco original) a 0..1 en el marco erguido
   /// (ML Kit devuelve la pose ya rotada; por eso se intercambian ancho/alto en
@@ -180,13 +181,14 @@ class _PoseCoachScreenState extends State<PoseCoachScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final strings = context.watch<LocaleService>().strings;
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: AppColors.surface,
         elevation: 0,
         title: Text(
-          'Entrenador con cámara',
+          strings.pcTitulo,
           style: AppType.headlineSm.copyWith(
             color: AppColors.onSurface,
             fontWeight: FontWeight.w800,
@@ -197,8 +199,8 @@ class _PoseCoachScreenState extends State<PoseCoachScreen> {
             onPressed: _estado == _EstadoCoach.listo || _estado == _EstadoCoach.cargando
                 ? () => Navigator.of(context).pop()
                 : null,
-            child: const Text(
-              'Terminar',
+            child: Text(
+              strings.pcTerminar,
               style: TextStyle(
                 color: AppColors.primary,
                 fontWeight: FontWeight.w700,
@@ -220,38 +222,37 @@ class _PoseCoachScreenState extends State<PoseCoachScreen> {
   }
 
   Widget _buildCuerpo() {
+    final strings = context.watch<LocaleService>().strings;
     switch (_estado) {
       case _EstadoCoach.cargando:
-        return const Center(
+        return Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               CircularProgressIndicator(color: AppColors.primary),
               SizedBox(height: 16),
-              Text('Encendiendo la cámara…', style: AppType.bodyMd),
+              Text(strings.pcEncendiendo, style: AppType.bodyMd),
             ],
           ),
         );
       case _EstadoCoach.sinPermiso:
         return _EstadoHonesto(
           icon: Icons.no_photography_outlined,
-          titulo: 'Permiso de cámara necesario',
-          detalle:
-              'La cámara se usa solo para analizar tu postura EN TU MÓVIL: '
-              'nada se graba ni se sube. Concede el permiso y vuelve a intentarlo.',
-          accion: 'Abrir ajustes',
+          titulo: strings.pcPermisoTitulo,
+          detalle: strings.pcPermisoDetalle,
+          accion: strings.pcAbrirAjustes,
           onAccion: _abrirAjustes,
         );
       case _EstadoCoach.sinCamara:
-        return const _EstadoHonesto(
+        return _EstadoHonesto(
           icon: Icons.videocam_off_outlined,
-          titulo: 'No se encontró la cámara',
-          detalle: 'Revisa que el dispositivo tenga una cámara disponible.',
+          titulo: strings.pcSinCamaraTitulo,
+          detalle: strings.pcSinCamaraDetalle,
         );
       case _EstadoCoach.sinModelo:
         return _EstadoHonesto(
           icon: Icons.smart_toy_outlined,
-          titulo: 'Entrenador con cámara no disponible ahora',
+          titulo: strings.pcNoDisponibleTitulo,
           detalle: _mensaje,
         );
       case _EstadoCoach.listo:
@@ -270,6 +271,7 @@ class _PoseCoachScreenState extends State<PoseCoachScreen> {
   }
 
   Widget _barraInferior() {
+    final strings = context.watch<LocaleService>().strings;
     final tieneContador = _analizador.reps >= 0 &&
         (widget.tipo == TipoPostura.pierna ||
             widget.tipo == TipoPostura.empuje ||
@@ -279,7 +281,7 @@ class _PoseCoachScreenState extends State<PoseCoachScreen> {
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        border: const Border(top: BorderSide(color: AppColors.outlineVariant)),
+        border: Border(top: BorderSide(color: AppColors.outlineVariant)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -305,7 +307,7 @@ class _PoseCoachScreenState extends State<PoseCoachScreen> {
                     borderRadius: BorderRadius.circular(999),
                   ),
                   child: Text(
-                    '${_analizador.reps} reps',
+                    strings.pcReps(_analizador.reps),
                     style: AppType.labelMd.copyWith(
                       color: AppColors.onPrimaryContainer,
                       fontWeight: FontWeight.w800,
@@ -328,8 +330,8 @@ class _PoseCoachScreenState extends State<PoseCoachScreen> {
               _estado == _EstadoCoach.listo
                   ? _mensaje
                   : _estado == _EstadoCoach.cargando
-                      ? 'Preparando el análisis de postura…'
-                      : 'El entrenador con cámara no está activo.',
+                      ? strings.pcPreparando
+                      : strings.pcNoActivo,
               style: AppType.bodyMd.copyWith(
                 color: AppColors.onSurfaceVariant,
                 fontWeight: FontWeight.w600,

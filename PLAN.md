@@ -18,8 +18,9 @@
 | Fase 3 (negocio: anuncios + Premium + app ligera) | ✅ código | AdMob IDs de prueba + consentimiento local + Premium + R8; falta prueba manual en ambos móviles |
 | Fase 4 (comidas) | ✅ código | Plan semanal real (6 recetas) + lista de la compra + día libre; falta prueba manual |
 | Fase 5 (entrenador con cámara) | ✅ código | ML Kit pose on-device + estados honestos; falta prueba manual |
-| Fase 6 (extras de retención) | ✅ código | Widget de home (pasos/calorías/racha) + avisos locales por tipo; falta prueba manual |
-| Fases 7–8 | ⏳ | Pendientes (ver detalle abajo) |
+| Fase 6 (extras de retención) | ✅ instalado/verificado | Widget de home (pasos/calorías/racha) + avisos locales por tipo; instalado y verificado en Pixel 6a y Xiaomi |
+| Fase 7 (premium + accesibilidad) | ✅ código | Modo oscuro (sistema/claro/oscuro), contraste WCAG AA, tamaño accesible (0 desbordes a 2.0×), micro-animaciones, i18n es/en completo; `flutter analyze` 0 issues y 55 tests verdes. Pendiente PASA/FALLA manual del usuario |
+| Fase 8 | ⏳ | Pendiente (ver detalle abajo) |
 
 **Sesión** (`FUNCIONALIDADES.md`), **guía de prueba manual** (`GUIA_TESTEO_FASE1.md`) y
 **README** están pendientes de actualización con el estado de Fases 1 y 2.
@@ -228,11 +229,25 @@ fuera de Cuba (se deja la puerta abierta sin bloquear la app).
   reales; activar ambos avisos, conceder el permiso y comprobar que aparecen en la
   bandeja a la hora indicada (hidratación cada hora, racha 20:00).
 
-## 10. Fase 7 — Experiencia premium y accesibilidad ⏳
+## 10. Fase 7 — Experiencia premium y accesibilidad ✅ (código)
 
-- Modo oscuro, contraste y tamaño accesibles (EAA/WCAG), micro-animaciones.
-- Todos los textos y documentos en es/en (hoy la mayoría del UI está hardcodeada en
-  español; `LocaleService` solo cubre parte).
+- ✅ **Modo oscuro**: selector en Perfil (Sistema/Claro/Oscuro) con `AppThemeMode`
+  persistido (`fitpulse_theme_v1`); el `builder` de `MaterialApp` activa la paleta
+  correcta respondiendo también a `MediaQuery.platformBrightness`. Paleta oscura
+  propia en `theme.dart` (verde sobre superficie oscura), gradientes del header con
+  verdes estables.
+- ✅ **Contraste WCAG AA**: verificado por test automático en `test/theme_test.dart`
+  (ratios de la paleta clara y oscura, incl. `outline` #5F6B62 en hints/pasos).
+- ✅ **Tamaño accesible**: `test/accessibilidad_test.dart` recorre toda la app a
+  escala de texto 2.0× en 360 dp; 16 desbordes corregidos (patrón `Flexible` +
+  `maxLines: 1` + `TextOverflow.ellipsis`).
+- ✅ **Micro-animaciones**: anillo de `AppProgressRing` y barras de `MetricCard` con
+  `TweenAnimationBuilder` (700-800 ms, easeOutCubic).
+- ✅ **i18n es/en completo**: `AppStrings` con textos de las 11 pantallas (ES
+  verbatim, EN nuevo); cambio en vivo desde Perfil → Idioma; los valores de datos
+  (metas, sexo, nivel, categorías) se traducen solo en su visualización.
+- ⏳ Pendiente: prueba PASA/FALLA manual en ambos móviles (Pixel 6a + Xiaomi) y
+  revisión de la traducción EN por un hablante nativo.
 
 ## 11. Fase 8 — Privacidad, legal UE y lanzamiento ⏳
 
@@ -255,9 +270,9 @@ fuera de Cuba (se deja la puerta abierta sin bloquear la app).
 
 ## 13. Próximos pasos recomendados
 
-1. **Probar Fases 1-6 en los móviles** siguiendo `GUIA_TESTEO_FASE1.md`
-   (registrar PASA/FALLA por dispositivo: Health Connect, entrenamientos, anuncios,
-   Premium, comidas, entrenador con cámara y widget/avisos).
-2. Conectar el Xiaomi por ADB para instalar y probar Fases 4-6.
-3. Con la aprobación de Fases 4-6, abrir **Fase 7** (experiencia premium y
-   accesibilidad EAA/WCAG + textos es/en).
+1. **Prueba PASA/FALLA de Fases 1-7 en los móviles** siguiendo `GUIA_TESTEO_FASE1.md`
+   (tabla de registro por dispositivo: Health Connect, entrenamientos, anuncios,
+   Premium, comidas, entrenador con cámara, widget/avisos, modo oscuro, tamaño de
+   texto 2.0× e idioma en vivo).
+2. Con la aprobación manual de las Fases 1-7, abrir **Fase 8** (privacidad GDPR,
+   exportación/importación cifrada y lanzamiento).

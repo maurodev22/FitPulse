@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import '../services/locale_service.dart';
 import '../state/meal_plan.dart';
 import '../state/recetas_catalog.dart';
 import '../theme.dart';
@@ -14,6 +16,7 @@ class MealPlanScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final strings = context.watch<LocaleService>().strings;
     return DefaultTabController(
       length: 2,
       child: Scaffold(
@@ -22,20 +25,20 @@ class MealPlanScreen extends StatelessWidget {
           backgroundColor: AppColors.surface,
           elevation: 0,
           title: Text(
-            'Plan semanal de comidas',
+            strings.recPlanSemanal,
             style: AppType.headlineSm.copyWith(
               color: AppColors.onSurface,
               fontWeight: FontWeight.w800,
             ),
           ),
-          bottom: const TabBar(
+          bottom: TabBar(
             indicatorColor: AppColors.primary,
             labelColor: AppColors.primary,
             unselectedLabelColor: AppColors.outline,
             labelStyle: AppType.labelMd,
             tabs: [
-              Tab(text: 'Plan semanal'),
-              Tab(text: 'Lista de la compra'),
+              Tab(text: strings.mpTabPlan),
+              Tab(text: strings.mpTabLista),
             ],
           ),
         ),
@@ -58,6 +61,7 @@ class _ResumenPlan extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final strings = context.watch<LocaleService>().strings;
     final cobertura = plan.coberturaMetaPorcentaje.clamp(0, 100).toStringAsFixed(0);
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 12, 16, 4),
@@ -72,10 +76,10 @@ class _ResumenPlan extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Icon(Icons.restaurant_menu, size: 18, color: AppColors.primary),
+              Icon(Icons.restaurant_menu, size: 18, color: AppColors.primary),
               const SizedBox(width: 8),
               Text(
-                'Tu meta: ${plan.perfil.caloriasMeta.round()} kcal/día',
+                strings.mpTuMeta(plan.perfil.caloriasMeta.round()),
                 style: AppType.labelMd.copyWith(
                   color: AppColors.onSurface,
                   fontWeight: FontWeight.w700,
@@ -93,14 +97,12 @@ class _ResumenPlan extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'El plan base aporta ${plan.kcalPromedioDia.round()} kcal/día de '
-            'promedio calculadas de las recetas reales. Ajusta el tamaño de las '
-            'raciones para alcanzar tu meta.',
+            strings.mpBaseDesc(plan.kcalPromedioDia.round()),
             style: AppType.bodySm.copyWith(color: AppColors.outline),
           ),
           const SizedBox(height: 10),
           Text(
-            'Domingo = día libre planificado 🍕 · no penaliza tu racha de sesiones.',
+            strings.mpDomingoLibre,
             style: AppType.bodySm.copyWith(
               color: AppColors.primary,
               fontWeight: FontWeight.w600,
@@ -119,6 +121,7 @@ class _PlanView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final strings = context.watch<LocaleService>().strings;
     return ListView(
       padding: const EdgeInsets.only(bottom: 24),
       children: [
@@ -128,8 +131,7 @@ class _PlanView extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
           child: Text(
-            'Todas las comidas son recetas reales del catálogo nutricional. '
-            'Los totales son la suma exacta de sus valores; nada está inventado.',
+            strings.mpTodasReales,
             style: AppType.bodySm.copyWith(color: AppColors.outline),
           ),
         ),
@@ -145,6 +147,7 @@ class _DiaCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final strings = context.watch<LocaleService>().strings;
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 6, 16, 6),
       padding: const EdgeInsets.all(16),
@@ -159,7 +162,7 @@ class _DiaCard extends StatelessWidget {
           Row(
             children: [
               Text(
-                dia.dia,
+                strings.diaNombre(dia.dia),
                 style: AppType.labelMd.copyWith(
                   color: AppColors.onSurface,
                   fontWeight: FontWeight.w800,
@@ -174,7 +177,7 @@ class _DiaCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(999),
                   ),
                   child: Text(
-                    'Día libre 🍕',
+                    strings.mpDiaLibre,
                     style: AppType.labelSm.copyWith(
                       color: AppColors.onSecondaryContainer,
                       fontWeight: FontWeight.w700,
@@ -192,12 +195,26 @@ class _DiaCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 10),
-          _ComidaFila(icon: Icons.wb_sunny_outlined, etiqueta: 'Desayuno', receta: dia.desayuno),
-          _ComidaFila(icon: Icons.lunch_dining_outlined, etiqueta: 'Almuerzo', receta: dia.almuerzo),
-          _ComidaFila(icon: Icons.dinner_dining_outlined, etiqueta: 'Cena', receta: dia.cena),
+          _ComidaFila(
+            icon: Icons.wb_sunny_outlined,
+            etiqueta: strings.mpDesayuno,
+            receta: dia.desayuno,
+          ),
+          _ComidaFila(
+            icon: Icons.lunch_dining_outlined,
+            etiqueta: strings.mpAlmuerzo,
+            receta: dia.almuerzo,
+          ),
+          _ComidaFila(
+            icon: Icons.dinner_dining_outlined,
+            etiqueta: strings.mpCena,
+            receta: dia.cena,
+          ),
           _ComidaFila(
             icon: Icons.bolt_outlined,
-            etiqueta: dia.extra.tipo == 'Pre-entreno' ? 'Pre-entreno' : 'Recarga',
+            etiqueta: dia.extra.tipo == 'Pre-entreno'
+                ? strings.mpPreEntreno
+                : strings.mpRecarga,
             receta: dia.extra,
           ),
         ],
@@ -252,6 +269,7 @@ class _ListaCompraView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final strings = context.watch<LocaleService>().strings;
     final lista = plan.listaCompra;
     return ListView(
       padding: const EdgeInsets.only(bottom: 24),
@@ -266,12 +284,11 @@ class _ListaCompraView extends StatelessWidget {
           ),
           child: Row(
             children: [
-              const Icon(Icons.shopping_cart_outlined, size: 18, color: AppColors.primary),
+              Icon(Icons.shopping_cart_outlined, size: 18, color: AppColors.primary),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  '${lista.length} ingredientes para toda la semana '
-                  '(cantidades por ración en cada receta).',
+                  strings.mpIngredientes(lista.length),
                   style: AppType.bodySm.copyWith(color: AppColors.outline),
                 ),
               ),
@@ -288,7 +305,7 @@ class _ListaCompraView extends StatelessWidget {
             ),
             child: Row(
               children: [
-                const Icon(Icons.check_circle_outline, size: 16, color: AppColors.primary),
+                Icon(Icons.check_circle_outline, size: 16, color: AppColors.primary),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
