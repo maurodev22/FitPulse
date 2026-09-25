@@ -223,7 +223,40 @@ Ajustes → Privacidad → Permisos del cuerpo/Actividad física → FitPulse �
 
 ---
 
-## 13. Criterio de aprobación / fallo
+## 13. Fase 5 — Entrenador con cámara (corrección de postura, ML Kit on-device)
+
+**a) Acceso**
+- Pestaña **Entrenamientos** → abrir un programa → durante un ejercicio corregible
+  (sentadillas, zancadas, flexiones, fondos, plancha, mountain climbers, skipping,
+  jumping jacks…) aparece el botón **"Corregir postura con cámara"** (NO aparece en
+  estiramientos ni trote). Al pulsarlo se pausa el temporizador del reproductor.
+
+**b) Permiso y cámara**
+- La primera vez se pide **permiso de cámara** (solo análisis local: nada se graba ni se
+  sube). Si se deniega, se muestra el estado honesto con botón **"Abrir ajustes"**.
+- Abre la cámara (preferible la trasera) con el **esqueleto en vivo** superpuesto + el
+  **contador de repeticiones** y el **feedback** en la barra inferior.
+
+**c) Correcciones reales (ángulos del esqueleto)**
+- Sentadillas/zancadas/burpees: ángulo de rodilla ("Flexiona las rodillas · N°" /
+  "Sube para completar").
+- Flexiones/fondos: ángulo de codo ("Baja el pecho · N°" / "Sube para completar").
+- Plancha: alineación hombros-cadera-tobillos ("Eleva la cadera: tu cuerpo está
+  doblado (N°)" / "✔ Cuerpo alineado · mantén la plancha").
+- Cardio (skipping/climbers/jumping jacks): contador suave de ritmo 🎵.
+- Estiramientos y demás: solo "Pose detectada ✓".
+- El contador usa histéresis: una repetición = bajar del umbral y volver a superarlo
+  (no cuenta el temblor de la cámara). Sin pose → "Coloca tu cuerpo en el encuadre".
+
+**d) Sin conexión / sin modelo (honesto)**
+- Si Play Services o el modelo de IA no están disponibles (descarga única bloqueada por
+  red), se muestra "Entrenador con cámara no disponible ahora" con la explicación:
+  **no se inventa ninguna corrección** y la app **no crashea** (mismo patrón que el
+  placeholder de anuncios).
+
+---
+
+## 14. Criterio de aprobación / fallo
 
 **PASA si:**
 - Los pasos siempre vienen del sensor real (número real, nunca ficticio).
@@ -236,6 +269,10 @@ Ajustes → Privacidad → Permisos del cuerpo/Actividad física → FitPulse �
 - El plan semanal tiene 7 días, todas sus comidas son recetas reales del catálogo, el
   domingo está marcado como día libre (que no rompe la racha) y la lista de la compra
   agrupa ingredientes con su nombre real.
+- El entrenador con cámara abre desde un ejercicio corregible, pide el permiso de cámara
+  y muestra esqueleto + feedback real (ángulos) + contador de repeticiones.
+- Sin modelo de IA disponible, el entrenador con cámara muestra el estado honesto
+  ("no disponible ahora") y la app sigue funcionando.
 - No aparecen tendencias inventadas ni valores de salud ficticios.
 - `flutter analyze` → 0 issues y todos los tests verdes.
 
@@ -250,6 +287,8 @@ Ajustes → Privacidad → Permisos del cuerpo/Actividad física → FitPulse �
   más de una vez el mismo día, o la app crashea sin Play Services/red.
 - El plan semanal incluye comidas inventadas (fuera del catálogo real), totales que no
   coinciden con la suma de sus recetas, o el día libre no está marcado en domingo.
+- El entrenador con cámara crashea, muestra correcciones inventadas sin pose detectable,
+  o no maneja el permiso/cámara denegados (en lugar de mostrar el estado honesto).
 
 ---
 
@@ -259,4 +298,5 @@ Ajustes → Privacidad → Permisos del cuerpo/Actividad física → FitPulse �
 |-------|-------------|-----------|---------------|
 | 2026-09-24 | Pixel 6a | ☑ PASA (F1-F3) | F1/F2 ✅ (Health Connect, reproductor, racha, retos). F3: banner+Premium tras arreglo del placeholder ✅; **recompensado pendiente por red** (AdMob 403 en Cuba — probar fuera de Cuba). |
 |  | Pixel 6a | ☐ PASA / ☐ FALLA (F4) | Plan semanal de comidas + lista de la compra + día libre. |
-|  | Xiaomi | ☐ PASA / ☐ FALLA |  |
+|  | Pixel 6a | ☐ PASA / ☐ FALLA (F5) | Entrenador con cámara: permiso, esqueleto, feedback y contador; estado honesto si el modelo no descarga. |
+|  | Xiaomi | ☐ PASA / ☐ FALLA | F4 y F5 (conectar Xiaomi por ADB). |

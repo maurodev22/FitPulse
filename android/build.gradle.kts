@@ -1,5 +1,9 @@
 allprojects {
     repositories {
+        // Mirrors accesibles desde Cuba (primero); respaldo oficial después.
+        maven { url = uri("https://maven.aliyun.com/repository/google") }
+        maven { url = uri("https://maven.aliyun.com/repository/central") }
+        maven { url = uri("https://maven.aliyun.com/repository/public") }
         google()
         mavenCentral()
     }

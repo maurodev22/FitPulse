@@ -26,9 +26,16 @@ dispositivo (sin cuentas ni servidores).
   solo recetas reales del catálogo, totales calculados, cobertura honesta de la meta),
   **lista de la compra** agrupada e ingredientes en el catálogo, y **día libre 🍕 el
   domingo que no penaliza la racha**.
+- **Fase 5 completada (código)**: **entrenador con cámara** que corrige la postura
+  (ML Kit Pose Detection, análisis **100 % on-device**: nada se graba ni se sube).
+  Esqueleto en vivo + feedback por ángulos reales (rodilla/codo/plancha/ritmo) +
+  contador de reps con histéresis. Estados honestos sin crash: sin permiso (con "Abrir
+  ajustes"), sin cámara y **modelo de IA no disponible** (descarga única vía Play
+  Services; si la red no alcanza Google se explica y no se inventa ninguna corrección).
+  Entrada: botón "Corregir postura con cámara" en el reproductor.
 - **Prueba manual**: Fases 1-3 probadas en Pixel 6a (PASA en F1/F2/F3; recompensado
-  pendiente por red — AdMob 403 en Cuba). Fase 4 pendiente de probar en
-  `GUIA_TESTEO_FASE1.md`.
+  pendiente por red — AdMob 403 en Cuba). Fases 4-5 pendientes de probar en
+  `GUIA_TESTEO_FASE1.md` (Pixel 6a y Xiaomi).
 - El plan detallado por fases vive en **[`PLAN.md`](PLAN.md)**.
 
 ## Hoja de ruta por fases
@@ -42,7 +49,7 @@ dispositivo (sin cuentas ni servidores).
 | 2 | ✅ (código) | Catálogo de 4 entrenamientos + **reproductor con temporizador**; sesiones reales persistidas; **racha real**; **retos 3/5/7 días**; **XP/niveles**; **plan adaptativo** que recomienda el programa según tu semana. Falta prueba manual |
 | 3 | ✅ (código) | Anuncios de AdMob con **IDs de prueba** (banner todas las pestañas + recompensado +25 PTs 1/día con consentimiento local) + **Premium "Quitar anuncios"** (modo prueba; el cobro real requiere entidad fuera de Cuba) + **app ligera** (R8 en release; **medido: 55.6 MB universal / 22.5 MB arm64** vs 178 MB debug). Falta prueba manual |
 | 4 | ✅ (código) | Plan semanal de comidas según el perfil (7 días Lunes→Domingo, sin datos inventados: solo recetas reales del catálogo, totales por día = suma exacta, cobertura honesta de la meta) + **lista de la compra** agrupada por ingrediente + **día libre 🍕 el domingo que no penaliza la racha**. Pendiente prueba manual |
-| 5 | ⏳ | Entrenador con cámara (ML Kit, corrección de postura on-device) |
+| 5 | ✅ (código) | Entrenador con cámara: ML Kit Pose Detection on-device (sin conexión tras descarga única del modelo) — esqueleto en vivo, feedback por ángulos reales (rodilla/codo/plancha/ritmo), contador de reps con histéresis; estados honestos (permiso/cámara/modelo no disponible); permiso `CAMERA` + `MethodChannel` propio en `MainActivity.kt`; mirrors Maven Aliyun para AndroidX Camera + ML Kit. Pendiente prueba manual |
 | 6 | ⏳ | Widgets de home screen y notificaciones locales (permiso por tipo) |
 | 7 | ⏳ | Modo oscuro, accesibilidad (EAA/WCAG), i18n es/en completo, microinteracciones |
 | 8 | ⏳ | Privacidad (export cifrado, borrado), legal UE (EULA/Términos/Privacidad es/en, GDPR, edad 16), release firmado y lanzamiento |
@@ -64,6 +71,7 @@ lib/
     athlete_profile.dart       # Modelo del atleta / perfil (JSON persistido)
     recetas_catalog.dart       # Modelo y catálogo estático de recetas (+ ingredientes por ración, Fase 4)
     meal_plan.dart             # Plan semanal de comidas determinista + lista de la compra (Fase 4)
+    pose_coach.dart            # Entrenador de postura: lógica pura (ángulos, histéresis, feedback honesto) (Fase 5)
     workout.dart               # Modelos de sesión/programa de entrenamiento (Fase 2)
     workout_catalog.dart       # Catálogo de 4 programas con ejercicios (Fase 2)
   screens/
@@ -73,7 +81,8 @@ lib/
     recipes_screen.dart        # Recetas Nutricionales + catálogo completo (+ acceso al plan, Fase 4)
     meal_plan_screen.dart      # Plan semanal + lista de la compra (pestañas, Fase 4)
     progress_screen.dart       # Progreso (métricas Health Connect + sesiones/reto/nivel/insignias reales)
-    workout_player_screen.dart # Reproductor de entrenamiento con temporizador (Fase 2)
+    workout_player_screen.dart # Reproductor de entrenamiento con temporizador (Fase 2) + botón cámara (Fase 5)
+    pose_coach_screen.dart     # Entrenador con cámara: preview + esqueleto + contador + estados honestos (Fase 5)
     tips_screen.dart           # Consejos y Bienestar
     profile_screen.dart        # Perfil y Ajustes (idioma + tarjeta Health Connect)
     help_screen.dart           # Ayuda: manual local + FAQ
@@ -84,6 +93,7 @@ lib/
     wheel_number_picker.dart   # Rueda drum-roll para edad/peso/altura (Fase 0)
   services/
     ads_service.dart           # AdMob con IDs de prueba: banner + recompensado (Fase 3)
+    pose_coach_service.dart    # Puente cámara↔ML Kit: YUV→NV21, detector on-device (Fase 5)
     config_service.dart        # Feature-flags (ads, premium, mock) + versión EULA + consentimientos
     health_service.dart        # Pasos reales (pedometer) + HealthConnectService (solo lectura)
     locale_service.dart        # Idioma es/en en vivo + AppStrings

@@ -164,9 +164,32 @@ fuera de Cuba (se deja la puerta abierta sin bloquear la app).
 - ⏳ Probar en Pixel 6a y Xiaomi: abrir Plan semanal desde Recetas, ver 7 días + domingo día
   libre, lista de la compra agrupada.
 
-## 8. Fase 5 — Entrenador con cámara ⏳
+## 8. Fase 5 — Entrenador con cámara ✅ (código)
 
-- La cámara corrige la postura al hacer ejercicio (ML Kit, on-device, sin conexión).
+- La cámara corrige la postura al hacer ejercicio (ML Kit Pose Detection, on-device,
+  sin conexión tras la descarga única del modelo).
+  - `lib/state/pose_coach.dart`: lógica pura y testeable — ángulos entre articulaciones,
+    mapa ejercicio→corrección (sentadillas/zancadas=rodilla, flexiones/fondos=codo,
+    plancha=alineación, cardio=ritmo, resto=libre), contador de repeticiones con
+    histéresis y feedback honesto. **9 tests** (45/45 en verde con F1-F4).
+  - `lib/services/pose_coach_service.dart`: puente cámara↔ML Kit (YUV-420→NV21,
+    detector base en modo stream). Autorización: `MainActivity.kt` expone un
+    `MethodChannel` mínimo para pedir el permiso de cámara (sin dependencias extra).
+  - `lib/screens/pose_coach_screen.dart`: preview + esqueleto en vivo + contador de
+    reps + feedback. Estados honestos sin crash: sin permiso (con "Abrir ajustes"),
+    sin cámara, y **modelo de IA no disponible** (descarga única vía Play Services;
+    si la red no alcanza Google, se explica y no se inventa ninguna corrección).
+  - Entrada: botón "Corregir postura con cámara" en el reproductor
+    (`workout_player_screen.dart`), visible solo en ejercicios corregibles.
+- Nada se graba ni se sube: el análisis es 100 % local en el móvil.
+- Android: permiso `CAMERA` en el manifest. Mirrors de Maven de Aliyun añadidos a
+  `settings.gradle.kts`/`build.gradle.kts` (google()/mavenCentral() bloqueados en Cuba;
+  las dependencias nuevas de AndroidX Camera + ML Kit se descargan por el mirror).
+
+**Pendiente (manual):**
+- ⏳ Probar en Pixel 6a y Xiaomi: abrir el entrenador con cámara desde un ejercicio,
+  conceder permiso, ver el esqueleto y el contador, y el estado honesto si el modelo
+  no descarga (red).
 
 ## 9. Fase 6 — Extras de retención ⏳
 
@@ -201,9 +224,9 @@ fuera de Cuba (se deja la puerta abierta sin bloquear la app).
 
 ## 13. Próximos pasos recomendados
 
-1. **Probar Fases 1 + 2 + 3 en los móviles** siguiendo `GUIA_TESTEO_FASE1.md`
-   (registrar PASA/FALLA por dispositivo: Health Connect, entrenamientos, anuncios y
-   Premium).
+1. **Probar Fases 1-5 en los móviles** siguiendo `GUIA_TESTEO_FASE1.md`
+   (registrar PASA/FALLA por dispositivo: Health Connect, entrenamientos, anuncios,
+   Premium, comidas y entrenador con cámara).
 2. **Actualizar README y FUNCIONALIDADES** para reflejar el estado real
-   (Fases 0/0.5/1/2/3 ✅ en código).
-3. Con la aprobación, abrir **Fase 4** (plan semanal de comidas + lista de la compra).
+   (Fases 0/0.5/1/2/3/4/5 ✅ en código).
+3. Con la aprobación, abrir **Fase 6** (widgets de home + avisos locales).

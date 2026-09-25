@@ -31,6 +31,7 @@ contra el estado real de la implementación Flutter. Actualizado tras las **Fase
 | 21 | **Anuncios (IDs de prueba)** | `lib/services/ads_service.dart` + `google_mobile_ads` 9.1.0 | Banner inferior en todas las pestañas y en el reproductor; **recompensado** en Progreso: +25 PTs una vez al día (persistido por fecha). Degradación elegante si no hay Play Services/red (placeholder honesto). Toggle "Anuncios habilitados" en Perfil (consentimiento local). |
 | 22 | **Premium "Quitar anuncios"** | `ProfileScreen` + `ConfigService` | Tarjeta con estado y botón "Activar/Desactivar Premium (modo prueba)". Con Premium activo se ocultan banner y recompensado. El cobro real requiere Google Play con entidad fuera de Cuba (ver PLAN.md). |
 | 23 | **Plan semanal de comidas** | `meal_plan.dart` + `MealPlanScreen` (+ `RecipesScreen`) | 7 días (Lunes→Domingo) construidos **solo con recetas reales del catálogo** (con ingredientes por ración); totales por día = suma exacta; cobertura honesta de la meta (ajuste de raciones). Domingo = **día libre 🍕 que no penaliza la racha**. Pestañas "Plan semanal" / "Lista de la compra" (ingredientes agrupados con nº de usos). |
+| 24 | **Entrenador con cámara** | `pose_coach.dart` + `pose_coach_service.dart` + `PoseCoachScreen` (botón en `WorkoutPlayerScreen`) | ML Kit Pose Detection **on-device** (tras descarga única del modelo): esqueleto en vivo, feedback por ángulos reales (sentadillas/zancadas = rodilla; flexiones/fondos = codo; plancha = alineación; cardio = ritmo) y contador de reps con histéresis. **Nada se graba ni se sube.** Estados honestos sin crash: permiso denegado (→ "Abrir ajustes"), sin cámara y **modelo de IA no disponible** (sin Play Services/red → se explica, no se inventa ninguna corrección). Permiso `CAMERA` vía `MethodChannel` propio en `MainActivity.kt` (sin dependencias extra). |
 
 ## Funcionalidades pendientes / ausentes
 
@@ -45,9 +46,8 @@ contra el estado real de la implementación Flutter. Actualizado tras las **Fase
 | 7 | Compartir actividad | Placeholder | Solo un toggle visual. |
 | 8 | Pantalla "Ver detalles"/gráficos | Sin navegación | Enlaces tipo "Ver detalles", "Ver plan", "Ver todo" no implementan destinos. |
 | 9 | Modo oscuro | Ausente | El tema sólo define modo claro (previsto en Fase 7). |
-| 10 | Entrenador con cámara | Ausente | Fase 5 (ML Kit, on-device). |
-| 11 | Widgets y avisos locales | Ausente | Fase 6. |
-| 12 | Exportar/importar y borrado total (GDPR) | Ausente | Fase 8. |
+| 10 | Widgets y avisos locales | Ausente | Fase 6. |
+| 11 | Exportar/importar y borrado total (GDPR) | Ausente | Fase 8. |
 
 ## Decisiones registradas
 
@@ -63,3 +63,13 @@ contra el estado real de la implementación Flutter. Actualizado tras las **Fase
 - **Estructura comentada**: los archivos de `lib/` llevan documentación en español por
   archivo, clase y método clave.
 - **Nombre de paquete**: `com.fitpulse.app` (build 1, versión 1.0.0).
+- **Cámara 100 % local y honesta (Fase 5)**: el entrenador con cámara analiza la postura
+  con ML Kit en el propio móvil (nada se graba ni se sube). Si el permiso, la cámara o el
+  modelo de IA no están disponibles (p. ej. descarga única bloqueada por red), se muestra
+  un estado honesto — **nunca se inventa una corrección**.
+- **Permiso de cámara sin dependencias extra (Fase 5)**: en lugar de un plugin de
+  permisos (que fijaba una versión de AGP no descargable en Cuba), `MainActivity.kt` expone
+  un `MethodChannel` mínimo con las APIs de framework (minSdk 26).
+- **Mirrors Maven Aliyun (Fase 5)**: `google()`/`mavenCentral()` están bloqueados en Cuba;
+  `settings.gradle.kts`/`build.gradle.kts` usan primero los mirrors de Aliyun (accesibles,
+  igual que el mirror de pub) y dejan los repos oficiales como respaldo.

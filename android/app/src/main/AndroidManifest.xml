@@ -13,6 +13,9 @@
     <!-- INTERNET SOLO para los anuncios de AdMob (Fase 3). Los datos de salud
          nunca salen del dispositivo. -->
     <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- Cámara (Fase 5): el entrenador de postura analiza EN EL MÓVIL con ML Kit;
+         no graba ni sube nada. -->
+    <uses-permission android:name="android.permission.CAMERA"/>
     <application
         android:label="FitPulse"
         android:name="${applicationName}"

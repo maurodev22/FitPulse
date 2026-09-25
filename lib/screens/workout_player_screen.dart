@@ -4,7 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../state/app_state.dart';
+import '../state/pose_coach.dart';
 import '../state/workout.dart';
+import 'pose_coach_screen.dart';
 import '../services/ads_service.dart';
 import '../services/config_service.dart';
 import '../theme.dart';
@@ -35,6 +37,23 @@ class _WorkoutPlayerScreenState extends State<WorkoutPlayerScreen> {
   final DateTime _inicio = DateTime.now();
 
   WorkoutExercise get _ejercicio => widget.program.ejercicios[_indice];
+
+  /// Tipo de corrección de postura para el ejercicio actual (Fase 5).
+  TipoPostura get _tipoCoachable => tipoDeEjercicio(_ejercicio.nombre);
+
+  /// Abre el entrenador con cámara pausando antes el temporizador para que el
+  /// ejercicio no avance mientras se corrige la postura.
+  void _abrirEntrenadorCamara() {
+    if (!_pausado) _togglePausa();
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => PoseCoachScreen(
+          ejercicio: _ejercicio.nombre,
+          tipo: _tipoCoachable,
+        ),
+      ),
+    );
+  }
 
   @override
   void initState() {
@@ -246,6 +265,24 @@ class _WorkoutPlayerScreenState extends State<WorkoutPlayerScreen> {
                         _ejercicio.repeticiones,
                         style: AppType.bodyMd.copyWith(
                           color: AppColors.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                    if (!_enDescanso && _tipoCoachable != TipoPostura.libre) ...[
+                      const SizedBox(height: 14),
+                      TextButton.icon(
+                        onPressed: _abrirEntrenadorCamara,
+                        icon: const Icon(
+                          Icons.videocam_outlined,
+                          size: 18,
+                          color: AppColors.primary,
+                        ),
+                        label: const Text(
+                          'Corregir postura con cámara',
+                          style: TextStyle(
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                       ),
                     ],
