@@ -1,12 +1,19 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../services/avisos_service.dart';
 import '../services/config_service.dart';
+import '../services/data_backup_service.dart';
 import '../services/locale_service.dart';
 import '../state/app_state.dart';
 import '../state/athlete_profile.dart';
 import '../theme.dart';
+import 'eula_screen.dart';
+import 'privacy_screen.dart';
 
 /// Perfil y Ajustes: muestra y edita los datos del atleta de la sesión.
 class ProfileScreen extends StatefulWidget {
@@ -73,6 +80,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   const SizedBox(height: 16),
                   _buildTema(),
                   _buildIdioma(),
+                  const SizedBox(height: 16),
+                  _buildPrivacidadDatos(),
                   const SizedBox(height: 20),
                   _buildAcciones(),
                 ],
@@ -620,6 +629,168 @@ class _ProfileScreenState extends State<ProfileScreen> {
           style: AppType.bodySm.copyWith(color: AppColors.outline),
         ),
       ],
+    );
+  }
+
+  /// Fase 8: sección "Privacidad y datos" — exportar, importar, política de
+  /// privacidad y borrado total (derechos GDPR arts. 17 y 20).
+  Widget _buildPrivacidadDatos() {
+    final strings = context.watch<LocaleService>().strings;
+    return _SettingsCard(
+      children: [
+        _CardTitle(icon: Icons.shield_outlined, title: strings.pfPrivacidadDatos),
+        const SizedBox(height: 8),
+        _FilaAccion(
+          icon: Icons.upload_outlined,
+          title: strings.pfExportarDatos,
+          subtitle: strings.pfExportarDatosSub,
+          onTap: _exportarDatos,
+        ),
+        _FilaAccion(
+          icon: Icons.download_outlined,
+          title: strings.pfImportarBackup,
+          subtitle: strings.pfImportarBackupSub,
+          onTap: _importarBackup,
+        ),
+        _FilaAccion(
+          icon: Icons.privacy_tip_outlined,
+          title: strings.pfPoliticaPrivacidad,
+          subtitle: strings.pfPoliticaPrivacidadSub,
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute<void>(builder: (_) => const PrivacyScreen()),
+          ),
+        ),
+        Divider(height: 24, color: AppColors.outlineVariant.withValues(alpha: 0.4)),
+        _FilaAccion(
+          icon: Icons.delete_forever_outlined,
+          title: strings.pfBorrarTodosLosDatos,
+          subtitle: strings.pfBorrarSub,
+          iconColor: AppColors.error,
+          titleColor: AppColors.error,
+          onTap: _confirmarBorrado,
+        ),
+      ],
+    );
+  }
+
+  DataBackupService _servicioBackup() => DataBackupService(
+        appState: context.read<AppState>(),
+        config: context.read<ConfigService>(),
+        locale: context.read<LocaleService>(),
+      );
+
+  /// Exporta un backup JSON a los documentos de la app y abre el share-sheet
+  /// para que el usuario lo guarde donde quiera (portabilidad, art. 20).
+  Future<void> _exportarDatos() async {
+    final strings = context.read<LocaleService>().strings;
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      final dir = await getApplicationDocumentsDirectory();
+      final servicio = _servicioBackup();
+      final fichero = await servicio.exportarArchivo(directorio: dir);
+      await SharePlus.instance.share(
+        ShareParams(files: [XFile(fichero.path, mimeType: 'application/json')]),
+      );
+    } on Exception {
+      if (mounted) {
+        messenger.showSnackBar(SnackBar(content: Text(strings.pfBackupError)));
+      }
+    }
+  }
+
+  /// Importa un backup: elige fichero entre los guardados, confirma y restaura.
+  Future<void> _importarBackup() async {
+    final strings = context.read<LocaleService>().strings;
+    final messenger = ScaffoldMessenger.of(context);
+    final navigator = Navigator.of(context);
+    final servicio = _servicioBackup();
+    final dir = await getApplicationDocumentsDirectory();
+    final backups = await servicio.listarBackups(directorio: dir);
+    if (backups.isEmpty || !mounted) {
+      messenger.showSnackBar(SnackBar(content: Text(strings.pfSinBackups)));
+      return;
+    }
+    final elegido = await showDialog<File>(
+      context: context,
+      builder: (ctx) => SimpleDialog(
+        title: Text(strings.pfElegirBackup),
+        children: [
+          for (final f in backups)
+            SimpleDialogOption(
+              onPressed: () => Navigator.of(ctx).pop(f),
+              child: Text(
+                f.path.split(RegExp(r'[/\\]')).last,
+                style: AppType.bodyMd.copyWith(color: AppColors.onSurface),
+              ),
+            ),
+        ],
+      ),
+    );
+    if (elegido == null || !mounted) return;
+    final r = await servicio.importarArchivo(elegido);
+    if (!mounted) return;
+    messenger.showSnackBar(
+      SnackBar(content: Text(r.ok ? strings.pfImportOk : strings.pfImportError)),
+    );
+    if (r.ok) navigator.pop();
+  }
+
+  /// Derecho al olvido (art. 17): doble confirmación antes de borrar todo.
+  Future<void> _confirmarBorrado() async {
+    final strings = context.read<LocaleService>().strings;
+    final messenger = ScaffoldMessenger.of(context);
+    final navigator = Navigator.of(context);
+
+    final primero = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(strings.pfConfirmarBorradoTitulo),
+        content: Text(strings.pfConfirmarBorradoCuerpo),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(strings.pfCancelar),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(strings.pfBorrarAhora),
+          ),
+        ],
+      ),
+    );
+    if (primero != true || !mounted) return;
+
+    final segundo = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(strings.pfConfirmarBorradoTitulo),
+        content: Text(strings.pfConfirmarBorradoCuerpo2),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(strings.pfCancelar),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.error,
+              foregroundColor: AppColors.onError,
+            ),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(strings.pfBorrarAhora),
+          ),
+        ],
+      ),
+    );
+    if (segundo != true || !mounted) return;
+
+    await _servicioBackup().borrarTodo();
+    if (!mounted) return;
+    messenger.showSnackBar(SnackBar(content: Text(strings.pfBorradoHecho)));
+    // Vuelve al flujo inicial: como el EULA y la sesión están borrados, el
+    // arranque mostrará los términos de nuevo.
+    navigator.pushAndRemoveUntil(
+      MaterialPageRoute<void>(builder: (_) => const EulaScreen()),
+      (_) => false,
     );
   }
 
@@ -1288,6 +1459,77 @@ class _ToggleRow extends StatelessWidget {
             inactiveTrackColor: AppColors.surfaceContainerHighest,
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Fila de acción táctil con icono, título y subtítulo (sección privacidad).
+class _FilaAccion extends StatelessWidget {
+  const _FilaAccion({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+    this.iconColor,
+    this.titleColor,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+  final Color? iconColor;
+  final Color? titleColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(14),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        child: Row(
+          children: [
+            Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: AppColors.surfaceContainerLow,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                icon,
+                size: 18,
+                color: iconColor ?? AppColors.primary,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: AppType.labelLg.copyWith(
+                      color: titleColor ?? AppColors.onSurface,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: AppType.bodySm.copyWith(
+                      color: AppColors.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Icon(Icons.chevron_right, size: 20, color: AppColors.outline),
+          ],
+        ),
       ),
     );
   }

@@ -72,6 +72,10 @@ class _EulaScreenState extends State<EulaScreen> {
                   const SizedBox(height: 16),
                   _Section(title: strings.eulaSection4, body: strings.eulaSection4Body),
                   const SizedBox(height: 16),
+                  _Section(title: strings.eulaSection5, body: strings.eulaSection5Body),
+                  const SizedBox(height: 16),
+                  _Section(title: strings.eulaSection6, body: strings.eulaSection6Body),
+                  const SizedBox(height: 16),
                   Text(
                     '${strings.eulaVersionLabel}: v$kEulaVersion',
                     style: AppType.labelSm.copyWith(color: AppColors.outline),

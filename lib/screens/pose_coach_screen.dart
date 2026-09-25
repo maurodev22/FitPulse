@@ -338,6 +338,12 @@ class _PoseCoachScreenState extends State<PoseCoachScreen> {
               ),
             ),
           ),
+          // Fase 8 (Ley de IA UE, art. 50): transparencia del modelo de IA.
+          const SizedBox(height: 8),
+          Text(
+            strings.pcAvisoIA,
+            style: AppType.bodySm.copyWith(color: AppColors.outline),
+          ),
         ],
       ),
     );

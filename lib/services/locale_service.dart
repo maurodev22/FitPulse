@@ -40,6 +40,12 @@ class LocaleService extends ChangeNotifier {
     _locale = AppLocale.values.asNameMap()[saved] ?? AppLocale.es;
     notifyListeners();
   }
+
+  /// Restablece el idioma por defecto tras un borrado total (art. 17 GDPR).
+  void resetTrasBorrado() {
+    _locale = AppLocale.es;
+    notifyListeners();
+  }
 }
 
 /// Acceso a textos oficiales es/en.
@@ -632,6 +638,165 @@ class AppStrings {
   String pcReps(int n) => _t('$n reps', '$n reps');
   String get pcPreparando => _t('Preparando el análisis de postura…', 'Preparing posture analysis…');
   String get pcNoActivo => _t('El entrenador con cámara no está activo.', 'The camera coach is not active.');
+  // Aviso formal de IA (Ley de IA de la UE, art. 50): transparencia sobre el
+  // uso de un modelo de IA en el dispositivo.
+  String get pcAvisoIA => _t(
+      'Este módulo usa un modelo de IA en tu dispositivo (ML Kit): el análisis es '
+      'local y la cámara no graba ni sube nada.',
+      'This module uses an on-device AI model (ML Kit): analysis is local and the '
+      'camera records or uploads nothing.');
+
+  // ---- EULA (Fase 8): cláusulas nuevas de la versión v2 ----
+  String get eulaSection5 => _t('5. Datos de salud y edad mínima', '5. Health data and minimum age');
+  String get eulaSection5Body => _t(
+      'La app puede acceder a métricas de salud de tu dispositivo (pasos, pulso, '
+      'peso, sueño) únicamente con tu consentimiento, que puedes revocar en '
+      'cualquier momento desde los ajustes. Son datos de categoría especial '
+      '(art. 9 del RGPD) y se tratan solo en tu móvil. FitPulse está pensada para '
+      'mayores de 16 años; si eres menor, no uses la app sin el consentimiento de '
+      'tu representante legal.',
+      'The app may access health metrics from your device (steps, heart rate, '
+      'weight, sleep) only with your consent, which you can revoke at any time '
+      'from settings. These are special-category data (Art. 9 GDPR) processed '
+      'only on your phone. FitPulse is intended for people aged 16 or older; if '
+      'you are younger, do not use the app without the consent of your legal '
+      'guardian.');
+  String get eulaSection6 => _t('6. Publicidad, compras y comerciante', '6. Advertising, purchases and merchant');
+  String get eulaSection6Body => _t(
+      'La app puede mostrar publicidad de terceros; puedes desactivarla en Perfil '
+      'y, si resides en la Unión Europea o el Reino Unido, se te pedirá '
+      'consentimiento antes de mostrar anuncios personalizados. Las compras '
+      'dentro de la app (si existieran) se gestionan a través de Google Play, que '
+      'otorga el derecho de desistimiento de 14 días. Datos del comerciante: '
+      'desarrollador independiente; se publicarán cuando exista una entidad '
+      'legal.',
+      'The app may show third-party advertising; you can disable it in Profile '
+      'and, if you reside in the European Union or the United Kingdom, you will '
+      'be asked for consent before personalised ads are shown. In-app purchases '
+      '(if any) are handled through Google Play, which grants the 14-day '
+      'withdrawal right. Merchant details: independent developer; they will be '
+      'published once a legal entity exists.');
+
+  // ---- Perfil (Fase 8): privacidad y datos ----
+  String get pfPrivacidadDatos => _t('Privacidad y datos', 'Privacy & data');
+  String get pfExportarDatos => _t('Exportar mis datos', 'Export my data');
+  String get pfExportarDatosSub =>
+      _t('Genera tu backup en JSON y compártelo donde quieras (portabilidad)',
+          'Generates your JSON backup and lets you share it anywhere (portability)');
+  String get pfImportarBackup => _t('Importar un backup', 'Import a backup');
+  String get pfImportarBackupSub =>
+      _t('Restaura tus datos desde un fichero de backup guardado',
+          'Restores your data from a saved backup file');
+  String get pfPoliticaPrivacidad => _t('Política de privacidad', 'Privacy policy');
+  String get pfPoliticaPrivacidadSub => _t('Cómo tratamos tus datos (RGPD compatible)', 'How we handle your data (GDPR-aligned)');
+  String get pfBorrarTodosLosDatos => _t('Borrar todos mis datos', 'Delete all my data');
+  String get pfBorrarSub => _t('Derecho al olvido: borra todo del dispositivo', 'Right to erasure: deletes everything on this device');
+  String get pfCompartirBackupTexto =>
+      _t('Backup de FitPulse (JSON con tus datos).', 'FitPulse backup (JSON with your data).');
+  String get pfBackupError => _t('No se pudo exportar el backup. Inténtalo de nuevo.', 'Could not export the backup. Try again.');
+  String get pfSinBackups => _t('No hay backups guardados en este dispositivo.', 'No backups are saved on this device.');
+  String get pfImportOk => _t('¡Backup importado! Tus datos se han restaurado.', 'Backup imported! Your data has been restored.');
+  String get pfImportError => _t('El fichero no es un backup válido de FitPulse.', 'The file is not a valid FitPulse backup.');
+  String get pfBorradoHecho => _t('Todos tus datos se han borrado del dispositivo.', 'All your data has been deleted from this device.');
+  String get pfConfirmarBorradoTitulo => _t('¿Borrar todos tus datos?', 'Delete all your data?');
+  String get pfConfirmarBorradoCuerpo => _t(
+      'Esta acción elimina tu perfil, historial, balance y ajustes de este '
+      'dispositivo. Es irreversible. Considera exportar un backup antes.',
+      'This deletes your profile, history, balance and settings on this device. '
+      'It is irreversible. Consider exporting a backup first.');
+  String get pfConfirmarBorradoCuerpo2 => _t(
+      'Esta es la última confirmación. Se borrará todo y volverás al inicio.',
+      'This is the final confirmation. Everything will be deleted and you will '
+      'return to the start.');
+  String get pfCancelar => _t('Cancelar', 'Cancel');
+  String get pfBorrarAhora => _t('Sí, borrar todo', 'Yes, delete everything');
+  String get pfElegirBackup => _t('Elige un backup', 'Choose a backup');
+  String get pfBackupVacio => _t('El backup no contiene datos.', 'The backup contains no data.');
+
+  // ---- Política de privacidad (Fase 8) ----
+  String get pvTitle => _t('Política de privacidad', 'Privacy policy');
+  String get pvIntro => _t(
+      'FitPulse funciona 100 % en tu dispositivo: no hay cuentas, no hay servidores '
+      'y tus datos no salen del móvil salvo que tú los compartas. Esta política '
+      'explica qué se guarda, por qué y qué derechos tienes (RGPD/UE).',
+      'FitPulse runs 100 % on your device: no accounts, no servers, and your data '
+      'never leaves your phone unless you share it. This policy explains what is '
+      'stored, why, and what rights you have (GDPR/EU).');
+  String get pvVigencia => _t('Vigencia: 25 de septiembre de 2026', 'Effective: 25 September 2026');
+  String get pvSec1 => _t('1. Responsable y comerciante', '1. Controller and merchant');
+  String get pvSec1Body => _t(
+      'Responsable: desarrollador independiente de FitPulse. Cuando exista una '
+      'entidad legal para publicar en Europa, aquí se publicarán su nombre, '
+      'dirección y contacto (obligación de la Directiva 2011/83/UE y del '
+      'Reglamento UE 2017/2394).',
+      'Controller: independent developer of FitPulse. When a legal entity exists '
+      'to publish in Europe, its name, address and contact will be published here '
+      '(obligation under Directive 2011/83/EU and Regulation EU 2017/2394).');
+  String get pvSec2 => _t('2. Qué datos se guardan', '2. What data is stored');
+  String get pvSec2Body => _t(
+      'Perfil del atleta (nombre, edad, sexo, peso, altura, metas), balance '
+      'nutricional diario, historial de entrenamientos, puntos/rachas, recetas '
+      'favoritas y ajustes. Todo se almacena localmente con shared_preferences.',
+      'Athlete profile (name, age, sex, weight, height, goals), daily nutrition '
+      'balance, workout history, points/streaks, favourite recipes and settings. '
+      'All of it is stored locally with shared_preferences.');
+  String get pvSec3 => _t('3. Qué NO se transmite', '3. What is NOT transmitted');
+  String get pvSec3Body => _t(
+      'Nada. FitPulse no recopila, no envía ni comparte tus datos con servidores '
+      'o terceros. El único acceso a red es opcional (anuncios, si los habilitas) '
+      'y nunca incluye tus datos de salud.',
+      'Nothing. FitPulse does not collect, send or share your data with servers '
+      'or third parties. The only network access is optional (ads, if you enable '
+      'them) and never includes your health data.');
+  String get pvSec4 => _t('4. Datos de salud (categoría especial)', '4. Health data (special category)');
+  String get pvSec4Body => _t(
+      'Si lo autorizas, la app lee métricas de salud (pasos, pulso, peso, sueño) '
+      'de tu dispositivo o Health Connect. Es la base legal del consentimiento '
+      '(art. 9 del RGPD): puedes conceder o revocar cada permiso en cualquier '
+      'momento desde los ajustes del sistema. Estos datos solo se procesan en tu '
+      'móvil.',
+      'If you authorise it, the app reads health metrics (steps, heart rate, '
+      'weight, sleep) from your device or Health Connect. Consent is the legal '
+      'basis (Art. 9 GDPR): you can grant or revoke each permission at any time '
+      'from system settings. This data is only processed on your phone.');
+  String get pvSec5 => _t('5. Edad mínima', '5. Minimum age');
+  String get pvSec5Body => _t(
+      'Destinada a mayores de 16 años (art. 8 del RGPD). Si eres menor de 16, '
+      'necesitas el consentimiento de tu representante legal para usar la app.',
+      'Intended for people aged 16 or older (Art. 8 GDPR). If you are under 16, '
+      'you need the consent of your legal guardian to use the app.');
+  String get pvSec6 => _t('6. Tus derechos', '6. Your rights');
+  String get pvSec6Body => _t(
+      'Acceso (ver en pantalla), rectificación (editar tu perfil), portabilidad '
+      '(Exportar mis datos, art. 20), borrado (Borrar todos mis datos, art. 17) '
+      'y oposición al uso de tus datos para publicidad. En Perfil → Privacidad y '
+      'datos tienes exportar, importar y borrar.',
+      'Access (view on screen), rectification (edit your profile), portability '
+      '(Export my data, Art. 20), erasure (Delete all my data, Art. 17) and '
+      'objection to the use of your data for advertising. In Profile → Privacy & '
+      'data you can export, import and delete.');
+  String get pvSec7 => _t('7. Publicidad', '7. Advertising');
+  String get pvSec7Body => _t(
+      'Puedes desactivar los anuncios desde Perfil. Si resides en el EEE o Reino '
+      'Unido, la app usa mecánicas de consentimiento para la publicidad '
+      '(personalizada o no personalizada) antes de mostrar el primer anuncio.',
+      'You can disable ads from the Profile. If you reside in the EEA or UK, the '
+      'app uses consent mechanisms for advertising (personalised or '
+      'non-personalised) before showing the first ad.');
+  String get pvSec8 => _t('8. IA en tu dispositivo', '8. On-device AI');
+  String get pvSec8Body => _t(
+      'El entrenador con cámara usa un modelo de IA local (ML Kit de Google). El '
+      'análisis ocurre en tu móvil: la cámara no graba ni sube nada (transparencia '
+      'según la Ley de IA de la UE, art. 50).',
+      'The camera coach uses a local AI model (Google ML Kit). Analysis happens '
+      'on your phone: the camera records or uploads nothing (transparency under '
+      'the EU AI Act, Art. 50).');
+  String get pvSec9 => _t('9. Contacto', '9. Contact');
+  String get pvSec9Body => _t(
+      'Para ejercer tus derechos o resolver dudas, use la sección Ayuda de la app '
+      'o los datos del comerciante cuando estén publicados.',
+      'To exercise your rights or ask questions, use the Help section of the app '
+      'or the merchant details once published.');
 
   // ---- Ayuda (encabezado) ----
   String get helpHeaderTitle => _t('Ayuda y Soporte', 'Help & Support');

@@ -20,7 +20,7 @@
 | Fase 5 (entrenador con cámara) | ✅ código | ML Kit pose on-device + estados honestos; falta prueba manual |
 | Fase 6 (extras de retención) | ✅ instalado/verificado | Widget de home (pasos/calorías/racha) + avisos locales por tipo; instalado y verificado en Pixel 6a y Xiaomi |
 | Fase 7 (premium + accesibilidad) | ✅ código | Modo oscuro (sistema/claro/oscuro), contraste WCAG AA, tamaño accesible (0 desbordes a 2.0×), micro-animaciones, i18n es/en completo; `flutter analyze` 0 issues y 55 tests verdes. Pendiente PASA/FALLA manual del usuario |
-| Fase 8 | ⏳ | Privacidad GDPR: export/import cifrado + borrado total (8.1); política de privacidad es/en y EULA UE (8.2); consentimiento publicitario UMP (8.3); aviso de IA (8.4); release firmado + Data Safety (8.5, bloqueado por cuenta Play desde Cuba) |
+| Fase 8 | ⏳ | Privacidad GDPR: export/import legible + borrado total (8.1 ✅); política de privacidad + EULA v2 (8.2 ✅); UMP publicidad (8.3 pendiente); aviso de IA (8.4 ✅); release firmado + Data Safety (8.5, bloqueado por cuenta Play desde Cuba) |
 
 **Sesión** (`FUNCIONALIDADES.md`), **guía de prueba manual** (`GUIA_TESTEO_FASE1.md`) y
 **README** están pendientes de actualización con el estado de Fases 1 y 2.
@@ -251,43 +251,49 @@ fuera de Cuba (se deja la puerta abierta sin bloquear la app).
 
 ## 11. Fase 8 — Privacidad, legal UE y lanzamiento ⏳
 
-### 8.1 Datos: portabilidad y derecho al olvido (GDPR arts. 20 y 17)
-- **Export** del dispositivo: perfil, historial, balance, metas, ajustes y versión EULA
-  en un JSON cifrado con la clave de Aplicación Android, con share-sheet para guardarlo
-  fuera (nube/PC). Pantalla en Perfil → "Exportar mis datos" con fecha del archivo.
-- **Import** del backup firmado por el propio JSON (mismo formato), con confirmación de
-  sobrescritura.
-- **Borrado total (derecho al olvido)**: "Borrar todos mis datos" con doble confirmación
-  → limpia `shared_preferences`, borra el snapshot del widget y vuelve al onboarding.
-- Tests: round-trip export→import en memoria (estado idéntico), borrado → estado vacío.
+### 8.1 Datos: portabilidad y derecho al olvido (GDPR arts. 20 y 17) ✅
+- **Export** (implementado): JSON legible e interoperable con todo el estado
+  (perfil, balance, historial, XP, reto, favoritas, config, idioma) escrito en
+  los documentos de la app y abierto con share-sheet (`share_plus`) para
+  guardarlo en nube/PC. Nota de diseño: el export es **legible sin cifrar** a
+  propósito — el cifrado local rompería la portabilidad (art. 20 exige formato
+  estructurado e interoperable). Pantalla en Perfil → "Privacidad y datos".
+- **Import** (implementado): lista los backups `fitpulse_backup_*.json` del
+  dispositivo, valida formato/versión y restaura tras confirmar sobrescritura.
+- **Borrado total** (implementado): "Borrar todos mis datos" con **doble
+  confirmación** → `shared_preferences.clear()` (almacén exclusivo de la app)
+  + reset en memoria → vuelve al EULA/onboarding.
+- Tests: `test/data_backup_test.dart` (7) + `test/privacy_screen_test.dart` (2).
 
-### 8.2 Legal UE (es/en)
-- **Política de privacidad** (nueva pantalla/asset es/en): qué se guarda (todo local),
-  qué NO se transmite, categoría especial de salud (art. 9), base legal del
-  consentimiento, edades (16+), derechos (acceso, rectificación, portabilidad, borrado),
-  anuncios y consentimiento publicitario (UMP), datos del responsable.
-- **EULA actualizado**: cláusula explícita de datos de salud + aviso "bienestar, no
-  asesoramiento médico" + devolución 14 días en compras (la gestiona Play) + datos de
-  comerciante cuando exista entidad fuera de Cuba.
-- **Política de copy anti-claims (MDR)**: fijar por escrito que ningún texto afirma
-  diagnosticar/tratar/prevenir; auditar tips ("cortisol", "síntesis proteica") y
-  mantenerlos orientativos con disclaimer.
+### 8.2 Legal UE (es/en) ✅
+- **Política de privacidad** (implementada): nueva pantalla `PrivacyScreen` es/en
+  (9 secciones: responsable/comerciante, qué se guarda, qué NO se transmite,
+  datos de salud art. 9, edad 16+, derechos art. 17/20, publicidad, IA local,
+  contacto), enlazada desde Perfil → "Política de privacidad".
+- **EULA actualizado a v2** (implementado): cláusulas 5 (datos de salud art. 9 +
+  edad mínima 16) y 6 (publicidad/consentimiento + devolución 14 días + datos
+  de comerciante). `kEulaVersion = 2` → se vuelve a pedir aceptación.
+- **Política de copy anti-claims (MDR)**: pendiente de auditar los textos de
+  tips y fijarla por escrito (ningún texto afirma diagnosticar/tratar/prevenir).
 
-### 8.3 Consentimiento publicitario UE (UMP + ePrivacy)
+### 8.3 Consentimiento publicitario UE (UMP + ePrivacy) ⏳ pendiente
 - Integrar **Google User Messaging Platform** (UMP) para EEE/Reino Unido: mensaje de
   consentimiento antes del primer anuncio; si se rechaza la personalización, AdMob usa
   anuncios no personalizados. El toggle local "Anuncios habilitados" se mantiene como
-  capa adicional. Sin UMP no se muestra recompensado en EEE.
+  capa adicional. Sin UMP no se muestra recompensado en EEE. Depende de `google_ump`
+  (red a Google, bloqueada en Cuba en runtime) → se dejará documentada la integración
+  y el degradado honesto.
 
-### 8.4 Ley de IA de la UE (art. 50, transparencia)
-- Aviso formal en el entrenador con cámara: "Este módulo usa un modelo de IA en tu
-  dispositivo (ML Kit): análisis local, nada se graba ni se sube." (hoy se explica de
-  forma informal; se formaliza el texto).
+### 8.4 Ley de IA de la UE (art. 50, transparencia) ✅
+- Aviso formal en el entrenador con cámara (implementado): "Este módulo usa un modelo
+  de IA en tu dispositivo (ML Kit): el análisis es local y la cámara no graba ni sube
+  nada." Visible de forma permanente bajo la barra inferior del coach.
 
-### 8.5 Release firmado y publicación
-- **Firma propia** (keystore fuera del repo) + `app-release.aab` con Play App Signing.
+### 8.5 Release firmado y publicación ⏳ parcial
+- **Firma propia**: pendiente de generar keystore (fuera del repo) + `build.gradle.kts`
+  con signing condicional y `app-release.aab` con Play App Signing.
 - **Ficha Data Safety** cumplimentada con lo real (datos locales, cifrado, sin
-  compartición).
+  compartición) — pendiente de rellenar al publicar.
 - **Bloqueo estructural**: la cuenta de desarrollador de Play no puede crearse desde
   Cuba (país no soportado; requiere entidad + datos fiscales fuera). Publicar solo
   cuando exista esa entidad; hasta entonces el AAB firmado queda listo para subir.
@@ -326,9 +332,13 @@ AAB firmado y política/privacy visibles en Perfil y en la ficha de Play.
 
 ## 13. Próximos pasos recomendados
 
-1. **Prueba PASA/FALLA de Fases 1-7 en los móviles** siguiendo `GUIA_TESTEO_FASE1.md`
+1. **Cerrar Fase 8 (código)**: 8.3 UMP (necesita `google_ump` y red a Google) y
+   8.5 firma propia (keystore fuera del repo + `app-release.aab`). Verificar
+   `flutter analyze` 0 y la suite ampliada (~64 tests).
+2. **Prueba PASA/FALLA de Fases 1-8 en los móviles** siguiendo `GUIA_TESTEO_FASE1.md`
    (tabla de registro por dispositivo: Health Connect, entrenamientos, anuncios,
    Premium, comidas, entrenador con cámara, widget/avisos, modo oscuro, tamaño de
-   texto 2.0× e idioma en vivo).
-2. Con la aprobación manual de las Fases 1-7, abrir **Fase 8** (privacidad GDPR,
-   exportación/importación cifrada y lanzamiento).
+   texto 2.0×, idioma en vivo y — Fase 8 — exportar/importar/borrar datos más
+   política de privacidad es/en).
+3. Con la aprobación manual de las Fases 1-8, decidir publicación (requiere entidad
+   fuera de Cuba para la cuenta de desarrollador de Play).

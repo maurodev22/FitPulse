@@ -560,6 +560,109 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
+  // =====================================================================
+  //  Fase 8: portabilidad (GDPR art. 20) y derecho al olvido (art. 17)
+  // =====================================================================
+
+  /// Snapshot completo del estado para exportar. El perfil viaja como su
+  /// representación persistida (`encode()`) para que un import reproduzca
+  /// exactamente la sesión; el historial usa el mismo formato JSON que se
+  /// persiste. Solo datos reales del dispositivo, nunca valores inventados.
+  Map<String, dynamic> snapshotParaBackup() {
+    return {
+      'perfil': profile.encode(),
+      'balance': {
+        'calorias': caloriasConsumidas,
+        'proteinas': proteinasConsumidas,
+        'carbos': carbosConsumidos,
+        'grasas': grasasConsumidas,
+      },
+      'historial': historial.map((s) => s.toJson()).toList(),
+      'xp': _xp,
+      'reto_objetivo': _retoObjetivo,
+      'favoritas': favoritas.toList(),
+      'pasos_base_fecha': _prefs?.getString(_pasosBaseDateKey),
+    };
+  }
+
+  /// Aplica un snapshot exportado (import de backup) y lo persiste en el
+  /// dispositivo. Reemplaza el estado actual, con la misma semántica que una
+  /// restauración: perfil, balance, historial, XP, reto y favoritas.
+  Future<void> aplicarBackup(Map<String, dynamic> snapshot) async {
+    final perfilRaw = snapshot['perfil'];
+    if (perfilRaw is String && perfilRaw.isNotEmpty) {
+      try {
+        profile = AthleteProfile.fromString(perfilRaw);
+      } on FormatException {
+        profile = AthleteProfile.initial();
+      }
+      await _prefs?.setString(_profileKey, profile.encode());
+    }
+
+    final balance = snapshot['balance'];
+    if (balance is Map<String, dynamic>) {
+      caloriasConsumidas = (balance['calorias'] as num?)?.toDouble() ?? 0;
+      proteinasConsumidas = (balance['proteinas'] as num?)?.toDouble() ?? 0;
+      carbosConsumidos = (balance['carbos'] as num?)?.toDouble() ?? 0;
+      grasasConsumidas = (balance['grasas'] as num?)?.toDouble() ?? 0;
+      await _prefs?.setDouble(_caloriasKey, caloriasConsumidas);
+      await _prefs?.setDouble(_proteinasKey, proteinasConsumidas);
+      await _prefs?.setDouble(_carbosKey, carbosConsumidos);
+      await _prefs?.setDouble(_grasasKey, grasasConsumidas);
+    }
+
+    final rawHistorial = snapshot['historial'];
+    if (rawHistorial is List) {
+      try {
+        historial = rawHistorial
+            .map((e) =>
+                WorkoutSession.fromJson(Map<String, dynamic>.from(e as Map)))
+            .toList()
+          ..sort((a, b) => b.fecha.compareTo(a.fecha));
+      } on Exception {
+        historial = <WorkoutSession>[];
+      }
+      await _persistHistorial();
+    }
+
+    if (snapshot['xp'] is int) {
+      _xp = snapshot['xp'] as int;
+      await _persistXp();
+    }
+    if (snapshot['reto_objetivo'] is int) {
+      _retoObjetivo = (snapshot['reto_objetivo'] as int).clamp(3, 7);
+      await _prefs?.setInt(_retoKey, _retoObjetivo);
+    }
+    final rawFavoritas = snapshot['favoritas'];
+    if (rawFavoritas is List) {
+      favoritas
+        ..clear()
+        ..addAll(rawFavoritas.whereType<String>());
+      await _prefs?.setStringList(_favRecetasKey, favoritas.toList());
+    }
+    notifyListeners();
+  }
+
+  /// Restablece el estado en memoria tras un borrado total (el borrado de las
+  /// preferencias persistidas lo realiza [DataBackupService.borrarTodo]).
+  void resetTrasBorrado() {
+    profile = AthleteProfile.initial();
+    caloriasConsumidas = 0;
+    proteinasConsumidas = 0;
+    carbosConsumidos = 0;
+    grasasConsumidas = 0;
+    favoritas.clear();
+    historial = <WorkoutSession>[];
+    _xp = 0;
+    _retoObjetivo = 3;
+    _pasosBase = null;
+    pasosHoy = 0;
+    _healthToday = HealthToday.vacio;
+    _healthConnectDisponible = false;
+    _healthConnectPidiendo = false;
+    notifyListeners();
+  }
+
   /// Crea una copia del perfil aplicando campos opcionales.
   AthleteProfile _copyProfile({double? caloriasMeta, int? pasosMeta}) {
     final p = AthleteProfile(

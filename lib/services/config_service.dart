@@ -6,7 +6,9 @@ enum AppThemeMode { system, light, dark }
 
 /// Versión de los Términos y EULA. Si cambia, se vuelve a pedir la
 /// aceptación al usuario en el siguiente arranque.
-const int kEulaVersion = 1;
+/// v2 (Fase 8): añade las cláusulas de datos de salud (art. 9 GDPR), edad
+/// mínima 16, publicidad/consentimiento y datos del comerciante.
+const int kEulaVersion = 2;
 
 /// Versión global de la app (se muestra en Perfil).
 const String kAppVersion = '1.0.0';
@@ -90,5 +92,44 @@ class ConfigService extends ChangeNotifier {
     adsEnabled = habilitados;
     notifyListeners();
     await _prefs?.setInt(_adsKey, habilitados ? 1 : 0);
+  }
+
+  // =====================================================================
+  //  Fase 8: portabilidad (GDPR art. 20) y derecho al olvido (art. 17)
+  // =====================================================================
+
+  /// Configuración exportable (se incluye en el backup de datos).
+  Map<String, dynamic> snapshotParaBackup() => {
+        'ads': adsEnabled,
+        'premium': premiumEnabled,
+        'mock_sensors': mockSensorsEnabled,
+        'tema': _themeMode.name,
+        'eula_version': eulaAcceptedVersion,
+      };
+
+  /// Restaura la configuración desde un snapshot de backup.
+  Future<void> aplicarBackup(Map<String, dynamic> snapshot) async {
+    adsEnabled = snapshot['ads'] as bool? ?? adsEnabled;
+    premiumEnabled = snapshot['premium'] as bool? ?? premiumEnabled;
+    mockSensorsEnabled =
+        snapshot['mock_sensors'] as bool? ?? mockSensorsEnabled;
+    _themeMode = _leerModoTema(snapshot['tema'] as String?);
+    eulaAcceptedVersion = snapshot['eula_version'] as int? ?? eulaAcceptedVersion;
+    await _prefs?.setInt(_adsKey, adsEnabled ? 1 : 0);
+    await _prefs?.setInt(_premiumKey, premiumEnabled ? 1 : 0);
+    await _prefs?.setInt(_mockSensorsKey, mockSensorsEnabled ? 1 : 0);
+    await _prefs?.setString(_themeKey, _themeMode.name);
+    await _prefs?.setInt(_eulaVersionKey, eulaAcceptedVersion);
+    notifyListeners();
+  }
+
+  /// Restablece la configuración en memoria tras un borrado total.
+  void resetTrasBorrado() {
+    eulaAcceptedVersion = 0;
+    _themeMode = AppThemeMode.system;
+    adsEnabled = true;
+    premiumEnabled = false;
+    mockSensorsEnabled = true;
+    notifyListeners();
   }
 }
