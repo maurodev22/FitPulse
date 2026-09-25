@@ -65,7 +65,7 @@ dispositivo (sin cuentas ni servidores).
 | 5 | ✅ (código) | Entrenador con cámara: ML Kit Pose Detection on-device (sin conexión tras descarga única del modelo) — esqueleto en vivo, feedback por ángulos reales (rodilla/codo/plancha/ritmo), contador de reps con histéresis; estados honestos (permiso/cámara/modelo no disponible); permiso `CAMERA` + `MethodChannel` propio en `MainActivity.kt`; mirrors Maven Aliyun para AndroidX Camera + ML Kit. Pendiente prueba manual |
 | 6 | ✅ (código) | Widget de home (AppWidget nativo): pasos reales + calorías (gasto activo o "—") + racha real; **avisos locales por tipo**: 💧 hidratación cada hora y 🏃 racha en riesgo 20:00 con texto de racha real, toggles independientes en Perfil, permiso único al arrancar, desugaring + mirrors en buildscripts de plugins. Pendiente prueba manual |
 | 7 | ✅ (código) | Modo oscuro (Sistema/Claro/Oscuro persistido + brillo del sistema), contraste WCAG AA (test automático), tamaño accesible (0 desbordes a 2.0×), micro-animaciones y i18n es/en completo en vivo. Pendiente PASA/FALLA manual |
-| 8 | ⏳ | Privacidad (export cifrado, borrado), legal UE (EULA/Términos/Privacidad es/en, GDPR, edad 16), release firmado y lanzamiento |
+| 8 | ⏳ | Privacidad GDPR (export/import cifrado + borrado total), política de privacidad es/en, consentimiento publicitario UMP, aviso de IA, release firmado + Data Safety (publicar bloqueado desde Cuba) |
 
 ## Entorno
 
