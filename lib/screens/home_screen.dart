@@ -179,18 +179,12 @@ class _HomeHeader extends StatelessWidget {
         children: [
           Stack(
             children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(color: AppColors.secondaryFixed, width: 2),
-                ),
-                clipBehavior: Clip.antiAlias,
-                child: Image.asset(
-                  'assets/images/avatar.webp',
-                  fit: BoxFit.cover,
-                ),
+              FitAvatar(
+                nombre: state.profile.nombre,
+                fotoBase64: state.profile.fotoBase64,
+                radius: 24,
+                borde: AppColors.secondaryFixed,
+                bordeAncho: 2,
               ),
               Positioned(
                 right: 0,

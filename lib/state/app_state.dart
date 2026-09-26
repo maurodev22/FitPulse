@@ -683,6 +683,7 @@ class AppState extends ChangeNotifier {
       rachaDias: profile.rachaDias,
       caloriasMeta: caloriasMeta ?? profile.caloriasMeta,
       pasosMeta: pasosMeta ?? profile.pasosMeta,
+      fotoBase64: profile.fotoBase64,
     );
     return p;
   }

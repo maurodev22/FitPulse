@@ -44,9 +44,26 @@ Copiar cada `ca-app-pub-…/…` sobre la constante correspondiente.
       cargan anuncios; con "no personalizados" se muestran posteriores.
 - [ ] Eliminar Premium → vuelven los anuncios; activar Premium → desaparecen.
 - [ ] Sin red a Google (p. ej. Cuba): la app no crashea y no muestra anuncios reales
-      (degradado honesto; la zona de banner de desarrollo es solo dev).
+      (degradado honesto; el banner y el recompensado muestran las piezas de prueba
+      locales; desde el dispositivo del cliente con IDs reales se ven anuncios reales).
 
-## 5. Recordatorios regulatorios
+## 5. Vista previa de prueba automática (comportamiento acordado)
+
+La app decide sola si mostrar **anuncios reales** o **piezas de prueba**:
+
+- Si el consentimiento UMP **se resuelve** (cliente fuera de Cuba con IDs reales y
+  red a Google) → `vistaPreviaTest = false` → **anuncios reales** (banner,
+  recompensado y app open).
+- Si el consentimiento **falla por red** (Cuba / sin Google) → `vistaPreviaTest =
+  true` → el banner muestra una pieza local "Anuncio de PRUEBA" y el recompensado
+  simula el video con una pieza de imagen/texto; al cerrarla se otorga el +25 PTs
+  de prueba. Todo claramente marcado, nunca se confunde con publicidad real.
+
+No hace falta tocar código: se ajusta solo en `main()` según `consent.errorTecnico`.
+Si en algún test manual quieres ver siempre las piezas reales de AdMob, pon
+`AdsPermiso.vistaPreviaTest = false` de forma forzada en `main()`.
+
+## 6. Recordatorios regulatorios
 
 - **CERO interstitials** en FitPulse (decisión de producto: no interrumpir).
 - Nunca más de un banner a la vez (shell o reproductor, nunca ambos).

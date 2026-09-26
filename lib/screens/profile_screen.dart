@@ -1,6 +1,8 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
@@ -12,6 +14,7 @@ import '../services/locale_service.dart';
 import '../state/app_state.dart';
 import '../state/athlete_profile.dart';
 import '../theme.dart';
+import '../widgets/common.dart';
 import 'eula_screen.dart';
 import 'privacy_screen.dart';
 
@@ -958,6 +961,30 @@ class _ProfileHero extends StatelessWidget {
 
   final AthleteProfile profile;
 
+  /// Sube una foto desde la galería y la guarda en el perfil de la sesión.
+  /// Paso opcional: si falla o se cancela el perfil sigue sin foto (iniciales).
+  Future<void> _subirFoto(BuildContext context) async {
+    final strings = context.read<LocaleService>().strings;
+    final messenger = ScaffoldMessenger.of(context);
+    final appState = context.read<AppState>();
+    try {
+      final foto = await ImagePicker().pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 512,
+        maxHeight: 512,
+        imageQuality: 85,
+      );
+      if (foto == null) return; // Cancelado: sigue sin foto (iniciales).
+      final bytes = await foto.readAsBytes();
+      if (bytes.isEmpty) return;
+      final base64 = base64Encode(bytes);
+      await appState.guardarPerfil(profile.copiarConFoto(base64));
+      messenger.showSnackBar(SnackBar(content: Text(strings.pfFotoGuardada)));
+    } catch (_) {
+      messenger.showSnackBar(SnackBar(content: Text(strings.pfErrorFoto)));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final strings = context.watch<LocaleService>().strings;
@@ -979,25 +1006,18 @@ class _ProfileHero extends StatelessWidget {
         children: [
           Stack(
             children: [
-              Container(
-                width: 96,
-                height: 96,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(color: AppColors.secondaryFixed, width: 4),
-                ),
-                clipBehavior: Clip.antiAlias,
-                child: Image.asset('assets/images/profile.webp', fit: BoxFit.cover),
+              FitAvatar(
+                nombre: profile.nombre,
+                fotoBase64: profile.fotoBase64,
+                radius: 48,
+                borde: AppColors.secondaryFixed,
+                bordeAncho: 4,
               ),
               Positioned(
                 right: 0,
                 bottom: 0,
                 child: InkWell(
-                  onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(strings.pfEdicionFoto)),
-                    );
-                  },
+                  onTap: () => _subirFoto(context),
                   customBorder: const CircleBorder(),
                   child: Container(
                     width: 32,

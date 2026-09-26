@@ -54,6 +54,7 @@ class AthleteProfile {
     this.rachaDias = 0,
     this.caloriasMeta = 2100,
     this.pasosMeta = 10000,
+    this.fotoBase64,
   });
 
   /// Crea un perfil neutro (sin datos ficticios) para una nueva sesión.
@@ -93,6 +94,7 @@ class AthleteProfile {
       rachaDias: json['rachaDias'] as int? ?? 0,
       caloriasMeta: (json['caloriasMeta'] as num?)?.toDouble() ?? 2100,
       pasosMeta: json['pasosMeta'] as int? ?? 10000,
+      fotoBase64: json['fotoBase64'] as String?,
     );
   }
 
@@ -120,6 +122,10 @@ class AthleteProfile {
   final int rachaDias;
   final double caloriasMeta;
   final int pasosMeta;
+
+  /// Foto de perfil opcional en base64 (null = sin foto, se muestra el avatar
+  /// con iniciales). Nunca se usa una imagen de muestra.
+  final String? fotoBase64;
 
   /// Índice de Masa Corporal calculado en vivo desde peso y altura.
   double get imc {
@@ -158,8 +164,31 @@ class AthleteProfile {
         'rachaDias': rachaDias,
         'caloriasMeta': caloriasMeta,
         'pasosMeta': pasosMeta,
+        'fotoBase64': fotoBase64,
       };
 
   /// Versión en JSON string para `shared_preferences`.
   String encode() => jsonEncode(toJson());
+
+  /// Copia del perfil cambiando solo la foto de perfil (paso opcional).
+  AthleteProfile copiarConFoto(String? foto) => AthleteProfile(
+        nombre: nombre,
+        edad: edad,
+        sexo: sexo,
+        pesoKg: pesoKg,
+        alturaM: alturaM,
+        metas: List.of(metas),
+        tipoCuerpo: tipoCuerpo,
+        nivel: nivel,
+        diasEntrenamiento: List.of(diasEntrenamiento),
+        hidratacion: hidratacion,
+        entrenamientoMatutino: entrenamientoMatutino,
+        healthKit: healthKit,
+        vibracion: vibracion,
+        compartirActividad: compartirActividad,
+        rachaDias: rachaDias,
+        caloriasMeta: caloriasMeta,
+        pasosMeta: pasosMeta,
+        fotoBase64: foto,
+      );
 }

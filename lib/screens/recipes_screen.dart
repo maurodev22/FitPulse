@@ -242,7 +242,7 @@ class _SearchBar extends StatelessWidget {
     return Container(
       height: 44,
       decoration: BoxDecoration(
-        color: const Color(0xFFF0F4F1),
+        color: AppColors.surfaceContainerLow,
         borderRadius: BorderRadius.circular(14),
       ),
       child: Row(
@@ -257,7 +257,7 @@ class _SearchBar extends StatelessWidget {
               style: AppType.bodyMd.copyWith(color: AppColors.onSurface),
               decoration: InputDecoration(
                 hintText: strings.recBuscar,
-                hintStyle: AppType.bodySm.copyWith(color: Colors.grey),
+                hintStyle: AppType.bodySm.copyWith(color: AppColors.onSurfaceVariant),
                 border: InputBorder.none,
                 isDense: true,
                 contentPadding: EdgeInsets.zero,
@@ -567,13 +567,13 @@ class _RecipeCard extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFEDF7F2),
+                        color: AppColors.secondaryContainer,
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
                         strings.recKcal(recipe.calorias.round()),
                         style: AppType.labelSm.copyWith(
-                          color: AppColors.primary,
+                          color: AppColors.onSecondaryContainer,
                           fontWeight: FontWeight.w800,
                         ),
                       ),
@@ -871,7 +871,7 @@ class _RecetasCatalogScreenState extends State<RecetasCatalogScreen> {
                   hintText: strings.recBuscarCatalogo,
                   prefixIcon: Icon(Icons.search, color: AppColors.outline),
                   filled: true,
-                  fillColor: const Color(0xFFF0F4F1),
+                  fillColor: AppColors.surfaceContainerLow,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(14),
                     borderSide: BorderSide.none,

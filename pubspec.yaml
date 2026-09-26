@@ -52,6 +52,7 @@ dependencies:
   # MethodChannel (sin compilación nativa).
   path_provider_android: '>=2.2.0 <2.3.0'
   share_plus: ^13.3.0
+  image_picker: ^1.2.3
 dev_dependencies:
   flutter_test:
     sdk: flutter

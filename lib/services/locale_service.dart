@@ -564,7 +564,8 @@ class AppStrings {
   String get pfMiPerfil => _t('Mi Perfil', 'My Profile');
   String get pfSuperaLimites => _t('Supera tus límites hoy', 'Push your limits today');
   String get pfConfiguracionProx => _t('Configuración general disponible próximamente', 'General settings coming soon');
-  String get pfEdicionFoto => _t('Edición de foto próximamente', 'Photo editing coming soon');
+  String get pfFotoGuardada => _t('Foto de perfil actualizada', 'Profile photo updated');
+  String get pfErrorFoto => _t('No se pudo cargar la foto', 'Could not load the photo');
   String pfRachaEnRacha(int n) => _t('$n días en racha', '$n-day streak');
   String get pfPlan => _t('Plan: ', 'Plan: ');
   String get pfGrasaPct => _t('% Grasa', '% Fat');
@@ -579,7 +580,8 @@ class AppStrings {
 
   // ---- Registro (resto) ----
   String get regFotoTitulo => _t('Foto de perfil', 'Profile photo');
-  String get regFotoHint => _t('Añade una foto para identificarte', 'Add a photo to identify yourself');
+  String get regFotoOpcional => _t('Opcional', 'Optional');
+  String get regFotoHint => _t('Añade una foto para identificarte (puedes saltar este paso)', 'Add a photo to identify yourself (you can skip this step)');
   String get regSubirImagen => _t('Subir imagen', 'Upload image');
   String get regNameHint => _t('Escribe tu nombre', 'Enter your name');
   String get regEligeMetas => _t('Elige hasta 2 metas', 'Choose up to 2 goals');

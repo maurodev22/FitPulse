@@ -47,6 +47,15 @@ class AdsPermiso {
   /// banner con el placeholder honesto, para que el layout se pueda testear.
   static bool consentimientoErrorSinRed = false;
 
+  /// Vista previa de piezas DE PRUEBA (imagen/texto, claramente marcadas).
+  ///
+  /// Se activa en `main()` cuando el consentimiento UMP falla por red (Cuba o
+  /// sin acceso a Google): el banner y el recompensado muestran piezas locales
+  /// "Anuncio de PRUEBA" para verificar el layout y el flujo del +25 PTs sin
+  /// depender de AdMob. Con consentimiento resuelto (cliente fuera de Cuba con
+  /// IDs reales) queda falso y se muestran anuncios reales.
+  static bool vistaPreviaTest = false;
+
   /// Un entrenamiento (reproductor) está en pantalla: no se interrumpe con un
   /// anuncio de apertura. Lo gestiona `workout_player_screen.dart`.
   static bool ejercicioActivo = false;
@@ -62,6 +71,7 @@ void resetAdsPermisoParaTests() {
   AdsPermiso.consentimientoErrorSinRed = false;
   AdsPermiso.ejercicioActivo = false;
   AdsPermiso.anuncioALaVista = false;
+  AdsPermiso.vistaPreviaTest = false;
 }
 
 /// Inicializa el SDK de AdMob. Nunca lanza: si no hay soporte (tests,
@@ -154,6 +164,72 @@ class _FitBannerAdState extends State<FitBannerAd> {
   Widget build(BuildContext context) {
     final banner = _banner;
     if (banner == null && _loadFailed && FitBannerAd.mostrarPlaceholderCuandoFalla) {
+      // Vista previa de prueba (Cuba/dev sin red a Google): pieza local rica,
+      // claramente marcada como PRUEBA, para verificar el layout del banner.
+      if (AdsPermiso.vistaPreviaTest) {
+        return Container(
+          width: double.infinity,
+          height: 64,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          color: AppColors.surfaceContainer,
+          child: Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: AppColors.primaryContainer,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(Icons.campaign, size: 20, color: AppColors.onPrimaryContainer),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'FitPulse · Ejercítate hoy 💪',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppType.labelLg.copyWith(
+                        color: AppColors.onSurface,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    Text(
+                      'Anuncio de PRUEBA local — AdMob sin conexión',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppType.bodySm.copyWith(
+                        color: AppColors.onSurfaceVariant,
+                        fontSize: 10,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: AppColors.primary,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  'PRUEBA',
+                  style: AppType.labelSm.copyWith(
+                    color: AppColors.onPrimary,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      }
       // Zona de anuncio honesta cuando no hay conexión a AdMob (prueba local).
       return Container(
         width: double.infinity,
@@ -196,10 +272,19 @@ class _FitBannerAdState extends State<FitBannerAd> {
 ///
 /// Nunca lanza: los fallos se reportan por [onError]. Respeta la puerta de
 /// consentimiento y evita solaparse con otro anuncio a pantalla completa.
+/// En modo vista previa ([AdsPermiso.vistaPreviaTest]) simula el flujo con una
+/// pieza de imagen/texto local para poder probar el +25 PTs sin AdMob.
 Future<void> mostrarAnuncioRecompensado({
+  required BuildContext context,
   required VoidCallback onRecompensa,
   required ValueChanged<String> onError,
 }) async {
+  // Vista previa de prueba (Cuba/dev sin red a Google): flujo completo del
+  // recompensado con una pieza local claramente marcada como PRUEBA.
+  if (AdsPermiso.vistaPreviaTest && !AdsPermiso.consentimientoOk) {
+    await _mostrarRecompensadoDePrueba(context, onRecompensa);
+    return;
+  }
   if (!AdsPermiso.consentimientoOk) {
     onError('Los anuncios no están disponibles en este dispositivo.');
     return;
@@ -237,6 +322,127 @@ Future<void> mostrarAnuncioRecompensado({
   } catch (_) {
     limpiar();
     onError('Los anuncios no están disponibles en este dispositivo.');
+  }
+}
+
+/// Simula el anuncio recompensado en vista previa (prueba local): una pieza
+/// de solo imagen/texto claramente marcada como PRUEBA. Al cerrarla se otorga
+/// la recompensa para poder probar el flujo completo del +25 PTs sin AdMob.
+Future<void> _mostrarRecompensadoDePrueba(
+  BuildContext context,
+  VoidCallback onRecompensa,
+) async {
+  final otorgar = await showGeneralDialog<bool>(
+    context: context,
+    barrierDismissible: false,
+    barrierLabel: 'Anuncio de prueba',
+    barrierColor: Colors.black54,
+    transitionDuration: const Duration(milliseconds: 250),
+    pageBuilder: (context, animation, secondaryAnimation) =>
+        const _RecompensaDePruebaDialog(),
+  );
+  if (otorgar == true) onRecompensa();
+}
+
+/// Pieza "video" de prueba: solo imagen/texto estáticos (un anuncio de imagen
+/// en la vida real), con cierre que entrega la recompensa de prueba.
+class _RecompensaDePruebaDialog extends StatelessWidget {
+  const _RecompensaDePruebaDialog();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.primaryContainer,
+      body: SafeArea(
+        child: Column(
+          children: [
+            // "Video" del anuncio: creatividad estática (imagen/texto).
+            Expanded(
+              child: Container(
+                width: double.infinity,
+                color: AppColors.primaryContainer,
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      width: 88,
+                      height: 88,
+                      decoration: BoxDecoration(
+                        color: AppColors.onPrimaryContainer.withValues(alpha: 0.18),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(Icons.play_arrow_rounded, size: 48,
+                          color: AppColors.onPrimaryContainer),
+                    ),
+                    const SizedBox(height: 20),
+                    Text(
+                      'FitPulse Premium',
+                      textAlign: TextAlign.center,
+                      style: AppType.headlineMd.copyWith(
+                        color: AppColors.onPrimaryContainer,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      '7 días gratis · Sin anuncios',
+                      textAlign: TextAlign.center,
+                      style: AppType.bodyMd.copyWith(
+                        color: AppColors.onPrimaryContainer.withValues(alpha: 0.85),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: AppColors.onPrimaryContainer.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Text(
+                        'ANUNCIO DE PRUEBA · SIN CONEXIÓN A AdMob',
+                        textAlign: TextAlign.center,
+                        style: AppType.labelSm.copyWith(
+                          color: AppColors.onPrimaryContainer,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            // Barra de control: cerrar otorga la recompensa (prueba).
+            Container(
+              width: double.infinity,
+              color: AppColors.surface,
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    'Simulación local: al cerrar ganas +25 PTs de prueba.',
+                    textAlign: TextAlign.center,
+                    style: AppType.bodySm.copyWith(color: AppColors.onSurfaceVariant),
+                  ),
+                  const SizedBox(height: 12),
+                  FilledButton.icon(
+                    onPressed: () => Navigator.of(context).pop(true),
+                    icon: const Icon(Icons.check_circle_outline, size: 18),
+                    label: const Text('Cerrar y ganar +25 PTs (prueba)'),
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(false),
+                    child: const Text('Cerrar sin recompensa'),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 

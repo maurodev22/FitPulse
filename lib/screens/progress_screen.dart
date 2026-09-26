@@ -399,6 +399,7 @@ class ProgressScreen extends StatelessWidget {
       final messenger = ScaffoldMessenger.of(context);
       final appState = context.read<AppState>();
       await mostrarAnuncioRecompensado(
+        context: context,
         onRecompensa: () async {
           final aplicada = await appState.aplicarRecompensaAnuncio();
           messenger.showSnackBar(SnackBar(

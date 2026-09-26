@@ -89,6 +89,11 @@ Future<void> _arrancarAds(ConfigService config) async {
   }
   AdsPermiso.consentimientoOk = consent.puedeMostrarAnuncios;
   AdsPermiso.consentimientoErrorSinRed = consent.errorTecnico;
+  // Vista previa de anuncios de prueba (Cuba/dev sin red a Google): el banner
+  // y el recompensado muestran piezas locales "PRUEBA" para verificar el
+  // layout y el flujo del +25 PTs. Con cuentas e IDs reales (cliente fuera de
+  // Cuba) el consentimiento se resuelve y aquí queda falso → anuncios reales.
+  AdsPermiso.vistaPreviaTest = consent.errorTecnico;
   if (!AdsPermiso.consentimientoOk) return;
   unawaited(initAds());
   unawaited(AppOpenAdManager.instance.iniciar());

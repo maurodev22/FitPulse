@@ -162,7 +162,7 @@ class _PlanCard extends StatelessWidget {
               child: Container(
                 height: 40,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF0F4F1),
+                  color: AppColors.surfaceContainerLow,
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: Row(
@@ -173,7 +173,7 @@ class _PlanCard extends StatelessWidget {
                     Expanded(
                       child: Text(
                         strings.tipsBuscar,
-                        style: TextStyle(color: Colors.grey, fontSize: 13),
+                        style: TextStyle(color: AppColors.onSurfaceVariant, fontSize: 13),
                       ),
                     ),
                   ],

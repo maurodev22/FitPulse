@@ -1,8 +1,10 @@
 /// Consentimiento publicitario UE (Fase 8.3) sobre el SDK UMP de Google.
 ///
-/// El SDK de UMP ya viene embebido en play-services-ads (25.4.0), que es lo
-/// que usa `google_mobile_ads`, por lo que NO hace falta `google_ump` (que no
-/// se puede descargar desde Cuba: pub.dev da 403 y el mirror no lo tiene).
+/// El SDK UMP (com.google.android.ump:user-messaging-platform:4.0.0) lo trae
+/// `google_mobile_ads` como dependencia `implementation` de su plugin, y además
+/// está declarado en la app (misma versión) para que el compilador Kotlin lo
+/// vea. NO hace falta `google_ump` (que no se puede descargar desde Cuba:
+/// pub.dev da 403 y el mirror no lo tiene).
 /// El puente nativo vive en `MainActivity.kt` (canal `fitpulse/consent`).
 ///
 /// Reglas de honestidad:

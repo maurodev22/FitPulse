@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
 import '../main.dart';
@@ -7,6 +10,7 @@ import '../state/app_state.dart';
 import '../state/athlete_profile.dart';
 import '../theme.dart';
 import '../utils/validators.dart';
+import '../widgets/common.dart';
 import '../widgets/wheel_number_picker.dart';
 
 class RegistrationScreen extends StatefulWidget {
@@ -28,6 +32,9 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   final List<String> _metas = <String>[];
   String? _sexo;
   String? _tipoCuerpo;
+  // Foto de perfil OPCIONAL en base64 (null = se muestra el avatar con
+  // iniciales). Nunca una imagen de muestra.
+  String? _fotoBase64;
 
   String? _nombreError;
   String? _sexoError;
@@ -73,7 +80,29 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       alturaM: _alturaM,
       metas: List.of(_metas),
       tipoCuerpo: TipoCuerpo.normalizar(_tipoCuerpo),
+      fotoBase64: _fotoBase64,
     );
+  }
+
+  /// Sube la foto desde la galería (paso opcional). Falla sin romper el
+  /// registro: la foto se puede dejar para después.
+  Future<void> _elegirFoto() async {
+    final strings = context.read<LocaleService>().strings;
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      final foto = await ImagePicker().pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 512,
+        maxHeight: 512,
+        imageQuality: 85,
+      );
+      if (foto == null) return; // El usuario canceló → se queda sin foto.
+      final bytes = await foto.readAsBytes();
+      if (bytes.isEmpty) return;
+      setState(() => _fotoBase64 = base64Encode(bytes));
+    } catch (_) {
+      messenger.showSnackBar(SnackBar(content: Text(strings.pfErrorFoto)));
+    }
   }
 
   /// IMC calculado en vivo a partir de los valores de las ruedas.
@@ -152,28 +181,44 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       ),
       child: Row(
         children: [
-          Container(
-            width: 64,
-            height: 64,
-            decoration: BoxDecoration(
-              color: const Color(0xFFDCF5EA),
-              shape: BoxShape.circle,
-              border: Border.all(color: AppColors.primary, width: 2),
-            ),
-            clipBehavior: Clip.antiAlias,
-            child: Image.asset('assets/images/avatar.webp', fit: BoxFit.cover),
+          FitAvatar(
+            nombre: _nombreController.text,
+            fotoBase64: _fotoBase64,
+            radius: 32,
+            borde: AppColors.primary,
+            bordeAncho: 2,
           ),
           const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  strings.regFotoTitulo,
-                  style: AppType.labelLg.copyWith(
-                    color: AppColors.onSurface,
-                    fontWeight: FontWeight.w700,
-                  ),
+                Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        strings.regFotoTitulo,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppType.labelLg.copyWith(
+                          color: AppColors.onSurface,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: AppColors.surfaceContainer,
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Text(
+                        strings.regFotoOpcional,
+                        style: AppType.labelSm.copyWith(color: AppColors.onSurfaceVariant),
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 2),
                 Text(
@@ -182,7 +227,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 ),
                 const SizedBox(height: 6),
                 InkWell(
-                  onTap: () {},
+                  onTap: _elegirFoto,
                   borderRadius: BorderRadius.circular(8),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(vertical: 2),
@@ -232,7 +277,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
             ),
             decoration: InputDecoration(
               hintText: strings.regNameHint,
-              hintStyle: AppType.bodyMd.copyWith(color: Colors.grey),
+              hintStyle: AppType.bodyMd.copyWith(color: AppColors.onSurfaceVariant),
               filled: true,
               fillColor: AppColors.surfaceLowest,
               contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
@@ -487,7 +532,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
           isDense: true,
           hint: Text(
             hint ?? '',
-            style: AppType.bodyMd.copyWith(color: Colors.grey),
+            style: AppType.bodyMd.copyWith(color: AppColors.onSurfaceVariant),
           ),
           icon: Icon(Icons.expand_more, size: 18, color: AppColors.onSurfaceVariant),
           style: AppType.bodyMd.copyWith(
@@ -554,7 +599,7 @@ class _RegHeader extends StatelessWidget {
             child: LinearProgressIndicator(
               value: 0.5,
               minHeight: 6,
-              backgroundColor: Color(0xFFE3EBE6),
+              backgroundColor: AppColors.surfaceContainer,
               color: AppColors.primary,
             ),
           ),
@@ -626,7 +671,7 @@ class _BmiBar extends StatelessWidget {
     final valid = imc > 0;
     final categoria = valid ? _categoriaImc(strings, imc) : '...';
     final (badge, badColor) =
-        valid ? _estadoImc(strings, imc) : ('—', Colors.grey);
+        valid ? _estadoImc(strings, imc) : ('—', AppColors.onSurfaceVariant);
 
     final borderColor = valid ? badColor : AppColors.outlineVariant;
     return Container(

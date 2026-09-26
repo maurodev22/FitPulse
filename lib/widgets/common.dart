@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 
 import '../theme.dart';
@@ -274,5 +276,92 @@ class CategoryChip extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+/// Iniciales (máx. 2, en mayúsculas) derivadas del nombre para el avatar
+/// cuando el usuario no subió foto. Nunca inventa un rostro.
+String inicialesDe(String nombre) {
+  final partes = nombre
+      .trim()
+      .split(RegExp(r'\s+'))
+      .where((p) => p.isNotEmpty)
+      .toList();
+  if (partes.isEmpty) return '?';
+  if (partes.length == 1) return partes.first[0].toUpperCase();
+  return (partes.first[0] + partes.last[0]).toUpperCase();
+}
+
+/// Avatar de perfil honesto: subir foto es un paso OPCIONAL.
+///
+/// - Con foto de sesión guardada ([fotoBase64]): la muestra tal cual.
+/// - Sin foto: círculo neutro con las iniciales del nombre (nunca una imagen
+///   de muestra que finge tener foto).
+class FitAvatar extends StatelessWidget {
+  const FitAvatar({
+    super.key,
+    required this.nombre,
+    this.fotoBase64,
+    this.radius = 24,
+    this.borde,
+    this.bordeAncho = 3,
+  });
+
+  final String nombre;
+  final String? fotoBase64;
+  final double radius;
+  final Color? borde;
+  final double bordeAncho;
+
+  @override
+  Widget build(BuildContext context) {
+    final foto = (fotoBase64 == null || fotoBase64!.isEmpty) ? null : fotoBase64;
+    Widget contenido;
+    if (foto != null) {
+      // Foto real de la sesión; si el base64 está corrupto se degrada a
+      // iniciales (honesto, nunca una imagen falsa).
+      contenido = fotoDecodificable(foto)
+          ? Image.memory(base64Decode(foto), fit: BoxFit.cover, gaplessPlayback: true)
+          : _inicialesAvatar();
+    } else {
+      contenido = _inicialesAvatar();
+    }
+    return Container(
+      width: radius * 2,
+      height: radius * 2,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: borde == null ? null : Border.all(color: borde!, width: bordeAncho),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: contenido,
+    );
+  }
+
+  Widget _inicialesAvatar() {
+    final tamLetra = (radius * 0.55).clamp(12.0, 30.0);
+    return ColoredBox(
+      color: AppColors.primaryContainer,
+      child: Center(
+        child: Text(
+          inicialesDe(nombre),
+          style: TextStyle(
+            color: AppColors.onPrimaryContainer,
+            fontSize: tamLetra,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// True si el string es base64 de imagen decodificable (guard para Image.memory).
+bool fotoDecodificable(String base64) {
+  try {
+    base64Decode(base64);
+    return true;
+  } catch (_) {
+    return false;
   }
 }

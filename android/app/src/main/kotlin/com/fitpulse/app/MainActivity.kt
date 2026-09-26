@@ -7,9 +7,9 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.provider.Settings
-import com.google.android.ump.ConsentForm
 import com.google.android.ump.ConsentInformation
 import com.google.android.ump.ConsentRequestParameters
+import com.google.android.ump.UserMessagingPlatform
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
@@ -54,11 +54,16 @@ class MainActivity : FlutterActivity() {
                 else -> result.notImplemented()
             }
         }
-        // Fase 8.3: consentimiento publicitario UE (UMP). El SDK de UMP ya
-        // viene embebido en play-services-ads (25.4.0), así que no hace falta
-        // ninguna dependencia nueva (pub.dev/google_ump no llega desde Cuba).
-        // Si el SDK UMP no soporta el dispositivo/red, cada método devuelve una
-        // respuesta honesta y la app degrada a "sin anuncios".
+        // Fase 8.3: consentimiento publicitario UE (UMP) vía canal nativo
+        // (flutter_ump/pub.dev no llega desde Cuba). El SDK UMP 4.0.0 lo trae
+        // google_mobile_ads como dependencia `implementation` de su plugin
+        // (runtime sí, pero no al compilador), por eso también se declara en
+        // android/app/build.gradle.kts con la misma versión 4.0.0.
+        // En UMP 4.0.0 la API cambió: ConsentInformation.getInstance(...) y
+        // ConsentForm.loadAndShowConsentFormIfRequired(...) ya NO existen; todo
+        // pasa por UserMessagingPlatform. Si el SDK no soporta dispositivo/red,
+        // cada método devuelve una respuesta honesta y la app degrada a "sin
+        // anuncios".
         MethodChannel(
             flutterEngine.dartExecutor.binaryMessenger,
             "fitpulse/consent"
@@ -66,25 +71,16 @@ class MainActivity : FlutterActivity() {
             when (call.method) {
                 "request" -> requestConsentInfo(result)
                 "canRequestAds" -> result.success(
-                    ConsentInformation.getInstance(this).canRequestAds
+                    UserMessagingPlatform.getConsentInformation(this)
+                        .canRequestAds()
                 )
-                "loadAndShowIfRequired" -> {
-                    val ci = ConsentInformation.getInstance(this)
-                    if (!ci.isConsentFormAvailable) {
-                        // Fuera de EEE (o ya consentido): no hay formulario.
-                        result.success(false)
-                    } else {
-                        ConsentForm.loadAndShowConsentFormIfRequired(
-                            this,
-                            { form ->
-                                form.show(this) { result.success(true) }
-                            },
-                            { error -> result.success(mapOf("ok" to false, "message" to error.message)) }
-                        )
+                "loadAndShowIfRequired" -> UserMessagingPlatform
+                    .loadAndShowConsentFormIfRequired(this) { error ->
+                        // error == null => formulario mostrado (o no requerido).
+                        result.success(error == null)
                     }
-                }
                 "reset" -> {
-                    ConsentInformation.getInstance(this).reset()
+                    UserMessagingPlatform.getConsentInformation(this).reset()
                     result.success(null)
                 }
                 else -> result.notImplemented()
@@ -93,16 +89,19 @@ class MainActivity : FlutterActivity() {
     }
 
     private fun requestConsentInfo(result: MethodChannel.Result) {
-        val consentInformation = ConsentInformation.getInstance(this)
+        val consentInformation =
+            UserMessagingPlatform.getConsentInformation(this)
         consentInformation.requestConsentInfoUpdate(
             this,
-            ConsentRequestParameters(),
+            ConsentRequestParameters.Builder().build(),
             {
                 result.success(
                     mapOf(
                         "ok" to true,
-                        "canRequestAds" to consentInformation.canRequestAds,
-                        "status" to consentInformation.consentStatus.name
+                        "canRequestAds" to consentInformation.canRequestAds(),
+                        "status" to consentStatusName(
+                            consentInformation.consentStatus
+                        )
                     )
                 )
             },
@@ -118,6 +117,14 @@ class MainActivity : FlutterActivity() {
                 )
             }
         )
+    }
+
+    /** Nombre textual del estado UMP como espera el Dart (ConsentService). */
+    private fun consentStatusName(status: Int): String = when (status) {
+        ConsentInformation.ConsentStatus.OBTAINED -> "OBTAINED"
+        ConsentInformation.ConsentStatus.REQUIRED -> "REQUIRED"
+        ConsentInformation.ConsentStatus.NOT_REQUIRED -> "NOT_REQUIRED"
+        else -> "UNKNOWN"
     }
 
     private fun requestCameraPermission(result: MethodChannel.Result) {

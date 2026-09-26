@@ -280,9 +280,13 @@ fuera de Cuba (se deja la puerta abierta sin bloquear la app).
 - Integrar **Google User Messaging Platform** (UMP) para EEE/Reino Unido: mensaje de
   consentimiento antes del primer anuncio; si se rechaza la personalización, AdMob usa
   anuncios no personalizados. Implementado SIN `google_ump` (pub.dev da 403 desde Cuba
-  y el mirror no lo tiene): el SDK UMP ya viene embebido en `play-services-ads` 25.4.0,
-  así que el puente es nativo por MethodChannel (`fitpulse/consent` en
-  `MainActivity.kt`): `request` (+ `consentStatus` + `canRequestAds`),
+  y el mirror no lo tiene): el SDK es `com.google.android.ump:user-messaging-platform:4.0.0`,
+  que `google_mobile_ads` trae como dependencia `implementation` de su plugin; como
+  así no llega al compilador de la app, también se declara en `android/app/build.gradle.kts`
+  (misma versión, vía Aliyun). El puente es nativo por MethodChannel (`fitpulse/consent`
+  en `MainActivity.kt`) usando la API de UMP **4.0.0** (todo pasa por
+  `UserMessagingPlatform`: `getConsentInformation`, `requestConsentInfoUpdate`,
+  `loadAndShowConsentFormIfRequired`): `request` (+ `consentStatus` + `canRequestAds`),
   `loadAndShowIfRequired`, `canRequestAds` y `reset`, servidos a
   `ConsentService` (`lib/services/consent_service.dart`).
 - **Gating de todos los formatos por consentimiento** (`AdsPermiso` en
@@ -300,8 +304,13 @@ fuera de Cuba (se deja la puerta abierta sin bloquear la app).
   mensaje de consentimiento en la consola AdMob (privacy & messaging) + verificación
   en dispositivo EEE. Lista de sustitución: `docs/ADS_CLIENTE.md`.
 - Nota de honor: en Cuba (sin red a Google) el UMP falla → la app no muestra anuncios
-  reales, lo cual es el comportamiento honesto; el placeholder "Zona de anuncio"
-  sigue disponible para desarrollo.
+  reales, lo cual es el comportamiento honesto. **Vista previa de prueba**
+  (`AdsPermiso.vistaPreviaTest`, activa en `main()` solo cuando el consentimiento falla
+  por red): el banner muestra una pieza local "Anuncio de PRUEBA" con texto/imagen y el
+  recompensado simula el video con una pieza de solo imagen (al cerrarla otorga el
+  +25 PTs de prueba). Todo claramente marcado como PRUEBA; con IDs reales y cuenta
+  fuera de Cuba el consentimiento se resuelve → vista previa desactivada → anuncios
+  reales. No requiere tocar código (se ajusta sola según `consent.errorTecnico`).
 
 ### 8.4 Ley de IA de la UE (art. 50, transparencia) ✅
 - Aviso formal en el entrenador con cámara (implementado): "Este módulo usa un modelo
