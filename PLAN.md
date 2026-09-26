@@ -15,12 +15,12 @@
 | **Hotfix** (aprobado) | ✅ | Aplicado y verificado en código (sin "Explorar categorías", "Nutrición & Vitalidad", coaches ni "Cerrar sesión"; `**` del manual limpiados) |
 | Fase 1 (datos reales del cuerpo) | ✅ código | Pasos reales ✅; **Health Connect ✅** (pulso, peso, grasa, sueño, agua, gasto activo, tiempo activo; solo lectura); reinicio diario ✅; analytics local ✅. Falta prueba manual en dispositivo |
 | Fase 2 (entrenamientos + motivación) | ✅ código | Catálogo + reproductor ✅; historial real ✅; racha real ✅; retos 3/5/7 ✅; puntos/niveles ✅; plan adaptativo ✅. Falta prueba manual en dispositivo |
-| Fase 3 (negocio: anuncios + Premium + app ligera) | ✅ código | AdMob IDs de prueba + consentimiento local + Premium + R8; falta prueba manual en ambos móviles |
+| Fase 3 (negocio: anuncios + Premium + app ligera) | ✅ código | AdMob IDs de prueba (banner + rewarded + app open) + consentimiento UMP local/UE + Premium + R8; falta prueba manual en ambos móviles |
 | Fase 4 (comidas) | ✅ código | Plan semanal real (6 recetas) + lista de la compra + día libre; falta prueba manual |
 | Fase 5 (entrenador con cámara) | ✅ código | ML Kit pose on-device + estados honestos; falta prueba manual |
 | Fase 6 (extras de retención) | ✅ instalado/verificado | Widget de home (pasos/calorías/racha) + avisos locales por tipo; instalado y verificado en Pixel 6a y Xiaomi |
 | Fase 7 (premium + accesibilidad) | ✅ código | Modo oscuro (sistema/claro/oscuro), contraste WCAG AA, tamaño accesible (0 desbordes a 2.0×), micro-animaciones, i18n es/en completo; `flutter analyze` 0 issues y 55 tests verdes. Pendiente PASA/FALLA manual del usuario |
-| Fase 8 | ⏳ | Privacidad GDPR: export/import legible + borrado total (8.1 ✅); política de privacidad + EULA v2 (8.2 ✅); UMP publicidad (8.3 pendiente); aviso de IA (8.4 ✅); release firmado + Data Safety (8.5, bloqueado por cuenta Play desde Cuba) |
+| Fase 8 | ✅ código (falta verificación EEE + 8.5) | Privacidad GDPR: export/import legible + borrado total (8.1 ✅); política de privacidad + EULA v2 (8.2 ✅); UMP publicidad nativo + app open (8.3 ✅ código); aviso de IA (8.4 ✅); release firmado + Data Safety (8.5, bloqueado por cuenta Play desde Cuba) |
 
 **Sesión** (`FUNCIONALIDADES.md`), **guía de prueba manual** (`GUIA_TESTEO_FASE1.md`) y
 **README** están pendientes de actualización con el estado de Fases 1 y 2.
@@ -276,13 +276,32 @@ fuera de Cuba (se deja la puerta abierta sin bloquear la app).
 - **Política de copy anti-claims (MDR)**: pendiente de auditar los textos de
   tips y fijarla por escrito (ningún texto afirma diagnosticar/tratar/prevenir).
 
-### 8.3 Consentimiento publicitario UE (UMP + ePrivacy) ⏳ pendiente
+### 8.3 Consentimiento publicitario UE (UMP + ePrivacy) ✅ código (verificación EEE pendiente)
 - Integrar **Google User Messaging Platform** (UMP) para EEE/Reino Unido: mensaje de
   consentimiento antes del primer anuncio; si se rechaza la personalización, AdMob usa
-  anuncios no personalizados. El toggle local "Anuncios habilitados" se mantiene como
-  capa adicional. Sin UMP no se muestra recompensado en EEE. Depende de `google_ump`
-  (red a Google, bloqueada en Cuba en runtime) → se dejará documentada la integración
-  y el degradado honesto.
+  anuncios no personalizados. Implementado SIN `google_ump` (pub.dev da 403 desde Cuba
+  y el mirror no lo tiene): el SDK UMP ya viene embebido en `play-services-ads` 25.4.0,
+  así que el puente es nativo por MethodChannel (`fitpulse/consent` en
+  `MainActivity.kt`): `request` (+ `consentStatus` + `canRequestAds`),
+  `loadAndShowIfRequired`, `canRequestAds` y `reset`, servidos a
+  `ConsentService` (`lib/services/consent_service.dart`).
+- **Gating de todos los formatos por consentimiento** (`AdsPermiso` en
+  `ads_service.dart`): banner, recompensado y app open solo cargan si
+  `canRequestAds == true`. Degradado honesto: sin red a Google (Cuba) o sin soporte
+  UMP → `ConsentEstado.error` → no se cargan anuncios reales; solo la zona de banner
+  de desarrollo queda visible para testes.
+- El toggle local "Anuncios habilitados" (Perfil) y Premium se mantienen como capas
+  adicionales (`adsPermitidos(adsEnabled && !premium && consentimientoOk)`).
+- **App Open** (`AppOpenAdManager`): 1×/sesión, cooldown 60 s, pausa en segundo plano
+  ≥ 30 s, nunca en arranque en frío, nunca encima del reproductor de ejercicios
+  (`AdsPermiso.ejercicioActivo`) ni de otro anuncio. ID de prueba
+  `ca-app-pub-3940256099942544/9257395921`.
+- **Pendiente real (cliente fuera de Cuba)**: cuenta AdMob real + unit IDs + crear el
+  mensaje de consentimiento en la consola AdMob (privacy & messaging) + verificación
+  en dispositivo EEE. Lista de sustitución: `docs/ADS_CLIENTE.md`.
+- Nota de honor: en Cuba (sin red a Google) el UMP falla → la app no muestra anuncios
+  reales, lo cual es el comportamiento honesto; el placeholder "Zona de anuncio"
+  sigue disponible para desarrollo.
 
 ### 8.4 Ley de IA de la UE (art. 50, transparencia) ✅
 - Aviso formal en el entrenador con cámara (implementado): "Este módulo usa un modelo
@@ -310,7 +329,7 @@ fuera de Cuba (se deja la puerta abierta sin bloquear la app).
 | GDPR política de privacidad | Transparencia | 🟡 MEDIA | Medio: se implementa en 8.2 |
 | Google Play Data Safety | Ficha declarada | ⚪ N/A (sin publicar) | Medio: al publicar (8.5) |
 | Google Health apps policy | Privacidad + claims veraces | 🟡 MEDIA | Medio: misma política (8.2) |
-| EU User Consent (UMP/ePrivacy) | Consentimiento publicitario | 🔴 MÍNIMA | Medio: se implementa en 8.3 |
+| EU User Consent (UMP/ePrivacy) | Consentimiento publicitario | 🟢 ALTA (código; UMP nativo) | Medio: cuenta AdMob real + mensaje UMP (8.3 → docs/ADS_CLIENTE.md) |
 | Directiva 2011/83/UE (14 días) | Devolución en compras | 🟢 ALTA | Cero (Play lo gestiona) |
 | Ley de IA UE (art. 50) | Aviso de IA | 🟡 MEDIA-ALTA | Bajo: se formaliza en 8.4 |
 | EAA/WCAG accesibilidad | Estándar | 🟢 ALTA | Bajo (mantenimiento) |

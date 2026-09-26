@@ -30,10 +30,14 @@ void main() {
     expect(find.text('Política de privacidad'), findsWidgets);
     expect(find.textContaining('RGPD'), findsWidgets);
     expect(find.textContaining('art. 9'), findsWidgets);
+
+    // El ListView con children: es perezoso: las secciones del final se crean
+    // al desplazarse. Se recorre la lista en pasos para construirlas todas y
+    // verificar el contenido íntegro sin depender del tamaño del viewport.
+    await tester.scrollUntilVisible(find.textContaining('art. 8'), 200);
     expect(find.textContaining('art. 8'), findsWidgets);
 
-    // Recorre toda la lista para asegurar que no hay desbordes ni roturas.
-    await tester.drag(find.byType(Scrollable).first, const Offset(0, -3000));
+    await tester.scrollUntilVisible(find.text('9. Contacto'), 200);
     await tester.pumpAndSettle();
     expect(find.text('9. Contacto'), findsOneWidget);
     expect(tester.takeException(), isNull);
@@ -55,7 +59,7 @@ void main() {
     expect(find.text('Privacy policy'), findsWidgets);
     expect(find.textContaining('GDPR'), findsWidgets);
 
-    await tester.drag(find.byType(Scrollable).first, const Offset(0, -3000));
+    await tester.scrollUntilVisible(find.text('9. Contact'), 200);
     await tester.pumpAndSettle();
     expect(find.text('9. Contact'), findsOneWidget);
     expect(tester.takeException(), isNull);

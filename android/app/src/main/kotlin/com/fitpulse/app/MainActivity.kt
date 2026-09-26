@@ -7,6 +7,9 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.provider.Settings
+import com.google.android.ump.ConsentForm
+import com.google.android.ump.ConsentInformation
+import com.google.android.ump.ConsentRequestParameters
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
@@ -51,6 +54,70 @@ class MainActivity : FlutterActivity() {
                 else -> result.notImplemented()
             }
         }
+        // Fase 8.3: consentimiento publicitario UE (UMP). El SDK de UMP ya
+        // viene embebido en play-services-ads (25.4.0), así que no hace falta
+        // ninguna dependencia nueva (pub.dev/google_ump no llega desde Cuba).
+        // Si el SDK UMP no soporta el dispositivo/red, cada método devuelve una
+        // respuesta honesta y la app degrada a "sin anuncios".
+        MethodChannel(
+            flutterEngine.dartExecutor.binaryMessenger,
+            "fitpulse/consent"
+        ).setMethodCallHandler { call, result ->
+            when (call.method) {
+                "request" -> requestConsentInfo(result)
+                "canRequestAds" -> result.success(
+                    ConsentInformation.getInstance(this).canRequestAds
+                )
+                "loadAndShowIfRequired" -> {
+                    val ci = ConsentInformation.getInstance(this)
+                    if (!ci.isConsentFormAvailable) {
+                        // Fuera de EEE (o ya consentido): no hay formulario.
+                        result.success(false)
+                    } else {
+                        ConsentForm.loadAndShowConsentFormIfRequired(
+                            this,
+                            { form ->
+                                form.show(this) { result.success(true) }
+                            },
+                            { error -> result.success(mapOf("ok" to false, "message" to error.message)) }
+                        )
+                    }
+                }
+                "reset" -> {
+                    ConsentInformation.getInstance(this).reset()
+                    result.success(null)
+                }
+                else -> result.notImplemented()
+            }
+        }
+    }
+
+    private fun requestConsentInfo(result: MethodChannel.Result) {
+        val consentInformation = ConsentInformation.getInstance(this)
+        consentInformation.requestConsentInfoUpdate(
+            this,
+            ConsentRequestParameters(),
+            {
+                result.success(
+                    mapOf(
+                        "ok" to true,
+                        "canRequestAds" to consentInformation.canRequestAds,
+                        "status" to consentInformation.consentStatus.name
+                    )
+                )
+            },
+            { error ->
+                // Fallo técnico/red (p. ej. sin red a Google): la app no muestra
+                // anuncios reales (degradado honesto).
+                result.success(
+                    mapOf(
+                        "ok" to false,
+                        "code" to error.errorCode,
+                        "message" to error.message
+                    )
+                )
+            }
+        )
     }
 
     private fun requestCameraPermission(result: MethodChannel.Result) {

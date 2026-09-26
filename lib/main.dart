@@ -15,6 +15,7 @@ import 'screens/tips_screen.dart';
 import 'services/ads_service.dart';
 import 'services/avisos_service.dart';
 import 'services/config_service.dart';
+import 'services/consent_service.dart';
 import 'services/health_service.dart';
 import 'services/home_widget_service.dart';
 import 'services/locale_service.dart';
@@ -44,11 +45,11 @@ Future<void> main() async {
   final configService = ConfigService();
   await configService.init();
   usageLog.log('app', 'inicio');
-  // AdMob (Fase 3): se inicializa en segundo plano si los anuncios están
-  // activos y el usuario no tiene Premium. Nunca bloquea el arranque.
-  if (configService.adsEnabled && !configService.premiumEnabled) {
-    unawaited(initAds());
-  }
+  // AdMob (Fase 3 + 8.3): consentimiento UE (UMP) primero, y solo con el
+  // consentimiento resuelto se cargan anuncios reales (banner, recompensado y
+  // app open). Nunca bloquea el arranque y degrada honesto sin red a Google
+  // (p. ej. Cuba): sin anuncios reales, solo la zona de banner de desarrollo.
+  unawaited(_arrancarAds(configService));
   // Fase 6: avisos locales (hidratación + racha en riesgo) según los toggles
   // persistidos del perfil; un único flujo serializado pide el permiso una sola
   // vez y, si se deniega, no se programa nada (honesto, nunca se finge activo).
@@ -71,6 +72,26 @@ Future<void> main() async {
     localeService: localeService,
     configService: configService,
   ));
+}
+
+/// Arranca la publicidad respetando el consentimiento UE (Fase 8.3).
+///
+/// 1. Resuelve el consentimiento UMP. 2. Si la UE/EEE lo requiere, muestra el
+/// formulario (una sola vez). 3. Solo con consentimiento resuelto activa el
+/// banner (vía [AdsPermiso]) y precarga el app open. Nunca lanza.
+Future<void> _arrancarAds(ConfigService config) async {
+  if (!config.adsEnabled || config.premiumEnabled) return;
+  final consent = ConsentService();
+  await consent.iniciar();
+  if (consent.estado == ConsentEstado.requerido) {
+    await consent.mostrarFormularioSiRequiere();
+    await consent.actualizarTrasFormulario();
+  }
+  AdsPermiso.consentimientoOk = consent.puedeMostrarAnuncios;
+  AdsPermiso.consentimientoErrorSinRed = consent.errorTecnico;
+  if (!AdsPermiso.consentimientoOk) return;
+  unawaited(initAds());
+  unawaited(AppOpenAdManager.instance.iniciar());
 }
 
 /// Raíz de FitPulse: provee el estado global y elige pantalla inicial

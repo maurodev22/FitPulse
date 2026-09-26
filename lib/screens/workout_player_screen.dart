@@ -60,11 +60,15 @@ class _WorkoutPlayerScreenState extends State<WorkoutPlayerScreen> {
   @override
   void initState() {
     super.initState();
+    // Fase 8.3: un entrenamiento en curso nunca se interrumpe con un anuncio
+    // de apertura (app open). El reproductor es pantalla de alta atención.
+    AdsPermiso.ejercicioActivo = true;
     _arrancarTimer();
   }
 
   @override
   void dispose() {
+    AdsPermiso.ejercicioActivo = false;
     _timer?.cancel();
     super.dispose();
   }

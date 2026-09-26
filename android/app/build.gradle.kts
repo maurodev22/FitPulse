@@ -56,6 +56,15 @@ android {
 dependencies {
     // Fase 6: core library desugaring (ver compileOptions arriba).
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
+
+    // Fix Pixel (Fase 8, verificación Android 16/17): flutter_local_notifications
+    // 22.x arrastra androidx.work 2.7.0 + androidx.room 2.2.5 (2021), que crashean
+    // creando WorkDatabase en Android 17 (SDK 37). Se fuerzan las versiones que
+    // Google compila juntas (work 2.9.1 <-> room 2.6.1). Artefactos por Aliyun.
+    implementation("androidx.work:work-runtime:2.9.1")
+    implementation("androidx.work:work-runtime-ktx:2.9.1")
+    implementation("androidx.work:work-multiprocess:2.9.1")
+    implementation("androidx.room:room-runtime:2.6.1")
 }
 
 kotlin {
