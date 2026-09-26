@@ -65,6 +65,13 @@ dependencies {
     implementation("androidx.work:work-runtime-ktx:2.9.1")
     implementation("androidx.work:work-multiprocess:2.9.1")
     implementation("androidx.room:room-runtime:2.6.1")
+
+    // Fase 8.3: consentimiento UE (UMP). google_mobile_ads lo trae como
+    // dependencia `implementation` de su plugin, así que en runtime está, pero
+    // el compilador de la app NO lo ve. Se declara aquí (misma versión 4.0.0
+    // que usa el plugin) para poder usar com.google.android.ump.* en
+    // MainActivity.kt sin dependencias nuevas en runtime.
+    implementation("com.google.android.ump:user-messaging-platform:4.0.0")
 }
 
 kotlin {
