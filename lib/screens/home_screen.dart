@@ -183,7 +183,7 @@ class _HomeHeader extends StatelessWidget {
                 nombre: state.profile.nombre,
                 fotoBase64: state.profile.fotoBase64,
                 radius: 24,
-                borde: AppColors.secondaryFixed,
+                borde: AppColors.outlineVariant,
                 bordeAncho: 2,
               ),
               Positioned(
@@ -427,7 +427,11 @@ class _WorkoutHeroCard extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFF003824), Color(0xFF005C41), Color(0xFF003D27)],
+          colors: [
+            AppColors.gradienteInicio,
+            AppColors.gradienteIntermedio,
+            AppColors.gradienteFin,
+          ],
         ),
         boxShadow: [
           BoxShadow(
@@ -447,7 +451,7 @@ class _WorkoutHeroCard extends StatelessWidget {
               height: 150,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                border: Border.all(color: AppColors.secondaryFixed.withValues(alpha: 0.15), width: 8),
+                border: Border.all(color: AppColors.onGradienteAcento.withValues(alpha: 0.15), width: 8),
               ),
             ),
           ),
@@ -458,7 +462,7 @@ class _WorkoutHeroCard extends StatelessWidget {
               width: 80,
               height: 80,
               decoration: BoxDecoration(
-                color: AppColors.secondaryFixed.withValues(alpha: 0.1),
+                color: AppColors.onGradienteAcento.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
             ),
@@ -472,7 +476,7 @@ class _WorkoutHeroCard extends StatelessWidget {
                   intensidad,
                 ),
                 style: AppType.labelSm.copyWith(
-                  color: AppColors.secondaryFixed,
+                  color: AppColors.onGradienteAcento,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 0.6,
                 ),
@@ -481,14 +485,14 @@ class _WorkoutHeroCard extends StatelessWidget {
               Text(
                 program.nombre,
                 style: AppType.headlineLg.copyWith(
-                  color: Colors.white,
+                  color: AppColors.onGradiente,
                   fontWeight: FontWeight.w800,
                 ),
               ),
               const SizedBox(height: 6),
               Text(
                 program.descripcion,
-                style: AppType.bodySm.copyWith(color: Colors.white.withValues(alpha: 0.85)),
+                style: AppType.bodySm.copyWith(color: AppColors.onGradienteVariant),
               ),
               const SizedBox(height: 16),
               Wrap(
@@ -504,7 +508,7 @@ class _WorkoutHeroCard extends StatelessWidget {
               SizedBox(
                 width: double.infinity,
                 child: Material(
-                  color: AppColors.secondaryFixed,
+                  color: AppColors.botonGradiente,
                   borderRadius: BorderRadius.circular(999),
                   child: InkWell(
                     onTap: () {
@@ -520,7 +524,7 @@ class _WorkoutHeroCard extends StatelessWidget {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.play_arrow_rounded, size: 22, color: AppColors.onSecondaryFixed),
+                          Icon(Icons.play_arrow_rounded, size: 22, color: AppColors.onBotonGradiente),
                           const SizedBox(width: 8),
                           Flexible(
                             child: Text(
@@ -528,7 +532,7 @@ class _WorkoutHeroCard extends StatelessWidget {
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: AppType.labelLg.copyWith(
-                                color: AppColors.onSecondaryFixed,
+                                color: AppColors.onBotonGradiente,
                                 fontWeight: FontWeight.w700,
                               ),
                             ),
@@ -558,21 +562,21 @@ class _HeroInfoChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.1),
+        color: AppColors.onGradienteAcento.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+        border: Border.all(color: AppColors.onGradienteAcento.withValues(alpha: 0.12)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 14, color: AppColors.secondaryFixed),
+          Icon(icon, size: 14, color: AppColors.onGradienteAcento),
           const SizedBox(width: 4),
           Flexible(
             child: Text(
               label,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: AppType.labelMd.copyWith(color: Colors.white, fontWeight: FontWeight.w600),
+              style: AppType.labelMd.copyWith(color: AppColors.onGradiente, fontWeight: FontWeight.w600),
             ),
           ),
         ],

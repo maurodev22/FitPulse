@@ -28,6 +28,14 @@ void main() {
         (p.error, p.surface),
         (p.onErrorContainer, p.errorContainer),
         (p.onInverseSurface, p.inverseSurface),
+        // Roles de gradiente (Fase 8: tarjetas adaptativas claras/oscuras).
+        (p.onGradiente, p.gradienteInicio),
+        (p.onGradiente, p.gradienteIntermedio),
+        (p.onGradienteVariant, p.gradienteIntermedio),
+        (p.onGradienteVariant, p.gradienteFin),
+        (p.onGradienteAcento, p.gradienteInicio),
+        (p.onGradienteAcento, p.gradienteIntermedio),
+        (p.onBotonGradiente, p.botonGradiente),
       ];
       for (final (fg, bg) in paresTexto) {
         expect(contraste(fg, bg), greaterThanOrEqualTo(4.5),
@@ -63,11 +71,15 @@ void main() {
     expect(AppColors.background, lightFitPalette.background);
     expect(AppColors.primary, lightFitPalette.primary);
     expect(AppColors.onSurface, lightFitPalette.onSurface);
+    expect(AppColors.gradienteInicio, lightFitPalette.gradienteInicio);
+    expect(AppColors.botonGradiente, lightFitPalette.botonGradiente);
 
     AppColors.activate(darkFitPalette);
     expect(AppColors.background, darkFitPalette.background);
     expect(AppColors.surface, darkFitPalette.surface);
     expect(AppColors.onSurface, darkFitPalette.onSurface);
+    expect(AppColors.onGradiente, darkFitPalette.onGradiente);
+    expect(AppColors.onBotonGradiente, darkFitPalette.onBotonGradiente);
   });
 
   test('buildFitPulseTheme genera temas claro y oscuro', () {

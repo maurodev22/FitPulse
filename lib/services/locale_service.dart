@@ -619,10 +619,15 @@ class AppStrings {
   String get pcEncendiendo => _t('Encendiendo la cámara…', 'Turning on the camera…');
   String get pcColocaEncuadre => _t('Coloca tu cuerpo en el encuadre', 'Place your body in the frame');
   String get pcNoModelo => _t(
-      'El modelo de IA de Google no está disponible ahora (requiere Play Services '
-      'y una descarga única). Sin él no se puede activar el entrenador con cámara.',
-      'Google\'s AI model is not available right now (requires Play Services and '
-      'a one-time download). Without it the camera coach cannot run.');
+      'El modelo de IA viene incluido en la app (análisis 100% local, en tu '
+      'móvil: la cámara no graba ni sube nada), pero Google ML Kit no pudo '
+      'iniciar el detector en este dispositivo (componente de Play services no '
+      'disponible/desactualizado). Revisa que Google Play services esté '
+      'actualizado y reintenta.',
+      'The AI model is bundled with the app (100% on-device analysis: the '
+      'camera never records or uploads anything), but Google ML Kit could not '
+      'start the detector on this device (Play services component missing/'
+      'outdated). Make sure Google Play services is up to date and retry.');
   String get pcTitulo => _t('Entrenador con cámara', 'Camera coach');
   String get pcTerminar => _t('Terminar', 'Finish');
   String get pcPermisoTitulo => _t('Permiso de cámara necesario', 'Camera permission needed');

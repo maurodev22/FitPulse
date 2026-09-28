@@ -1010,7 +1010,7 @@ class _ProfileHero extends StatelessWidget {
                 nombre: profile.nombre,
                 fotoBase64: profile.fotoBase64,
                 radius: 48,
-                borde: AppColors.secondaryFixed,
+                borde: AppColors.outlineVariant,
                 bordeAncho: 4,
               ),
               Positioned(

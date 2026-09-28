@@ -909,7 +909,11 @@ class _ConsistenciaBanner extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFF003824), Color(0xFF005C41), Color(0xFF003D27)],
+          colors: [
+            AppColors.gradienteInicio,
+            AppColors.gradienteIntermedio,
+            AppColors.gradienteFin,
+          ],
         ),
       ),
       child: Column(
@@ -917,7 +921,7 @@ class _ConsistenciaBanner extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.workspace_premium, color: AppColors.secondaryFixed, size: 20),
+              Icon(Icons.workspace_premium, color: AppColors.onGradienteAcento, size: 20),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
@@ -925,7 +929,7 @@ class _ConsistenciaBanner extends StatelessWidget {
                       ? strings.prConsistenciaTitulo
                       : strings.prEmpiezaRacha,
                   style: AppType.headlineSm.copyWith(
-                    color: Colors.white,
+                    color: AppColors.onGradiente,
                     fontWeight: FontWeight.w800,
                   ),
                 ),
@@ -937,7 +941,7 @@ class _ConsistenciaBanner extends StatelessWidget {
             hayHistorial
                 ? strings.prConsistenciaPct(pct)
                 : strings.prActivaRacha,
-            style: AppType.bodySm.copyWith(color: Colors.white.withValues(alpha: 0.85)),
+            style: AppType.bodySm.copyWith(color: AppColors.onGradienteVariant),
           ),
           const SizedBox(height: 12),
           ClipRRect(
@@ -945,8 +949,8 @@ class _ConsistenciaBanner extends StatelessWidget {
             child: LinearProgressIndicator(
               value: porcentaje.clamp(0.0, 1.0),
               minHeight: 6,
-              backgroundColor: Colors.white24,
-              color: AppColors.secondaryFixed,
+              backgroundColor: AppColors.onGradienteAcento.withValues(alpha: 0.2),
+              color: AppColors.onGradienteAcento,
             ),
           ),
         ],

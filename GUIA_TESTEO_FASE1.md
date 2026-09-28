@@ -1,7 +1,7 @@
 # Guía de testeo manual — Fases 1 a 7 (Pixel 6a + Xiaomi)
 
 Dispositivo: **Pixel 6a** (`2B181JEGR15535`) y **Xiaomi Redmi 8A** (`M1908C3JGG`) · Paquete: `com.fitpulse.app`
-Build instalado: `app-release.apk` (F7) · Fecha:
+Build instalado: `app-release.apk` (F8) · Fecha: 2026-09-28
 
 > Reglas de las Fases 1 y 2:
 > - Los pasos se leen del sensor real del teléfono (`pedometer`).
@@ -365,6 +365,29 @@ Ajustes → Privacidad → Permisos del cuerpo/Actividad física → FitPulse �
 
 ---
 
+## 17. Fase 8 (28/09/2026) — Modo claro global + borde de avatar neutro
+
+Errores reportados y corregidos (verificación de colores por muestreo de píxeles +
+`uiautomator dump` en el Xiaomi; sin lectura visual):
+
+| # | Paso | Esperado | Resultado |
+|---|------|----------|-----------|
+| 1 | Perfil → "Tema de la app" → **Claro** (o sistema en claro). | Toda la app se repinta clara **al instante, sin reiniciar**: Home, Recetas, Progreso, Consejos, Perfil y Ayuda con fondo blanco `#FFFFFF`, tarjetas claras y texto negro. | ✅ PASA |
+| 2 | Con Perfil en claro, revisar la **foto/avatar**. | El borde del avatar es **gris neutro** (`outlineVariant` ≈ `#BEC9C0`), nunca verde menta. | ✅ PASA |
+| 3 | Recorrer las 6 pestañas en claro. | Ninguna pantalla queda negra; los gradientes de tarjetas (héroe Home, Consistencia de Progreso, balance+macros de Recetas) se ven **verdes claros**, no bloques verde oscuro fijos. | ✅ PASA |
+| 4 | Perfil → "Tema de la app" → **Oscuro**. | La app completa pasa a fondo negro `#000000` con texto blanco al instante (rebuild global). | ✅ PASA |
+| 5 | Volver a **Claro**. | Se restaura el modo claro completo (round-trip inmediato). | ✅ PASA |
+| 6 | `flutter analyze` + suite de tests. | `No issues found!` y `+89 tests` verdes, incluidos los pares de contraste WCAG de los nuevos roles de gradiente. | ✅ PASA |
+
+Causa raíz del modo claro a medias: los widgets leían `AppColors` (estático) y no se
+reconstruían al cambiar el tema. Fix: `KeyedSubtree` con `key: ValueKey(oscuro)` en el
+`builder` de `MaterialApp` → rebuild global. Borde del avatar: `AppColors.secondaryFixed`
+(verde menta) → `AppColors.outlineVariant` (neutro) en Home y Perfil. Gradientes de
+tarjetas: nuevos roles de paleta `gradienteInicio/Intermedio/Fin`, `onGradiente*`,
+`botonGradiente/onBotonGradiente` en ambas paletas (clara y oscura).
+
+---
+
 ## Registro de la prueba
 
 | Fecha | Dispositivo | Resultado | Observaciones |
@@ -375,4 +398,5 @@ Ajustes → Privacidad → Permisos del cuerpo/Actividad física → FitPulse �
 | 2026-09-25 | Pixel 6a | ☑ PASA (F7) | A instalar con `app-release.apk`: modo oscuro, texto 2.0× sin desbordes, idioma en vivo es/en, micro-animaciones. Marcar aquí el resultado del usuario. |
 |  | Pixel 6a | ☐ PASA / ☐ FALLA (F7) | Modo oscuro (Sistema/Claro/Oscuro + persistencia), tamaño de texto máximo sin desbordes, idioma en vivo es↔en y persistencia. |
 |  | Pixel 6a | ☐ PASA / ☐ FALLA (F4-F6) | Confirmar en familia la verificación del equipo (plan semanal, entrenador con cámara, widget/avisos). |
-|  | Xiaomi Redmi 8A | ☐ PASA / ☐ FALLA (F4-F7) | Repetir F4-F7 en el Xiaomi (reconectar ADB inalámbrico si se desconectó). |
+| 2026-09-28 | Xiaomi Redmi 8A | ☑ PASA (F8) | Modo claro global en las 6 pestañas ✅ (muestreo de píxeles: fondos `#FFFFFF`, tarjetas claras, sin bloques negros), borde de avatar `#BEC9C0` neutro ✅, cambio Oscuro↔Claro en vivo sin reiniciar ✅ (rebuild por `KeyedSubtree`), round-trip de vuelta a claro ✅. |
+|  | Pixel 6a | ☐ PASA / ☐ FALLA (F8) | Pendiente: reconectar el Pixel para re-verificar modo claro + borde de avatar y la prueba final del entrenador con cámara (ML Kit R8). |

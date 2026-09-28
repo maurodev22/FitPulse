@@ -63,6 +63,14 @@ class AdsPermiso {
   /// Hay un anuncio a pantalla completa en curso (app open o recompensado):
   /// no se muestra otro encima.
   static bool anuncioALaVista = false;
+
+  /// Avisa a los widgets de anuncio (p. ej. el banner del shell) cuando el
+  /// consentimiento UMP se resuelve desde `main()`. Los banners creados antes
+  /// de la resolución (carrera de arranque) se re-evalúan con esto: si el
+  /// consentimiento falló por red muestran la zona honesta; si se resolvió,
+  /// cargan el anuncio real.
+  static final ValueNotifier<int> consentimientoResuelto =
+      ValueNotifier<int>(0);
 }
 
 /// Restablece la puerta global (útil en tests).
@@ -72,6 +80,7 @@ void resetAdsPermisoParaTests() {
   AdsPermiso.ejercicioActivo = false;
   AdsPermiso.anuncioALaVista = false;
   AdsPermiso.vistaPreviaTest = false;
+  AdsPermiso.consentimientoResuelto.value = 0;
 }
 
 /// Inicializa el SDK de AdMob. Nunca lanza: si no hay soporte (tests,
@@ -113,7 +122,29 @@ class _FitBannerAdState extends State<FitBannerAd> {
   @override
   void initState() {
     super.initState();
+    // El consentimiento UMP se resuelve después del primer frame (main.dart lo
+    // arranca sin esperar). Cuando llega, el banner se re-evalúa: si el
+    // consentimiento falló por red muestra la zona honesta; si se resolvió,
+    // carga el anuncio real.
+    AdsPermiso.consentimientoResuelto.addListener(_reevaluarConsentimiento);
     _cargar();
+  }
+
+  void _reevaluarConsentimiento() {
+    if (!mounted) return;
+    setState(() {
+      _banner?.dispose();
+      _banner = null;
+      _loadFailed = false;
+    });
+    _cargar();
+  }
+
+  @override
+  void dispose() {
+    AdsPermiso.consentimientoResuelto.removeListener(_reevaluarConsentimiento);
+    _banner?.dispose();
+    super.dispose();
   }
 
   Future<void> _cargar() async {
@@ -152,12 +183,6 @@ class _FitBannerAdState extends State<FitBannerAd> {
       debugPrint('[FitPulse/Ads] banner sin soporte: $e');
       if (mounted) setState(() => _loadFailed = true);
     }
-  }
-
-  @override
-  void dispose() {
-    _banner?.dispose();
-    super.dispose();
   }
 
   @override

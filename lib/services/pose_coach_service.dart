@@ -1,4 +1,5 @@
 import 'package:camera/camera.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:google_mlkit_pose_detection/google_mlkit_pose_detection.dart';
 
@@ -8,8 +9,10 @@ import '../state/pose_coach.dart';
 ///
 /// - Conversión del frame YUV-420-888 de la cámara a NV21 (lo que acepta Android).
 /// - Ejecuta el detector base en modo stream (inferencia 100 % on-device).
-/// - Si el modelo de IA no está disponible (sin Play Services / descarga
-///   bloqueada por red), devuelve null y el motivo: NUNCA crashea y la UI lo
+/// - El modelo de IA viene empaquetado DENTRO del APK (`assets/mlkit_pose/*.tflite`);
+///   no hay descargas en tiempo de ejecución. Si Google ML Kit no lo puede
+///   iniciar en un dispositivo concreto (Play services no actualizado, delegate
+///   no disponible, etc.), devuelve null y el motivo: NUNCA crashea y la UI lo
 ///   muestra de forma honesta.
 class PoseCoachService {
   PoseDetector? _detector;
@@ -21,8 +24,9 @@ class PoseCoachService {
   /// Motivo honesto de indisponibilidad (o null si todo bien).
   String? get errorInicializacion => _errorInicializacion;
 
-  /// Crea el detector. El modelo se descarga una única vez vía Play Services
-  /// (o ya viene en caché) y después funciona sin conexión.
+  /// Crea el detector. El modelo viene en el APK (assets/mlkit_pose), así que no
+  /// hay descarga previa: solo se comprueba que ML Kit pueda cargarlo al
+  /// procesar el primer frame.
   Future<void> inicializar() async {
     if (_detector != null) return;
     try {
@@ -60,8 +64,12 @@ class PoseCoachService {
       }
       final puntos = _mapearArticulaciones(poses.first);
       return PoseCoachFrame(puntos: puntos, posicionVisible: puntos.isNotEmpty);
-    } on PlatformException {
-      // El modelo / Play Services no está disponible (p. ej. descarga 403).
+    } on PlatformException catch (e) {
+      // Diagnóstico: el texto real del fallo nativo viaja en el mensaje.
+      // (El modelo viene en el APK; esto revela si es Play Services, el
+      // delegate o el entorno del dispositivo.)
+      debugPrint('[FitPulse/Coach] PlatformException code=${e.code} '
+          'message=${e.message} details=${e.details}');
       _detector?.close();
       _detector = null;
       _errorInicializacion = _auditarErrorMLKit;
@@ -83,9 +91,11 @@ class PoseCoachService {
   }
 
   static const _auditarErrorMLKit =
-      'El modelo de IA de Google no está disponible ahora '
-      '(requiere Play Services y una descarga única). '
-      'Sin conexión no se puede activar el entrenador con cámara.';
+      'El modelo de IA viene incluido en la app (análisis 100% local, en tu '
+      'móvil: la cámara no graba ni sube nada), pero Google ML Kit no pudo '
+      'iniciar el detector en este dispositivo (componente de Play services no '
+      'disponible/desactualizado). Revisa que Google Play services esté '
+      'actualizado y reintenta.';
 
   Map<Lm, PuntoPose> _mapearArticulaciones(Pose pose) {
     final puntos = <Lm, PuntoPose>{};

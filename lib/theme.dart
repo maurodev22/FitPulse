@@ -52,6 +52,14 @@ class FitPalette {
     required this.onErrorContainer,
     required this.inverseSurface,
     required this.onInverseSurface,
+    required this.gradienteInicio,
+    required this.gradienteIntermedio,
+    required this.gradienteFin,
+    required this.onGradiente,
+    required this.onGradienteVariant,
+    required this.onGradienteAcento,
+    required this.botonGradiente,
+    required this.onBotonGradiente,
   });
 
   final Color background;
@@ -84,6 +92,20 @@ class FitPalette {
   final Color inverseSurface;
   final Color onInverseSurface;
 
+  /// Tarjetas con gradiente de marca (héroe de Inicio, consistencia de
+  /// Progreso, balance de Recetas). En claro son verdes muy claros con texto
+  /// oscuro; en oscuro son verdes profundos con texto claro. Así se cumple la
+  /// regla estricta: fondo blanco/letras negras en claro, fondo negro/letras
+  /// blancas en oscuro, sin bloques de color fijos.
+  final Color gradienteInicio;
+  final Color gradienteIntermedio;
+  final Color gradienteFin;
+  final Color onGradiente;
+  final Color onGradienteVariant;
+  final Color onGradienteAcento;
+  final Color botonGradiente;
+  final Color onBotonGradiente;
+
   /// Contraste de [a] sobre [b] según WCAG 2.x (ratio, ≥ 4.5 texto normal,
   /// ≥ 3.0 UI/iconos). Público para el test de accesibilidad.
   static double contraste(Color a, Color b) {
@@ -104,16 +126,17 @@ class FitPalette {
   }
 }
 
-/// Paleta clara (idéntica a la histórica de FitPulse: ningún cambio visual).
+/// Paleta clara — regla de diseño estricta: fondo blanco puro con letras
+/// negras. Los contenedores mantienen un leve tono gris para la elevación.
 const FitPalette lightFitPalette = FitPalette(
-  background: Color(0xFFF8FAF8),
-  surface: Color(0xFFF8FAF8),
+  background: Color(0xFFFFFFFF),
+  surface: Color(0xFFFFFFFF),
   surfaceLowest: Color(0xFFFFFFFF),
   surfaceContainerLow: Color(0xFFF2F4F2),
   surfaceContainer: Color(0xFFECEEEC),
   surfaceContainerHigh: Color(0xFFE6E9E7),
   surfaceContainerHighest: Color(0xFFE1E3E1),
-  onSurface: Color(0xFF191C1B),
+  onSurface: Color(0xFF000000),
   onSurfaceVariant: Color(0xFF3F4943),
   outline: Color(0xFF5F6B62),
   outlineVariant: Color(0xFFBEC9C0),
@@ -133,23 +156,33 @@ const FitPalette lightFitPalette = FitPalette(
   onError: Color(0xFFFFFFFF),
   errorContainer: Color(0xFFFFDAD6),
   onErrorContainer: Color(0xFF93000A),
-  inverseSurface: Color(0xFF2E3130),
-  onInverseSurface: Color(0xFFEFF1EF),
+  inverseSurface: Color(0xFF000000),
+  onInverseSurface: Color(0xFFFFFFFF),
+  gradienteInicio: Color(0xFFF3FBF7),
+  gradienteIntermedio: Color(0xFFE1F3E9),
+  gradienteFin: Color(0xFFEAF7F0),
+  onGradiente: Color(0xFF0B2E21),
+  onGradienteVariant: Color(0xFF33493E),
+  onGradienteAcento: Color(0xFF006C49),
+  botonGradiente: Color(0xFF005136),
+  onBotonGradiente: Color(0xFFFFFFFF),
 );
 
-/// Paleta oscura (contraste WCAG AA verificado por test de accesibilidad).
+/// Paleta oscura — regla de diseño estricta: fondo negro puro con letras
+/// blancas (contraste 21:1). Los contenedores mantienen un leve tono gris
+/// para la elevación.
 ///
 /// Espeja los roles semánticos de la paleta clara con luminancias invertidas:
 /// superficies muy oscuras y textos/acentos claros.
 const FitPalette darkFitPalette = FitPalette(
-  background: Color(0xFF101412),
-  surface: Color(0xFF101412),
-  surfaceLowest: Color(0xFF0A0D0B),
+  background: Color(0xFF000000),
+  surface: Color(0xFF000000),
+  surfaceLowest: Color(0xFF000000),
   surfaceContainerLow: Color(0xFF161B18),
   surfaceContainer: Color(0xFF1B211D),
   surfaceContainerHigh: Color(0xFF202623),
   surfaceContainerHighest: Color(0xFF252C28),
-  onSurface: Color(0xFFE1E7E1),
+  onSurface: Color(0xFFFFFFFF),
   onSurfaceVariant: Color(0xFFBDC7BF),
   outline: Color(0xFF87958B),
   outlineVariant: Color(0xFF3F4A43),
@@ -169,8 +202,16 @@ const FitPalette darkFitPalette = FitPalette(
   onError: Color(0xFF330000),
   errorContainer: Color(0xFF93000A),
   onErrorContainer: Color(0xFFFFDAD6),
-  inverseSurface: Color(0xFFE1E7E1),
-  onInverseSurface: Color(0xFF101412),
+  inverseSurface: Color(0xFFFFFFFF),
+  onInverseSurface: Color(0xFF000000),
+  gradienteInicio: Color(0xFF003824),
+  gradienteIntermedio: Color(0xFF005C41),
+  gradienteFin: Color(0xFF003D27),
+  onGradiente: Color(0xFFFFFFFF),
+  onGradienteVariant: Color(0xFFC9DED1),
+  onGradienteAcento: Color(0xFF6FFBBE),
+  botonGradiente: Color(0xFF6FFBBE),
+  onBotonGradiente: Color(0xFF002113),
 );
 
 /// Colores de marca: delegan en la paleta activa (clara u oscura).
@@ -217,6 +258,15 @@ abstract final class AppColors {
   static Color get onErrorContainer => _active.onErrorContainer;
   static Color get inverseSurface => _active.inverseSurface;
   static Color get onInverseSurface => _active.onInverseSurface;
+
+  static Color get gradienteInicio => _active.gradienteInicio;
+  static Color get gradienteIntermedio => _active.gradienteIntermedio;
+  static Color get gradienteFin => _active.gradienteFin;
+  static Color get onGradiente => _active.onGradiente;
+  static Color get onGradienteVariant => _active.onGradienteVariant;
+  static Color get onGradienteAcento => _active.onGradienteAcento;
+  static Color get botonGradiente => _active.botonGradiente;
+  static Color get onBotonGradiente => _active.onBotonGradiente;
 }
 
 abstract final class AppType {

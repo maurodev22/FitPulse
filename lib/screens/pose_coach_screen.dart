@@ -97,7 +97,8 @@ class _PoseCoachScreenState extends State<PoseCoachScreen> {
       orElse: () => camaras.first,
     );
 
-    // 3) Detector de pose (el modelo se descarga una vez vía Play Services).
+    // 3) Detector de pose (el modelo viene empaquetado en el APK:
+    // assets/mlkit_pose/*.tflite → 100% local, sin descargas).
     await _servicio.inicializar();
     if (!mounted) return;
     if (!_servicio.disponible) {

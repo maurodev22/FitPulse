@@ -290,10 +290,14 @@ class _MacroSummaryCard extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
-        gradient: const LinearGradient(
+        gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFF006C49), Color(0xFF004E35)],
+          colors: [
+            AppColors.gradienteInicio,
+            AppColors.gradienteIntermedio,
+            AppColors.gradienteFin,
+          ],
         ),
         boxShadow: [
           BoxShadow(
@@ -316,7 +320,7 @@ class _MacroSummaryCard extends StatelessWidget {
                   Text(
                     strings.recBalanceHoy,
                     style: AppType.labelSm.copyWith(
-                      color: AppColors.secondaryFixed,
+                      color: AppColors.onGradienteAcento,
                       fontWeight: FontWeight.w700,
                       letterSpacing: 0.6,
                     ),
@@ -325,7 +329,7 @@ class _MacroSummaryCard extends StatelessWidget {
                   Text(
                     '$kcal / $meta kcal',
                     style: AppType.headlineSm.copyWith(
-                      color: Colors.white,
+                      color: AppColors.onGradiente,
                       fontWeight: FontWeight.w800,
                     ),
                   ),
@@ -335,13 +339,13 @@ class _MacroSummaryCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.15),
+                  color: AppColors.onGradienteAcento.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(999),
                 ),
                 child: Text(
                   strings.recPorciento(pct),
                   style: AppType.labelSm.copyWith(
-                    color: Colors.white,
+                    color: AppColors.onGradiente,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -394,7 +398,7 @@ class _MacroCell extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 10),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.1),
+        color: AppColors.onGradienteAcento.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -402,7 +406,7 @@ class _MacroCell extends StatelessWidget {
           Text(
             label,
             style: AppType.bodySm.copyWith(
-              color: const Color(0xFFE0E7E2),
+              color: AppColors.onGradienteVariant,
               fontSize: 10,
             ),
           ),
@@ -413,14 +417,14 @@ class _MacroCell extends StatelessWidget {
                 TextSpan(
                   text: value,
                   style: AppType.labelLg.copyWith(
-                    color: Colors.white,
+                    color: AppColors.onGradiente,
                     fontWeight: FontWeight.w800,
                   ),
                 ),
                 TextSpan(
                   text: ' / $goal',
                   style: AppType.labelSm.copyWith(
-                    color: AppColors.secondaryFixed,
+                    color: AppColors.onGradienteAcento,
                     fontWeight: FontWeight.w400,
                   ),
                 ),

@@ -94,6 +94,9 @@ Future<void> _arrancarAds(ConfigService config) async {
   // layout y el flujo del +25 PTs. Con cuentas e IDs reales (cliente fuera de
   // Cuba) el consentimiento se resuelve y aquí queda falso → anuncios reales.
   AdsPermiso.vistaPreviaTest = consent.errorTecnico;
+  // Los banners creados antes de la resolución (carrera de arranque) se
+  // re-evalúan ahora que el consentimiento ya está decidido.
+  AdsPermiso.consentimientoResuelto.value++;
   if (!AdsPermiso.consentimientoOk) return;
   unawaited(initAds());
   unawaited(AppOpenAdManager.instance.iniciar());
@@ -159,7 +162,16 @@ class FitPulseApp extends StatelessWidget {
                 AppColors.activate(
                   oscuro ? darkFitPalette : lightFitPalette,
                 );
-                return child!;
+                // KeyedSubtree con la paleta como key: al cambiar claro/oscuro
+                // Toda la app se reconstruye. Es necesario porque los widgets
+                // leen AppColors (estático) y no dependen del tema: sin este
+                // truco se quedaban con los colores viejos (el nav bar y Perfil
+                // sí se refrescaban porque observan ConfigService, por eso el
+                // modo claro quedaba a medias).
+                return KeyedSubtree(
+                  key: ValueKey(oscuro),
+                  child: child!,
+                );
               },
               scrollBehavior: const NoGlowScrollBehavior(),
               home: const _Bootstrap(),
