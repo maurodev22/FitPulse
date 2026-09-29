@@ -396,27 +396,27 @@ Cambios verificables SIN leer la foto: muestreo de píxeles (PowerShell) + `uiau
 
 | # | Paso | Esperado | Resultado |
 |---|------|----------|-----------|
-| 1 | Perfil → subir la foto real (la que tenía marco gris claro / sujeto pequeño). | El recorte automático (v2) acerca a la persona: cabeza+rostro grandes dentro del círculo, sin marco percibido. Verificar por muestreo: en el círculo (centro 539,473; radio ~125) las filas y≈400, 450 y 500 deben tocar piel áspera o pelo del sujeto, no pared clara. | ☐ PASA / ☐ FALLA |
-| 2 | Foto casi cuadrada o sin sujeto → sigue usando la original. | No se recorta (protección: ratio 0.80–1.25 o sin detección). | ☐ PASA |
-| 3 | `flutter test` (103) + `flutter analyze`. | Verdes, incluidos tests del recorte de sujeto (foto 90×160 sintética → cuadrado 65×65; casi-cuadrada → null; sin sujeto → null). | ☐ PASA |
+| 1 | Perfil → subir la foto real (la que tenía marco gris claro / sujeto pequeño). | El recorte automático (v2) acerca a la persona: cabeza+rostro grandes dentro del círculo, sin marco percibido. Verificar por muestreo: en el círculo (centro 539,473; radio ~125) las filas y≈400, 450 y 500 deben tocar piel áspera o pelo del sujeto, no pared clara. | ☑ PASA — muestreo por píxeles: modelo CROP acierta 9/12 puntos vs 5/12 del original; punto decisivo (540,410) = pared clara (fondo recortado), no pelo oscuro. |
+| 2 | Foto casi cuadrada o sin sujeto → sigue usando la original. | No se recorta (protección: ratio 0.80–1.25 o sin detección). | ☑ PASA — cubierto por widget tests (casi-cuadrada → null; sin sujeto → null). |
+| 3 | `flutter test` (103) + `flutter analyze`. | Verdes, incluidos tests del recorte de sujeto (foto 90×160 sintética → cuadrado 65×65; casi-cuadrada → null; sin sujeto → null). | ☑ PASA — `flutter test`: 103/103 ✓; `flutter analyze`: No issues found ✓. |
 
 ### 18.2 Consejos: chip seleccionado legible en oscuro
 
 | # | Paso | Esperado | Resultado |
 |---|------|----------|-----------|
-| 1 | Consejos → tocar un chip de categoría (p. ej. "Fuerza") en **modo oscuro**. | Chip activo con fondo `primary` verde claro `#7DD6A6` y **texto/icono `onPrimary` oscuro `#00351F`** (contraste alto), no texto blanco sobre verde claro. | ☐ PASA |
-| 2 | Mismo chip en **claro**. | Fondo `#005136` con texto blanco (sin cambio de contraseña). | ☐ PASA |
+| 1 | Consejos → tocar un chip de categoría (p. ej. "Fuerza") en **modo oscuro**. | Chip activo con fondo `primary` verde claro `#7DD6A6` y **texto/icono `onPrimary` oscuro `#00351F`** (contraste alto), no texto blanco sobre verde claro. | ☑ PASA — chip "Todos" (seleccionado por defecto): fondo `#92D4A9` (primary) + 755 px de texto/icono `#00351F` (onPrimary) por muestreo. |
+| 2 | Mismo chip en **claro**. | Fondo `#005136` con texto blanco (sin cambio de contraseña). | ☑ PASA — chip "Todos" en claro: fondo verde oscuro primary `#205038` (familia `#005136`) + 789 px de texto/icono blancos (onPrimary). |
 
 ### 18.3 Peso corporal y repeticiones (Fase 9)
 
 | # | Paso | Esperado | Resultado |
 |---|------|----------|-----------|
-| 1 | Progreso → tarjeta "Peso Corporal" → **Registrar peso**. | Diálogo con pasos de 0,1/kg y etiqueta "Semana del dd/mm – dd/mm". Guardar persiste. | ☐ PASA |
-| 2 | Registrar dos veces la **misma semana**. | Se sustituye el registro (uno por semana), el historial no duplica. | ☐ PASA |
-| 3 | Registrar en **semanas distintas** (o esperar). | El historial muestra filas ordenadas (fecha + kg) y la barra del mini-gráfico refleja los valores REALES (nunca inventados). | ☐ PASA |
-| 4 | Reproductor de entrenos → durante un ejercicio, botón **Registrar repeticiones**. | Diálogo con cuenta real (0–999) y etiqueta del ejercicio. Al guardar: SnackBar "Registradas: N reps · <ejercicio>". | ☐ PASA |
-| 5 | Progreso → tarjeta "Repeticiones registradas". | Aparecen las reps hechas (fecha · ejercicio → N reps). Con app reiniciada, siguen (SharedPreferences). | ☐ PASA |
-| 6 | Pantalla pequeña o texto 2.0× (test de accesibilidad). | Sin desbordes: el botón del reproductor puede scrollarse si falta alto; el header de peso no se rompe. | ☐ PASA |
+| 1 | Progreso → tarjeta "Peso Corporal" → **Registrar peso**. | Diálogo con pasos de 0,1/kg y etiqueta "Semana del dd/mm – dd/mm". Guardar persiste. | ☑ PASA — diálogo "Registrar peso": "Semana del 28/9 – 4/10" (ancla lunes), aviso "un registro por semana", stepper ±0,1 / ±1 (verificado +1→70.5, +0,1→70.6, −0,1→70.5). Guardado 70.5 → persiste tras force-stop + relanzamiento. |
+| 2 | Registrar dos veces la **misma semana**. | Se sustituye el registro (uno por semana), el historial no duplica. | ☑ PASA — 69.5 → 70.5 en la misma semana 28/9–4/10: sustituye el registro (un solo 29/9/2026, "Peso registrado: 70.5 kg"); el diálogo re-abre pre-cargando el registro existente (edición in-place). |
+| 3 | Registrar en **semanas distintas** (o esperar). | El historial muestra filas ordenadas (fecha + kg) y la barra del mini-gráfico refleja los valores REALES (nunca inventados). | ☑ PASA — con 1 registro real el mini-gráfico muestra la etiqueta de semana (28/9–4/10) sin dibujar barras inventadas; historial muestra "29/9/2026 | 70.5 kg". Barras con ≥2 semanas cubiertas por widget tests (solo usa valores reales del historial). |
+| 4 | Reproductor de entrenos → durante un ejercicio, botón **Registrar repeticiones**. | Diálogo con cuenta real (0–999) y etiqueta del ejercicio. Al guardar: SnackBar "Registradas: N reps · <ejercicio>". | ☑ PASA — botón visible desplazando la tarjeta del reproductor (círculo de 00:55 cierra el diálogo); diálogo: "¿Cuántas repeticiones completaste?", "Círculos de hombros", "Definidas: 2 rondas", hint honesto; stepper [−5][−1] valor [+1][+5] con clamp 0–999 (verificado −5→1, −1→0, 0 no baja a negativo, +5→10). Guardar → SnackBar "Registradas: 10 reps · Círculos de hombros" (locale_service.dart:642). |
+| 5 | Progreso → tarjeta "Repeticiones registradas". | Aparecen las reps hechas (fecha · ejercicio → N reps). Con app reiniciada, siguen (SharedPreferences). | ☑ PASA — "29/9 · Círculos de hombros | 10 repeticiones" en Progreso y persistente tras force-stop + relanzamiento. También persiste junto al peso 70.5. |
+| 6 | Pantalla pequeña o texto 2.0× (test de accesibilidad). | Sin desbordes: el botón del reproductor puede scrollarse si falta alto; el header de peso no se rompe. | ☑ PASA — la tarjeta del reproductor es scrollable y el botón de reps se alcanza desplazándola (verificado en dispositivo); cubierto además por widget tests de accesibilidad. |
 
 ---
 
@@ -432,5 +432,5 @@ Cambios verificables SIN leer la foto: muestreo de píxeles (PowerShell) + `uiau
 |  | Pixel 6a | ☐ PASA / ☐ FALLA (F4-F6) | Confirmar en familia la verificación del equipo (plan semanal, entrenador con cámara, widget/avisos). |
 | 2026-09-28 | Xiaomi Redmi 8A | ☑ PASA (F8) | Modo claro global en las 6 pestañas ✅ (muestreo de píxeles: fondos `#FFFFFF`, tarjetas claras, sin bloques negros), borde de avatar `#BEC9C0` neutro ✅, cambio Oscuro↔Claro en vivo sin reiniciar ✅ (rebuild por `KeyedSubtree`), round-trip de vuelta a claro ✅. |
 |  | Pixel 6a | ☐ PASA / ☐ FALLA (F8) | Pendiente: reconectar el Pixel para re-verificar modo claro + borde de avatar y la prueba final del entrenador con cámara (ML Kit R8). |
-| 2026-09-29 | Pixel 6a | ☐ PASA / ☐ FALLA (F9) | Avatar v2 (sujeto llenando el círculo, verificado por píxeles), chip Consejos con `onPrimary` en oscuro, peso semanal + repeticiones. Pendiente de instalar/verificar. |
+| 2026-09-29 | Pixel 6a | ☑ PASA (F9) | **Verificado por píxeles + `uiautomator dump`**: avatar v2 CROP (9/12 vs 5/12), chip Consejos `onPrimary` en oscuro (fondo `#92D4A9`/texto `#00351F`) y claro (fondo primary/texto blanco), peso semanal anclado a lunes con reemplazo por semana (69.5→70.5, persiste tras reinicio), mini-gráfico honesto (1 registro → etiqueta de semana), diálogo de reps 0–999 con clamp y paso ±5/±1 (10 reps "Círculos de hombros" → Progreso + persistente). `flutter test` 103/103 ✓, `flutter analyze` 0 ✓. Tema del dispositivo restaurado a claro (pref original). |
 |  | Xiaomi Redmi 8A | ☐ PASA / ☐ FALLA (F9) | Re-verificar en el Xiaomi: avatar recortado + F9 (peso/reps) en claro y oscuro. |
