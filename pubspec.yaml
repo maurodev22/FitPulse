@@ -53,10 +53,12 @@ dependencies:
   path_provider_android: '>=2.2.0 <2.3.0'
   share_plus: ^13.3.0
   image_picker: ^1.2.3
+  # Recorte de márgenes de la foto de perfil (Fase 9): puro Dart, sin
+  # compilación nativa ni red.
+  image: ^4.3.0
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  image: ^4.3.0
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is

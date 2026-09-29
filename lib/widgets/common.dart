@@ -1,8 +1,10 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../theme.dart';
+import '../utils/foto_avatar.dart';
 
 class AppProgressRing extends StatelessWidget {
   const AppProgressRing({
@@ -297,7 +299,11 @@ String inicialesDe(String nombre) {
 /// - Con foto de sesión guardada ([fotoBase64]): la muestra tal cual.
 /// - Sin foto: círculo neutro con las iniciales del nombre (nunca una imagen
 ///   de muestra que finge tener foto).
-class FitAvatar extends StatelessWidget {
+///
+/// Fase 9: si la foto tiene un encuadre casi uniforme (marco blanco/gris), se
+/// recorta una vez (memoizado) para que la persona llene el círculo y no se
+/// vea un "borde cuadrado" interno.
+class FitAvatar extends StatefulWidget {
   const FitAvatar({
     super.key,
     required this.nombre,
@@ -314,8 +320,51 @@ class FitAvatar extends StatelessWidget {
   final double bordeAncho;
 
   @override
+  State<FitAvatar> createState() => _FitAvatarState();
+}
+
+class _FitAvatarState extends State<FitAvatar> {
+  /// Memo: foto cruda (base64) -> foto presentada (recortada si hace falta).
+  static final Map<String, String> _presentadas = {};
+
+  String? _fotoFinal;
+
+  @override
+  void initState() {
+    super.initState();
+    _fotoFinal = _resolver();
+  }
+
+  @override
+  void didUpdateWidget(FitAvatar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!identical(oldWidget.fotoBase64, widget.fotoBase64) &&
+        oldWidget.fotoBase64 != widget.fotoBase64) {
+      _fotoFinal = _resolver();
+    }
+  }
+
+  /// Devuelve la foto a mostrar. La primera vez muestra la original y lanza
+  /// el recorte en un isolate; cuando termina se actualiza con la recortada.
+  String? _resolver() {
+    final foto = widget.fotoBase64;
+    if (foto == null || foto.isEmpty) return null;
+    final memo = _presentadas[foto];
+    if (memo != null) return memo;
+    compute(recuadrarFoto, foto).then((recortada) {
+      final presentada = recortada ?? foto;
+      _presentadas[foto] = presentada;
+      if (!mounted || widget.fotoBase64 != foto) return;
+      setState(() {
+        _fotoFinal = presentada;
+      });
+    });
+    return foto;
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final foto = (fotoBase64 == null || fotoBase64!.isEmpty) ? null : fotoBase64;
+    final foto = _fotoFinal;
     Widget contenido;
     if (foto != null) {
       // Foto real de la sesión; si el base64 está corrupto se degrada a
@@ -327,11 +376,13 @@ class FitAvatar extends StatelessWidget {
       contenido = _inicialesAvatar();
     }
     return Container(
-      width: radius * 2,
-      height: radius * 2,
+      width: widget.radius * 2,
+      height: widget.radius * 2,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        border: borde == null ? null : Border.all(color: borde!, width: bordeAncho),
+        border: widget.borde == null
+            ? null
+            : Border.all(color: widget.borde!, width: widget.bordeAncho),
       ),
       clipBehavior: Clip.antiAlias,
       child: contenido,
@@ -339,12 +390,12 @@ class FitAvatar extends StatelessWidget {
   }
 
   Widget _inicialesAvatar() {
-    final tamLetra = (radius * 0.55).clamp(12.0, 30.0);
+    final tamLetra = (widget.radius * 0.55).clamp(12.0, 30.0);
     return ColoredBox(
       color: AppColors.primaryContainer,
       child: Center(
         child: Text(
-          inicialesDe(nombre),
+          inicialesDe(widget.nombre),
           style: TextStyle(
             color: AppColors.onPrimaryContainer,
             fontSize: tamLetra,

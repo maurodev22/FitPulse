@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
@@ -14,6 +15,7 @@ import '../services/locale_service.dart';
 import '../state/app_state.dart';
 import '../state/athlete_profile.dart';
 import '../theme.dart';
+import '../utils/foto_avatar.dart';
 import '../widgets/common.dart';
 import 'eula_screen.dart';
 import 'privacy_screen.dart';
@@ -978,7 +980,11 @@ class _ProfileHero extends StatelessWidget {
       final bytes = await foto.readAsBytes();
       if (bytes.isEmpty) return;
       final base64 = base64Encode(bytes);
-      await appState.guardarPerfil(profile.copiarConFoto(base64));
+      // Fase 9: recortar el encuadre casi uniforme (marco blanco/gris) para
+      // que la persona llene el círculo y no se vea un "borde cuadrado"
+      // dentro del avatar.
+      final recortada = await compute(recuadrarFoto, base64);
+      await appState.guardarPerfil(profile.copiarConFoto(recortada ?? base64));
       messenger.showSnackBar(SnackBar(content: Text(strings.pfFotoGuardada)));
     } catch (_) {
       messenger.showSnackBar(SnackBar(content: Text(strings.pfErrorFoto)));
