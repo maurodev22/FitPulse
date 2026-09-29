@@ -420,6 +420,39 @@ Cambios verificables SIN leer la foto: muestreo de píxeles (PowerShell) + `uiau
 
 ---
 
+## 19. Fase 9b (29/09/2026) — Consejos: bandas invertidas tras cambiar el tema en caliente
+
+Reporte del usuario: en **claro** la pantalla de Consejos mostraba **bandas NEGRAS** en la zona del
+plan (fondo negro con componentes blancos); en **oscuro**, **bandas BLANCAS** tras cambiar el tema.
+Solo ocurría tras el cambio **en caliente** (Perfil → Tema); el arranque en frío era correcto.
+
+| # | Paso | Esperado | Resultado |
+|---|------|----------|-----------|
+| 1 | Arranque en frío en **oscuro** → Consejos. | Limpio (fondo `#000000`, búsqueda `#171B18`, sin bandas blancas). | ☑ PASA — muestreo vertical x=540: todo negro salvo glifos de texto (`#FFFFFF` en y520 = subtítulo, `#333733` texto). |
+| 2 | Arranque en frío en **claro** → Consejos. | Limpio (fondo `#FFFFFF`, búsqueda `#F2F4F2`). | ☑ PASA — idéntico al frío oscuro (espejo). |
+| 3 | Perfil → Tema **claro→oscuro** (en caliente) → Consejos. | Sin bandas blancas. | ☑ PASA tras el fix — antes del fix: zona plan y340-700, y1000 e y1600-1780 en `#FFFFFF` (invertidas). |
+| 4 | Perfil → Tema **oscuro→claro** (en caliente) → Consejos. | Sin bandas negras. | ☑ PASA tras el fix — antes del fix: las MISMAS zonas en `#000000` (invertidas; la queja del usuario). |
+| 5 | Desplazar la lista de Consejos tras el cambio. | Contenido desplazado correcto (sin bandas). | ☑ PASA — scroll en oscuro: solo glifos de texto sobre negro (`#8A958C` texto gris, etc.). |
+| 6 | `flutter test` + `flutter analyze`. | Verdes. | ☑ PASA — `flutter test` 103/103 ✓; `flutter analyze`: No issues found ✓. |
+
+Causa raíz: tras el cambio de tema, el `KeyedSubtree` del `builder` de `MaterialApp` reconstruía
+los widgets, pero las **capas pintadas** de las pestañas inactivas del `IndexedStack` (Consejos)
+conservaban la paleta anterior: se pintaban con los colores opuestos al tema vigente hasta que un
+cambio de pestaña forzaba el repintado (verificado: Home→Consejos "sanaba" el estado roto, y los
+valores renderizados eran los del tema PREVIO al switch).
+
+Fix (`lib/main.dart`, `_AppShellState.build`): remontar el shell y descartar la pintura en caché al
+cambiar de tema — `KeyedSubtree(key: ValueKey('tema-<modo>'))` alrededor del `Scaffold` +
+`RepaintBoundary(key: <misma clave>)` alrededor del `IndexedStack` con las 6 pestañas. Así cada
+cambio de tema crea un `RepaintBoundary` nuevo cuya capa empieza vacía y se repinta con la paleta
+vigente. El arranque en frío ya era correcto; el bug solo vivía en el hot-switch.
+
+Nota de estado del dispositivo: la app quedó en **español** (se restauró desde inglés) y el tema en
+**oscuro** (preferencia del usuario); los datos (peso 70.x, reps, racha) se conservaron con
+`adb install -r`.
+
+---
+
 ## Registro de la prueba
 
 | Fecha | Dispositivo | Resultado | Observaciones |
@@ -433,4 +466,5 @@ Cambios verificables SIN leer la foto: muestreo de píxeles (PowerShell) + `uiau
 | 2026-09-28 | Xiaomi Redmi 8A | ☑ PASA (F8) | Modo claro global en las 6 pestañas ✅ (muestreo de píxeles: fondos `#FFFFFF`, tarjetas claras, sin bloques negros), borde de avatar `#BEC9C0` neutro ✅, cambio Oscuro↔Claro en vivo sin reiniciar ✅ (rebuild por `KeyedSubtree`), round-trip de vuelta a claro ✅. |
 |  | Pixel 6a | ☐ PASA / ☐ FALLA (F8) | Pendiente: reconectar el Pixel para re-verificar modo claro + borde de avatar y la prueba final del entrenador con cámara (ML Kit R8). |
 | 2026-09-29 | Pixel 6a | ☑ PASA (F9) | **Verificado por píxeles + `uiautomator dump`**: avatar v2 CROP (9/12 vs 5/12), chip Consejos `onPrimary` en oscuro (fondo `#92D4A9`/texto `#00351F`) y claro (fondo primary/texto blanco), peso semanal anclado a lunes con reemplazo por semana (69.5→70.5, persiste tras reinicio), mini-gráfico honesto (1 registro → etiqueta de semana), diálogo de reps 0–999 con clamp y paso ±5/±1 (10 reps "Círculos de hombros" → Progreso + persistente). `flutter test` 103/103 ✓, `flutter analyze` 0 ✓. Tema del dispositivo restaurado a claro (pref original). |
-|  | Xiaomi Redmi 8A | ☐ PASA / ☐ FALLA (F9) | Re-verificar en el Xiaomi: avatar recortado + F9 (peso/reps) en claro y oscuro. |
+| 2026-09-29 | Pixel 6a | ☑ PASA (F9b) | **Bug bandas invertidas de Consejos corrigido**: era real en el APK instalado (hash idéntico al build local). Se reprodujo en caliente: claro→bandas negras (zona plan y340-700, y1000, y1600-1780), oscuro→bandas blancas en las mismas zonas; los arranques en frío eran limpios y un cambio de pestaña "sanaba" la vista (capas pintadas viejas del IndexedStack). Fix: `KeyedSubtree`+`RepaintBoundary` con clave del tema en `_AppShellState.build`. Verificado por píxeles en ambas direcciones (claro y oscuro limpios tras el switch + scroll) y `flutter test` 103/103 ✓ / `flutter analyze` 0 ✓. Idioma restaurado a español y tema en oscuro (pref del usuario); datos intactos (instalado con `-r`). |
+|  | Xiaomi Redmi 8A | ☐ PASA / ☐ FALLA (F9b) | Re-verificar en el Xiaomi: cambio de tema en caliente y Consejos sin bandas + idioma/oscuro. |

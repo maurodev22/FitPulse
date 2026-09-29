@@ -212,31 +212,42 @@ class _AppShellState extends State<AppShell> {
     final config = context.watch<ConfigService>();
     // Fase 3: banner de anuncios solo si están activos y sin Premium.
     final mostrarBanner = config.adsEnabled && !config.premiumEnabled;
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: IndexedStack(
-        index: _current.index,
-        children: [
-          const HomeScreen(),
-          const RecipesScreen(),
-          const ProgressScreen(),
-          const TipsScreen(),
-          const ProfileScreen(),
-          const HelpScreen(),
-        ],
-      ),
-      bottomNavigationBar: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (mostrarBanner) const FitBannerAd(),
-          FitNavBar(
-            current: _current,
-            onChanged: (tab) {
-              context.read<AppState>().traceTab(tab.nombre);
-              setState(() => _current = tab);
-            },
+    final clavesTema = ValueKey<String>('tema-${config.themeMode.name}');
+    // Al cambiar claro/oscuro en Perfil, se remonta todo el shell y se
+    // descarta la capa pintada de las pestañas (el RepaintBoundary con key
+    // nueva invalida la pintura en caché). El KeyedSubtree solo en main.dart
+    // dejaba capas viejas en las pestañas inactivas del IndexedStack.
+    return KeyedSubtree(
+      key: clavesTema,
+      child: Scaffold(
+        backgroundColor: AppColors.background,
+        body: RepaintBoundary(
+          key: clavesTema,
+          child: IndexedStack(
+            index: _current.index,
+            children: [
+              const HomeScreen(),
+              const RecipesScreen(),
+              const ProgressScreen(),
+              const TipsScreen(),
+              const ProfileScreen(),
+              const HelpScreen(),
+            ],
           ),
-        ],
+        ),
+        bottomNavigationBar: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (mostrarBanner) const FitBannerAd(),
+            FitNavBar(
+              current: _current,
+              onChanged: (tab) {
+                context.read<AppState>().traceTab(tab.nombre);
+                setState(() => _current = tab);
+              },
+            ),
+          ],
+        ),
       ),
     );
   }
