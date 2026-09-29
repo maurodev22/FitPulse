@@ -432,6 +432,12 @@ class AppStrings {
   String get prSinSesionesHint =>
       _t('Completa tu primer entrenamiento desde Inicio para registrarlo aquí.',
           'Complete your first workout from Home to log it here.');
+  String get prSesiones => _t('Sesiones', 'Sessions');
+  String get prMinutos => _t('Minutos', 'Minutes');
+  String get prRachaMax => _t('Racha máx', 'Best streak');
+  String get prSinSesionesPeriodo =>
+      _t('Sin sesiones en este período', 'No sessions in this period');
+  String get prHistorialTitulo => _t('Historial de sesiones', 'Workout history');
   String get prInsignias => _t('Insignias & Logros', 'Badges & Achievements');
   String get prPrimeraSesion => _t('Primera Sesión', 'First Session');
   String get prCompletada => _t('Completada', 'Completed');

@@ -9,6 +9,8 @@ import '../services/ads_service.dart';
 import '../services/config_service.dart';
 import '../theme.dart';
 import '../widgets/common.dart';
+import '../widgets/sesion_row.dart';
+import 'historial_sesiones_screen.dart';
 
 /// Progreso y Rendimiento: métricas REALES del dispositivo.
 ///
@@ -16,8 +18,16 @@ import '../widgets/common.dart';
 /// perfil; grasa, gasto activo y tiempo activo vienen de Health Connect (o
 /// "—" si no hay dato); sesiones, racha, retos e insignias se calculan del
 /// historial real de entrenamiento.
-class ProgressScreen extends StatelessWidget {
+class ProgressScreen extends StatefulWidget {
   const ProgressScreen({super.key});
+
+  @override
+  State<ProgressScreen> createState() => _ProgressScreenState();
+}
+
+class _ProgressScreenState extends State<ProgressScreen> {
+  /// Ventana activa del panel de evolución (Semanal / Mensual / Año).
+  PeriodoRecorte _periodo = PeriodoRecorte.semanal;
 
   @override
   Widget build(BuildContext context) {
@@ -61,8 +71,13 @@ class ProgressScreen extends StatelessWidget {
                     style: AppType.bodyMd.copyWith(color: AppColors.onSurfaceVariant),
                   ),
                   const SizedBox(height: 16),
-                  const _PeriodTabs(),
-                  const SizedBox(height: 16),
+                  _PeriodTabs(
+                    seleccionado: _periodo,
+                    onChanged: (p) => setState(() => _periodo = p),
+                  ),
+                  const SizedBox(height: 12),
+                  _buildResumenPeriodo(state, strings),
+                  const SizedBox(height: 12),
                   _buildPesoSeccion(context, state, strings),
                   const SizedBox(height: 12),
                   _buildRepeticionesSeccion(state, strings),
@@ -170,6 +185,11 @@ class ProgressScreen extends StatelessWidget {
                   SectionHeader(
                     title: strings.prSesionesRecientes,
                     actionLabel: strings.prVerTodo,
+                    onAction: () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => const HistorialSesionesScreen(),
+                      ),
+                    ),
                   ),
                   const SizedBox(height: 12),
                   _buildSesiones(state, strings),
@@ -333,7 +353,11 @@ class ProgressScreen extends StatelessWidget {
             ),
           ] else ...[
             const SizedBox(height: 12),
-            _MiniWeightChart(historial: registros, label: _etiquetaSemana(lunes)),
+            _MiniWeightChart(
+              historial: registros,
+              label: _etiquetaSemana(lunes),
+              semanas: _semanasPeso(_periodo),
+            ),
             const SizedBox(height: 12),
             _buildHistorialPeso(registros, strings),
           ],
@@ -707,6 +731,71 @@ class ProgressScreen extends StatelessWidget {
     );
   }
 
+  /// Resumen REAL de la ventana activa (sesiones, minutos, kcal y racha máx).
+  Widget _buildResumenPeriodo(AppState state, AppStrings strings) {
+    final r = resumenPeriodo(state.historial, _diasPeriodo(_periodo));
+    if (r.sesiones == 0) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(16),
+        decoration: _cardDecoration(radius: 16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              strings.prSinSesionesPeriodo,
+              style: AppType.labelMd.copyWith(
+                color: AppColors.onSurface,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              strings.prSinSesionesHint,
+              style: AppType.bodySm.copyWith(color: AppColors.outline),
+            ),
+          ],
+        ),
+      );
+    }
+    final stats = <(IconData, String, String)>[
+      (Icons.fitness_center, '${r.sesiones}', strings.prSesiones),
+      (Icons.schedule, '${r.minutos}', strings.prMinutos),
+      (Icons.local_fire_department, '${r.kcal}', 'kcal'),
+      (Icons.whatshot, '${r.rachaMaxima}', strings.prRachaMax),
+    ];
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: _cardDecoration(radius: 16),
+      child: Row(
+        children: [
+          for (final (icono, valor, etiqueta) in stats)
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(icono, size: 18, color: AppColors.primary),
+                  const SizedBox(height: 6),
+                  Text(
+                    valor,
+                    style: AppType.labelLg.copyWith(
+                      color: AppColors.onSurface,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  Text(
+                    etiqueta,
+                    style: AppType.labelSm.copyWith(color: AppColors.outline),
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildSemanaCard(AppState state, int diasMeta, AppStrings strings) {
     final entrenados = state.diasSemanaEntrenados;
     final total = diasMeta > 0 ? diasMeta : 5;
@@ -827,7 +916,7 @@ class ProgressScreen extends StatelessWidget {
     }
     return Column(
       children: [
-        for (final s in recientes) _SesionRow.fromSesion(s, strings),
+        for (final s in recientes) SesionRow.fromSesion(s, strings),
       ],
     );
   }
@@ -978,17 +1067,14 @@ class _ProgressHeader extends StatelessWidget {
 }
 
 class _PeriodTabs extends StatelessWidget {
-  const _PeriodTabs();
+  const _PeriodTabs({required this.seleccionado, required this.onChanged});
+
+  final PeriodoRecorte seleccionado;
+  final ValueChanged<PeriodoRecorte> onChanged;
 
   @override
   Widget build(BuildContext context) {
     final strings = context.watch<LocaleService>().strings;
-    final periodos = [
-      strings.prPeriodoSemanal,
-      strings.prPeriodoMensual,
-      strings.prPeriodoAno,
-    ];
-    final seleccionado = strings.prPeriodoSemanal;
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
@@ -997,20 +1083,24 @@ class _PeriodTabs extends StatelessWidget {
       ),
       child: Row(
         children: [
-          for (final p in periodos)
+          for (final p in PeriodoRecorte.values)
             Expanded(
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: p == seleccionado ? AppColors.primary : Colors.transparent,
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: Text(
-                  p,
-                  style: AppType.labelMd.copyWith(
-                    color: p == seleccionado ? AppColors.onPrimary : AppColors.onSurfaceVariant,
-                    fontWeight: FontWeight.w700,
+              child: InkWell(
+                onTap: () => onChanged(p),
+                borderRadius: BorderRadius.circular(999),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: p == seleccionado ? AppColors.primary : Colors.transparent,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Text(
+                    _nombrePeriodo(p, strings),
+                    style: AppType.labelMd.copyWith(
+                      color: p == seleccionado ? AppColors.onPrimary : AppColors.onSurfaceVariant,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
               ),
@@ -1096,11 +1186,14 @@ class _SmallStat extends StatelessWidget {
 }
 
 class _MiniWeightChart extends StatelessWidget {
-  const _MiniWeightChart({required this.historial, this.label});
+  const _MiniWeightChart({required this.historial, this.label, this.semanas = 7});
 
   /// Historial REAL de peso (más reciente primero en la lista de estado).
   final List<RegistroPeso> historial;
   final String? label;
+
+  /// Ventana de barras según el período activo (7 / 13 / 52 semanas).
+  final int semanas;
 
   @override
   Widget build(BuildContext context) {
@@ -1110,8 +1203,8 @@ class _MiniWeightChart extends StatelessWidget {
         style: AppType.labelSm.copyWith(color: AppColors.outline),
       );
     }
-    // De más antigua a más reciente, últimas 7 semanas.
-    final barras = historial.reversed.take(7).toList().reversed.toList();
+    // De más antigua a más reciente, últimas N semanas (ventana del período).
+    final barras = historial.reversed.take(semanas).toList().reversed.toList();
     var min = barras.first.pesoKg, max = barras.first.pesoKg;
     for (final b in barras) {
       if (b.pesoKg < min) min = b.pesoKg;
@@ -1247,76 +1340,6 @@ class _ConsistenciaBanner extends StatelessWidget {
   }
 }
 
-class _SesionRow extends StatelessWidget {
-  const _SesionRow({required this.icon, required this.titulo, required this.detalle});
-
-  factory _SesionRow.fromSesion(WorkoutSession s, AppStrings strings) {
-    final ahora = DateTime.now();
-    final hoy = DateTime(ahora.year, ahora.month, ahora.day);
-    final dia = DateTime(s.fecha.year, s.fecha.month, s.fecha.day);
-    final diff = hoy.difference(dia).inDays;
-    final cuando = diff == 0
-        ? strings.prHoy
-        : diff == 1
-            ? strings.prAyer
-            : diff < 7
-                ? strings.prHaceDias(diff)
-                : '${s.fecha.day}/${s.fecha.month}';
-    return _SesionRow(
-      icon: Icons.fitness_center,
-      titulo: s.nombre,
-      detalle: '$cuando • ${s.duracionMin} min • ${s.calorias} kcal',
-    );
-  }
-
-  final IconData icon;
-  final String titulo;
-  final String detalle;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(12),
-      decoration: _cardDecoration(radius: 16),
-      child: Row(
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: AppColors.surfaceContainerLow,
-              shape: BoxShape.circle,
-            ),
-            child: Icon(icon, size: 20, color: AppColors.primary),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  titulo,
-                  style: AppType.labelLg.copyWith(
-                    color: AppColors.onSurface,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  detalle,
-                  style: AppType.bodySm.copyWith(color: AppColors.onSurfaceVariant),
-                ),
-              ],
-            ),
-          ),
-          Icon(Icons.check_circle, size: 20, color: AppColors.primary),
-        ],
-      ),
-    );
-  }
-}
-
 BoxDecoration _cardDecoration({double radius = 20}) {
   return BoxDecoration(
     color: AppColors.surfaceLowest,
@@ -1331,4 +1354,59 @@ BoxDecoration _cardDecoration({double radius = 20}) {
       ),
     ],
   );
+}
+
+/// Ventana de tiempo del panel de evolución de Progreso.
+enum PeriodoRecorte { semanal, mensual, anual }
+
+/// Días que cubre cada período (incluyendo hoy).
+int _diasPeriodo(PeriodoRecorte p) => switch (p) {
+      PeriodoRecorte.semanal => 7,
+      PeriodoRecorte.mensual => 30,
+      PeriodoRecorte.anual => 365,
+    };
+
+/// Semanas de barras de peso que muestra cada período (≈ trimestre/año).
+int _semanasPeso(PeriodoRecorte p) => switch (p) {
+      PeriodoRecorte.semanal => 7,
+      PeriodoRecorte.mensual => 13,
+      PeriodoRecorte.anual => 52,
+    };
+
+/// Etiqueta del período activo (Semanal / Mensual / Año).
+String _nombrePeriodo(PeriodoRecorte p, AppStrings strings) => switch (p) {
+      PeriodoRecorte.semanal => strings.prPeriodoSemanal,
+      PeriodoRecorte.mensual => strings.prPeriodoMensual,
+      PeriodoRecorte.anual => strings.prPeriodoAno,
+    };
+
+/// Resumen de actividad REAL dentro de los últimos [dias] días.
+///
+/// Fecha de corte = hoy - (dias - 1), de modo que "semanal" cubre 7 días
+/// incluyendo hoy. Nada se inventa: todo sale del historial real.
+({int sesiones, int minutos, int kcal, int rachaMaxima}) resumenPeriodo(
+  List<WorkoutSession> historial,
+  int dias,
+) {
+  final ahora = DateTime.now();
+  final corte =
+      DateTime(ahora.year, ahora.month, ahora.day).subtract(Duration(days: dias - 1));
+  var sesiones = 0, minutos = 0, kcal = 0;
+  final diasConSesion = <DateTime>{};
+  for (final s in historial) {
+    if (s.fecha.isBefore(corte)) continue;
+    sesiones++;
+    minutos += s.duracionMin;
+    kcal += s.calorias;
+    diasConSesion.add(DateTime(s.fecha.year, s.fecha.month, s.fecha.day));
+  }
+  final lista = diasConSesion.toList()..sort();
+  var rachaMax = 0, actual = 0;
+  DateTime? anterior;
+  for (final d in lista) {
+    actual = (anterior != null && d.difference(anterior).inDays == 1) ? actual + 1 : 1;
+    if (actual > rachaMax) rachaMax = actual;
+    anterior = d;
+  }
+  return (sesiones: sesiones, minutos: minutos, kcal: kcal, rachaMaxima: rachaMax);
 }

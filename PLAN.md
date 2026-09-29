@@ -21,6 +21,7 @@
 | Fase 6 (extras de retención) | ✅ instalado/verificado | Widget de home (pasos/calorías/racha) + avisos locales por tipo; instalado y verificado en Pixel 6a y Xiaomi |
 | Fase 7 (premium + accesibilidad) | ✅ código | Modo oscuro (sistema/claro/oscuro), contraste WCAG AA, tamaño accesible (0 desbordes a 2.0×), micro-animaciones, i18n es/en completo; `flutter analyze` 0 issues y 55 tests verdes. Pendiente PASA/FALLA manual del usuario |
 | Fase 8 | ✅ código (falta verificación EEE + 8.5) | Privacidad GDPR: export/import legible + borrado total (8.1 ✅); política de privacidad + EULA v2 (8.2 ✅); UMP publicidad nativo + app open (8.3 ✅ código); aviso de IA (8.4 ✅); release firmado + Data Safety (8.5, bloqueado por cuenta Play desde Cuba) |
+| Fase 9 (correcciones UI + plan aprobado) | 🚧 L1 en verificación | Plan aprobado 2026-09-29 (`docs/PLAN_AGREGAR_CORREGIR.md` + `docs/DISENO_GAMIFICACION.md`). L1 código ✅ (filtro recetas, pestañas de período, "Ver todo") con 108 tests; agua, constructor, recetas y gamificación ⏳ según orden del plan |
 
 **Sesión** (`FUNCIONALIDADES.md`), **guía de prueba manual** (`GUIA_TESTEO_FASE1.md`) y
 **README** están pendientes de actualización con el estado de Fases 1 y 2.
@@ -348,6 +349,34 @@ fuera de Cuba (se deja la puerta abierta sin bloquear la app).
 **Orden de ejecución sugerido:** 8.1 (datos) → 8.2 (legal) → 8.4 (IA) → 8.3 (UMP) →
 8.5 (release). Entregable: analyze 0, suite ampliada (tests export/import/borrado),
 AAB firmado y política/privacy visibles en Perfil y en la ficha de Play.
+
+---
+
+## 11.5 Fase 9 — Correcciones L1 y plan aprobado (agregar/corregir) 🚧
+
+Plan aprobado por el cliente el 2026-09-29. Documentos de diseño:
+`docs/PLAN_AGREGAR_CORREGIR.md` (7 ítems) y `docs/DISENO_GAMIFICACION.md` (gamificación
+sutil por fases A-F, construida sobre el XP/nivel/insignias existentes).
+
+**L1 — las 3 correcciones de UI (código y tests ✅):**
+- ✅ **1.1 Filtrado de recetas**: los pills de la vista principal ya no son decorativos;
+  tocan un pill y abre el catálogo filtrado por esa categoría (la lista destacada sigue
+  siendo editorial). (`recipes_screen.dart`)
+- ✅ **1.2 Pestañas Semanal / Mensual / Año en Progreso**: ahora son funcionales
+  (`_PeriodTabs` controlado). Cada ventana (7/30/365 días) recalcula un resumen REAL de
+  sesiones, minutos, kcal y racha máx. (`resumenPeriodo` en `progress_screen.dart`,
+  testeada con fechas simuladas) y abre la ventana del gráfico de peso (7/13/52 semanas).
+- ✅ **1.3 "Ver todo" de sesiones recientes**: abre el historial completo
+  (`HistorialSesionesScreen`); la fila de sesión se extrajo a un widget compartido
+  (`widgets/sesion_row.dart`).
+
+**Pendientes del plan (⏳):** 2.1 Agua (registro manual de vasos 250 ml + meta diaria
+editable, def. 3 L), 2.2 Constructor de entrenamientos (rutinas propias con descanso
+60 s, reutiliza el reproductor), 2.3 Recetas originales por metas (sin copiar medios,
+por copyright; Bajar de peso / Mantener / Ganar músculo) y 2.4 Gamificación Fase A+B.
+
+Estado: `flutter analyze` 0 issues y 108 tests verdes; verificación física pendiente en
+Pixel 6a (muestreo de píxeles + `uiautomator dump`, tema oscuro y español intactos).
 
 ---
 

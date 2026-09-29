@@ -96,7 +96,12 @@ class _RecipesScreenState extends State<RecipesScreen> {
             color: color,
             borderRadius: BorderRadius.circular(999),
             child: InkWell(
-              onTap: () => setState(() => _category = label),
+              onTap: () {
+                setState(() => _category = label);
+                // Corrección L1: el pill abre el catálogo ya filtrado por esa
+                // categoría (antes solo se resaltaba sin filtrar nada).
+                _openCatalog(categoria: label, recetas: catalog);
+              },
               borderRadius: BorderRadius.circular(999),
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 14),
