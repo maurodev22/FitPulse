@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -84,6 +85,113 @@ class _WorkoutPlayerScreenState extends State<WorkoutPlayerScreen> {
         }
       });
     });
+  }
+
+  /// Registra las repeticiones reales hechas al terminar el ejercicio actual.
+  Future<void> _registrarReps() async {
+    final strings = context.read<LocaleService>().strings;
+    final ejercicio = _ejercicio.nombre;
+    final reps = await _dialogoReps(context, strings);
+    if (reps == null || !mounted) return;
+    await context.read<AppState>().registrarRepeticiones(ejercicio, reps);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(strings.wpRepsGuardadas(ejercicio, reps))),
+    );
+  }
+
+  /// Diálogo honesto: el usuario introduce su cuenta real (0–999).
+  Future<int?> _dialogoReps(BuildContext context, AppStrings strings) {
+    final control = ValueNotifier<int>(0);
+    final definidas = _ejercicio.repeticiones;
+    return showDialog<int>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: AppColors.surfaceLowest,
+        title: Text(
+          strings.wpRepsDialogTitulo,
+          style: AppType.headlineSm.copyWith(
+            color: AppColors.onSurface,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              _ejercicio.nombre.toUpperCase(),
+              style: AppType.labelMd.copyWith(
+                color: AppColors.primary,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 0.4,
+              ),
+            ),
+            if (definidas.isNotEmpty) ...[
+              const SizedBox(height: 2),
+              Text(
+                strings.wpRepsDefinidas + strings.wpRepeticiones(definidas),
+                style: AppType.bodySm.copyWith(color: AppColors.outline),
+              ),
+            ],
+            const SizedBox(height: 8),
+            Text(
+              strings.wpRepsDialogHint,
+              style: AppType.bodySm.copyWith(color: AppColors.outline),
+            ),
+            const SizedBox(height: 16),
+            ValueListenableBuilder<int>(
+              valueListenable: control,
+              builder: (_, valor, _) => Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  _RepsStepBtn(
+                    icon: Icons.remove_circle_outline,
+                    onTap: () => control.value = math.max(0, valor - 5),
+                  ),
+                  _RepsStepBtn(
+                    icon: Icons.remove,
+                    onTap: () => control.value = math.max(0, valor - 1),
+                  ),
+                  Text(
+                    '$valor',
+                    style: AppType.metricVal.copyWith(color: AppColors.onSurface),
+                  ),
+                  _RepsStepBtn(
+                    icon: Icons.add,
+                    onTap: () => control.value = math.min(999, valor + 1),
+                  ),
+                  _RepsStepBtn(
+                    icon: Icons.add_circle_outline,
+                    onTap: () => control.value = math.min(999, valor + 5),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: Text(
+              strings.prCancelar,
+              style: TextStyle(color: AppColors.onSurfaceVariant),
+            ),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: AppColors.onPrimary,
+            ),
+            onPressed: () => Navigator.of(dialogContext).pop(control.value),
+            child: Text(
+              strings.prGuardar,
+              style: const TextStyle(fontWeight: FontWeight.w700),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   /// Salta a la fase siguiente (sin esperar al temporizador).
@@ -219,10 +327,13 @@ class _WorkoutPlayerScreenState extends State<WorkoutPlayerScreen> {
                 ],
               ),
               const Spacer(),
-              // Tarjeta central del ejercicio.
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(24),
+              // Tarjeta central del ejercicio. En pantallas pequeñas (o con
+              // texto grande) puede scrollarse en lugar de desbordar.
+              Flexible(
+                child: SingleChildScrollView(
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
                   color: AppColors.surfaceLowest,
                   borderRadius: BorderRadius.circular(28),
@@ -301,12 +412,39 @@ class _WorkoutPlayerScreenState extends State<WorkoutPlayerScreen> {
                         ),
                       ),
                     ],
+                    if (!_enDescanso) ...[
+                      const SizedBox(height: 12),
+                      OutlinedButton.icon(
+                        onPressed: _registrarReps,
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColors.primary,
+                          side: BorderSide(color: AppColors.outlineVariant),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 10,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                        ),
+                        icon: const Icon(Icons.onetwothree, size: 18),
+                        label: Text(
+                          strings.wpRegistrarReps,
+                          style: AppType.labelMd.copyWith(
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
-              const Spacer(),
-              // Controles.
-              Row(
+            ),
+          ),
+          const Spacer(),
+          // Controles.
+          Row(
                 children: [
                   Expanded(
                     child: OutlinedButton(
@@ -380,5 +518,30 @@ class _PlayerBanner extends StatelessWidget {
     final config = context.watch<ConfigService>();
     if (config.premiumEnabled) return const SizedBox.shrink();
     return const FitBannerAd();
+  }
+}
+
+/// Botón redondo del selector de repeticiones (−5 / −1 / +1 / +5).
+class _RepsStepBtn extends StatelessWidget {
+  const _RepsStepBtn({required this.icon, required this.onTap});
+
+  final IconData icon;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(999),
+      child: Container(
+        width: 44,
+        height: 44,
+        decoration: BoxDecoration(
+          color: AppColors.surfaceContainerLow,
+          shape: BoxShape.circle,
+        ),
+        child: Icon(icon, size: 22, color: AppColors.primary),
+      ),
+    );
   }
 }

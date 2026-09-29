@@ -388,6 +388,38 @@ tarjetas: nuevos roles de paleta `gradienteInicio/Intermedio/Fin`, `onGradiente*
 
 ---
 
+## 18. Fase 9 (29/09/2026) — Avatar recortado, chip Consejos y seguimiento de peso+reps
+
+Cambios verificables SIN leer la foto: muestreo de píxeles (PowerShell) + `uiautomator dump`.
+
+### 18.1 Avatar: el sujeto llena el círculo
+
+| # | Paso | Esperado | Resultado |
+|---|------|----------|-----------|
+| 1 | Perfil → subir la foto real (la que tenía marco gris claro / sujeto pequeño). | El recorte automático (v2) acerca a la persona: cabeza+rostro grandes dentro del círculo, sin marco percibido. Verificar por muestreo: en el círculo (centro 539,473; radio ~125) las filas y≈400, 450 y 500 deben tocar piel áspera o pelo del sujeto, no pared clara. | ☐ PASA / ☐ FALLA |
+| 2 | Foto casi cuadrada o sin sujeto → sigue usando la original. | No se recorta (protección: ratio 0.80–1.25 o sin detección). | ☐ PASA |
+| 3 | `flutter test` (103) + `flutter analyze`. | Verdes, incluidos tests del recorte de sujeto (foto 90×160 sintética → cuadrado 65×65; casi-cuadrada → null; sin sujeto → null). | ☐ PASA |
+
+### 18.2 Consejos: chip seleccionado legible en oscuro
+
+| # | Paso | Esperado | Resultado |
+|---|------|----------|-----------|
+| 1 | Consejos → tocar un chip de categoría (p. ej. "Fuerza") en **modo oscuro**. | Chip activo con fondo `primary` verde claro `#7DD6A6` y **texto/icono `onPrimary` oscuro `#00351F`** (contraste alto), no texto blanco sobre verde claro. | ☐ PASA |
+| 2 | Mismo chip en **claro**. | Fondo `#005136` con texto blanco (sin cambio de contraseña). | ☐ PASA |
+
+### 18.3 Peso corporal y repeticiones (Fase 9)
+
+| # | Paso | Esperado | Resultado |
+|---|------|----------|-----------|
+| 1 | Progreso → tarjeta "Peso Corporal" → **Registrar peso**. | Diálogo con pasos de 0,1/kg y etiqueta "Semana del dd/mm – dd/mm". Guardar persiste. | ☐ PASA |
+| 2 | Registrar dos veces la **misma semana**. | Se sustituye el registro (uno por semana), el historial no duplica. | ☐ PASA |
+| 3 | Registrar en **semanas distintas** (o esperar). | El historial muestra filas ordenadas (fecha + kg) y la barra del mini-gráfico refleja los valores REALES (nunca inventados). | ☐ PASA |
+| 4 | Reproductor de entrenos → durante un ejercicio, botón **Registrar repeticiones**. | Diálogo con cuenta real (0–999) y etiqueta del ejercicio. Al guardar: SnackBar "Registradas: N reps · <ejercicio>". | ☐ PASA |
+| 5 | Progreso → tarjeta "Repeticiones registradas". | Aparecen las reps hechas (fecha · ejercicio → N reps). Con app reiniciada, siguen (SharedPreferences). | ☐ PASA |
+| 6 | Pantalla pequeña o texto 2.0× (test de accesibilidad). | Sin desbordes: el botón del reproductor puede scrollarse si falta alto; el header de peso no se rompe. | ☐ PASA |
+
+---
+
 ## Registro de la prueba
 
 | Fecha | Dispositivo | Resultado | Observaciones |
@@ -400,3 +432,5 @@ tarjetas: nuevos roles de paleta `gradienteInicio/Intermedio/Fin`, `onGradiente*
 |  | Pixel 6a | ☐ PASA / ☐ FALLA (F4-F6) | Confirmar en familia la verificación del equipo (plan semanal, entrenador con cámara, widget/avisos). |
 | 2026-09-28 | Xiaomi Redmi 8A | ☑ PASA (F8) | Modo claro global en las 6 pestañas ✅ (muestreo de píxeles: fondos `#FFFFFF`, tarjetas claras, sin bloques negros), borde de avatar `#BEC9C0` neutro ✅, cambio Oscuro↔Claro en vivo sin reiniciar ✅ (rebuild por `KeyedSubtree`), round-trip de vuelta a claro ✅. |
 |  | Pixel 6a | ☐ PASA / ☐ FALLA (F8) | Pendiente: reconectar el Pixel para re-verificar modo claro + borde de avatar y la prueba final del entrenador con cámara (ML Kit R8). |
+| 2026-09-29 | Pixel 6a | ☐ PASA / ☐ FALLA (F9) | Avatar v2 (sujeto llenando el círculo, verificado por píxeles), chip Consejos con `onPrimary` en oscuro, peso semanal + repeticiones. Pendiente de instalar/verificar. |
+|  | Xiaomi Redmi 8A | ☐ PASA / ☐ FALLA (F9) | Re-verificar en el Xiaomi: avatar recortado + F9 (peso/reps) en claro y oscuro. |

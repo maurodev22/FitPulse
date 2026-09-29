@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../services/locale_service.dart';
 import '../state/app_state.dart';
+import '../state/registros.dart';
 import '../state/workout.dart';
 import '../services/ads_service.dart';
 import '../services/config_service.dart';
@@ -62,7 +63,9 @@ class ProgressScreen extends StatelessWidget {
                   const SizedBox(height: 16),
                   const _PeriodTabs(),
                   const SizedBox(height: 16),
-                  _buildPesoCard(profile.pesoKg, strings),
+                  _buildPesoSeccion(context, state, strings),
+                  const SizedBox(height: 12),
+                  _buildRepeticionesSeccion(state, strings),
                   const SizedBox(height: 12),
                   Row(
                     children: [
@@ -219,8 +222,36 @@ class ProgressScreen extends StatelessWidget {
     return strings.prFuente3(concedidas.join(', '));
   }
 
-  /// Tarjeta principal de evolución de peso corporal con mini gráfico.
-  Widget _buildPesoCard(double peso, AppStrings strings) {
+  /// Sección Fase 9: peso corporal con registro semanal real e historial.
+  Widget _buildPesoSeccion(BuildContext context, AppState state, AppStrings strings) {
+    final registros = state.historialPeso;
+    final ultimo = registros.isEmpty ? null : registros.first;
+    final lunes = _lunesDe(DateTime.now());
+    final deEstaSemana = registros.where((r) => r.lunes == lunes).toList();
+    final valorInicial = deEstaSemana.isNotEmpty
+        ? deEstaSemana.first.pesoKg
+        : (state.profile.pesoKg > 0 ? state.profile.pesoKg : 70.0);
+
+    Future<void> registrar() async {
+      final messenger = ScaffoldMessenger.of(context);
+      final appState = context.read<AppState>();
+      final kg = await _dialogoRegistrarPeso(
+        context,
+        strings,
+        inicial: valorInicial,
+      );
+      if (kg == null) return;
+      await appState.registrarPeso(kg);
+      messenger.showSnackBar(SnackBar(content: Text(strings.prPesoRegistrado(kg))));
+    }
+
+    String? delta;
+    if (registros.length >= 2) {
+      final anterior = registros[1].pesoKg;
+      final diff = ultimo!.pesoKg - anterior;
+      delta = diff > 0 ? '+${diff.toStringAsFixed(1)} kg' : '${diff.toStringAsFixed(1)} kg';
+    }
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: _cardDecoration(),
@@ -235,24 +266,33 @@ class ProgressScreen extends StatelessWidget {
                 child: Text(
                   strings.prPesoCorporal,
                   style: AppType.labelMd.copyWith(
-                    color: AppColors.outline,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 0.4,
-                  ),
-                ),
-              ),
-              Flexible(
-                child: Text(
-                  strings.deTuPerfil,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppType.labelMd.copyWith(
-                    color: AppColors.primary,
+                    color: AppColors.onSurface,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
               ),
             ],
+          ),
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton(
+              onPressed: registrar,
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                minimumSize: const Size(0, 32),
+              ),
+              child: Text(
+                strings.prRegistrarPesoBtn,
+                style: AppType.labelMd.copyWith(
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+          ),
+          Text(
+            strings.prRegistraPeso,
+            style: AppType.bodySm.copyWith(color: AppColors.outline),
           ),
           const SizedBox(height: 10),
           Row(
@@ -260,21 +300,226 @@ class ProgressScreen extends StatelessWidget {
             textBaseline: TextBaseline.alphabetic,
             children: [
               Text(
-                peso.toStringAsFixed(1),
+                (ultimo?.pesoKg ?? state.profile.pesoKg).toStringAsFixed(1),
                 style: AppType.metricVal.copyWith(color: AppColors.onSurface),
               ),
               const SizedBox(width: 4),
               Text(
-                'kg',
+                strings.prKg,
                 style: AppType.labelMd.copyWith(color: AppColors.outline),
               ),
+              if (delta != null) ...[
+                const SizedBox(width: 10),
+                Text(
+                  delta,
+                  style: AppType.labelMd.copyWith(
+                    color: delta.startsWith('-') ? AppColors.primary : AppColors.outline,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
             ],
           ),
-          const SizedBox(height: 12),
-          _MiniWeightChart(label: strings.prRegistraPeso),
+          if (ultimo == null) ...[
+            const SizedBox(height: 6),
+            Text(
+              strings.prPesoDePerfil,
+              style: AppType.bodySm.copyWith(color: AppColors.outline),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              strings.prSinPesoTodavia,
+              style: AppType.bodySm.copyWith(color: AppColors.outline),
+            ),
+          ] else ...[
+            const SizedBox(height: 12),
+            _MiniWeightChart(historial: registros, label: _etiquetaSemana(lunes)),
+            const SizedBox(height: 12),
+            _buildHistorialPeso(registros, strings),
+          ],
         ],
       ),
     );
+  }
+
+  Widget _buildHistorialPeso(List<RegistroPeso> registros, AppStrings strings) {
+    final recientes = registros.take(4).toList();
+    return Column(
+      children: [
+        for (final r in recientes) ...[
+          const Divider(height: 1),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Row(
+              children: [
+                Icon(Icons.calendar_today, size: 13, color: AppColors.outline),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    '${r.fecha.day}/${r.fecha.month}/${r.fecha.year}',
+                    style: AppType.labelMd.copyWith(color: AppColors.onSurfaceVariant),
+                  ),
+                ),
+                Text(
+                  '${r.pesoKg.toStringAsFixed(1)} ${strings.prKg}',
+                  style: AppType.labelMd.copyWith(
+                    color: AppColors.onSurface,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  /// Diálogo de registro de peso con paso de 0,1 kg (rango 20–300 kg).
+  Future<double?> _dialogoRegistrarPeso(
+    BuildContext context,
+    AppStrings strings, {
+    required double inicial,
+  }) {
+    final lunes = _lunesDe(DateTime.now());
+    final control = ValueNotifier<double>(inicial);
+    return showDialog<double>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: AppColors.surfaceLowest,
+        title: Text(
+          strings.prPesoDialogTitulo,
+          style: AppType.headlineSm.copyWith(
+            color: AppColors.onSurface,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              strings.prSemanaDel(_etiquetaSemana(lunes)),
+              style: AppType.labelMd.copyWith(
+                color: AppColors.primary,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              strings.prPesoDialogSemana,
+              style: AppType.bodySm.copyWith(color: AppColors.outline),
+            ),
+            const SizedBox(height: 16),
+            ValueListenableBuilder<double>(
+              valueListenable: control,
+              builder: (_, valor, _) => Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  _StepperBtn(icon: Icons.remove, onTap: () => control.value = (valor - 0.1).clamp(20.0, 300.0)),
+                  _StepperBtn(icon: Icons.remove_circle_outline, onTap: () => control.value = (valor - 1).clamp(20.0, 300.0)),
+                  Text(
+                    '${valor.toStringAsFixed(1)} ${strings.prKg}',
+                    style: AppType.metricVal.copyWith(color: AppColors.onSurface),
+                  ),
+                  _StepperBtn(icon: Icons.add_circle_outline, onTap: () => control.value = (valor + 1).clamp(20.0, 300.0)),
+                  _StepperBtn(icon: Icons.add, onTap: () => control.value = (valor + 0.1).clamp(20.0, 300.0)),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: Text(
+              strings.prCancelar,
+              style: TextStyle(color: AppColors.onSurfaceVariant),
+            ),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: AppColors.onPrimary,
+            ),
+            onPressed: () => Navigator.of(dialogContext).pop(control.value),
+            child: Text(
+              strings.prGuardar,
+              style: const TextStyle(fontWeight: FontWeight.w700),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Sección Fase 9: repeticiones reales registradas al terminar ejercicios.
+  Widget _buildRepeticionesSeccion(AppState state, AppStrings strings) {
+    final recientes = state.historialReps.take(5).toList();
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: _cardDecoration(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.onetwothree, size: 18, color: AppColors.primary),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  strings.prRepsRegistradas,
+                  style: AppType.labelMd.copyWith(
+                    color: AppColors.onSurface,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          if (recientes.isEmpty)
+            Text(
+              strings.prSinRepsTodavia,
+              style: AppType.bodySm.copyWith(color: AppColors.outline),
+            )
+          else
+            for (final r in recientes) ...[
+              const Divider(height: 1),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        '${r.fecha.day}/${r.fecha.month} · ${r.ejercicio}',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppType.labelMd.copyWith(color: AppColors.onSurfaceVariant),
+                      ),
+                    ),
+                    Text(
+                      '${r.reps} ${strings.prRepeticiones.toLowerCase()}',
+                      style: AppType.labelMd.copyWith(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+        ],
+      ),
+    );
+  }
+
+  DateTime _lunesDe(DateTime d) => DateTime(d.year, d.month, d.day)
+      .subtract(Duration(days: d.weekday - 1));
+
+  String _etiquetaSemana(DateTime lunes) {
+    final domingo = lunes.add(const Duration(days: 6));
+    return '${lunes.day}/${lunes.month} – ${domingo.day}/${domingo.month}';
   }
 
   Widget _buildRetoCard(AppState state, AppStrings strings) {
@@ -512,7 +757,7 @@ class ProgressScreen extends StatelessWidget {
                           entrenados.contains(i) ? Icons.check : Icons.remove,
                           size: 14,
                           color: entrenados.contains(i)
-                              ? Colors.white
+                              ? AppColors.onPrimary
                               : AppColors.outline,
                         ),
                       ),
@@ -764,7 +1009,7 @@ class _PeriodTabs extends StatelessWidget {
                 child: Text(
                   p,
                   style: AppType.labelMd.copyWith(
-                    color: p == seleccionado ? Colors.white : AppColors.onSurfaceVariant,
+                    color: p == seleccionado ? AppColors.onPrimary : AppColors.onSurfaceVariant,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -851,13 +1096,29 @@ class _SmallStat extends StatelessWidget {
 }
 
 class _MiniWeightChart extends StatelessWidget {
-  const _MiniWeightChart({this.label});
+  const _MiniWeightChart({required this.historial, this.label});
 
-  static const _valores = [3.0, 4.2, 3.6, 5.0, 4.0, 4.8, 3.2];
+  /// Historial REAL de peso (más reciente primero en la lista de estado).
+  final List<RegistroPeso> historial;
   final String? label;
 
   @override
   Widget build(BuildContext context) {
+    if (historial.length < 2) {
+      return Text(
+        label ?? '',
+        style: AppType.labelSm.copyWith(color: AppColors.outline),
+      );
+    }
+    // De más antigua a más reciente, últimas 7 semanas.
+    final barras = historial.reversed.take(7).toList().reversed.toList();
+    var min = barras.first.pesoKg, max = barras.first.pesoKg;
+    for (final b in barras) {
+      if (b.pesoKg < min) min = b.pesoKg;
+      if (b.pesoKg > max) max = b.pesoKg;
+    }
+    final rango = (max - min).abs() < 1.0 ? 1.0 : (max - min);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -867,12 +1128,14 @@ class _MiniWeightChart extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              for (final v in _valores)
+              for (var i = 0; i < barras.length; i++)
                 Container(
                   width: 22,
-                  height: 48 * v / 5.0,
+                  height: 8 + 40 * (barras[i].pesoKg - min) / rango,
                   decoration: BoxDecoration(
-                    color: AppColors.primaryContainer,
+                    color: i == barras.length - 1
+                        ? AppColors.primary
+                        : AppColors.primaryContainer,
                     borderRadius: BorderRadius.circular(6),
                   ),
                 ),
@@ -887,6 +1150,31 @@ class _MiniWeightChart extends StatelessWidget {
           ),
         ],
       ],
+    );
+  }
+}
+
+/// Botón redondo del selector de peso (pasos de 0,1 / 1 kg).
+class _StepperBtn extends StatelessWidget {
+  const _StepperBtn({required this.icon, required this.onTap});
+
+  final IconData icon;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(999),
+      child: Container(
+        width: 44,
+        height: 44,
+        decoration: BoxDecoration(
+          color: AppColors.surfaceContainerLow,
+          shape: BoxShape.circle,
+        ),
+        child: Icon(icon, size: 22, color: AppColors.primary),
+      ),
     );
   }
 }

@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../services/health_service.dart';
 import '../services/usage_log_service.dart';
 import 'athlete_profile.dart';
+import 'registros.dart';
 import 'workout.dart';
 import 'workout_catalog.dart';
 
@@ -39,6 +40,10 @@ class AppState extends ChangeNotifier {
   // Fase 3: recompensa del anuncio (una vez por día, guardada por fecha).
   static const _recompensaAnuncioKey = 'fitpulse_recompensa_anuncio_v1';
   static const int ptsRecompensaAnuncio = 25;
+
+  // Fase 9: registros reales de peso (semanal) y repeticiones por ejercicio.
+  static const _pesoKey = 'fitpulse_peso_v1';
+  static const _repsKey = 'fitpulse_reps_v1';
 
   // Health Connect: flag de "permisos ya solicitados al arrancar".
   static const _hcRequestedKey = 'fitpulse_hc_requested_v1';
@@ -159,6 +164,9 @@ class AppState extends ChangeNotifier {
 
     // Fase 2: historial de sesiones, puntos y reto actual.
     _cargarHistorial();
+
+    // Fase 9: registros de peso semanal y repeticiones por ejercicio.
+    _cargarRegistros();
 
     // Reinicio diario: si el balance guardado pertenece a otro día, se vacía.
     final today = _dayKey(DateTime.now());
@@ -494,6 +502,84 @@ class AppState extends ChangeNotifier {
 
   Future<void> _persistXp() async {
     await _prefs?.setInt(_xpKey, _xp);
+  }
+
+  // =====================================================================
+  //  Fase 9: peso corporal (1 registro por semana) y repeticiones
+  // =====================================================================
+
+  /// Peso registrado por el usuario, más reciente primero (historial real).
+  List<RegistroPeso> historialPeso = [];
+
+  /// Repeticiones hechas de verdad al terminar cada ejercicio, más reciente
+  /// primero (historial real).
+  List<RegistroReps> historialReps = [];
+
+  void _cargarRegistros() {
+    try {
+      final rawPeso = _prefs?.getString(_pesoKey);
+      if (rawPeso != null && rawPeso.isNotEmpty) {
+        historialPeso = (jsonDecode(rawPeso) as List)
+            .map((e) => RegistroPeso.fromJson(e as Map<String, dynamic>))
+            .toList()
+          ..sort((a, b) => b.fecha.compareTo(a.fecha));
+      }
+      final rawReps = _prefs?.getString(_repsKey);
+      if (rawReps != null && rawReps.isNotEmpty) {
+        historialReps = (jsonDecode(rawReps) as List)
+            .map((e) => RegistroReps.fromJson(e as Map<String, dynamic>))
+            .toList()
+          ..sort((a, b) => b.fecha.compareTo(a.fecha));
+      }
+    } catch (_) {
+      historialPeso = [];
+      historialReps = [];
+    }
+  }
+
+  Future<void> _persistPeso() async {
+    await _prefs?.setString(
+      _pesoKey,
+      jsonEncode(historialPeso.map((r) => r.toJson()).toList()),
+    );
+  }
+
+  Future<void> _persistReps() async {
+    await _prefs?.setString(
+      _repsKey,
+      jsonEncode(historialReps.map((r) => r.toJson()).toList()),
+    );
+  }
+
+  /// Registra un peso real de una semana. Si ya hay un registro de la misma
+  /// semana (mismo lunes), se sustituye: periodicidad semanal.
+  ///
+  /// [fecha] solo se usa en pruebas para simular días distintos.
+  Future<void> registrarPeso(double kg, {DateTime? fecha}) async {
+    final entrada = RegistroPeso(fecha: fecha ?? DateTime.now(), pesoKg: kg);
+    historialPeso.removeWhere((r) => r.lunes == entrada.lunes);
+    historialPeso.add(entrada);
+    historialPeso.sort((a, b) => b.fecha.compareTo(a.fecha));
+    notifyListeners();
+    await _persistPeso();
+  }
+
+  /// Registra las repeticiones reales hechas al terminar un ejercicio.
+  ///
+  /// [fecha] solo se usa en pruebas para simular días distintos.
+  Future<void> registrarRepeticiones(
+    String ejercicio,
+    int reps, {
+    DateTime? fecha,
+  }) async {
+    historialReps.add(RegistroReps(
+      fecha: fecha ?? DateTime.now(),
+      ejercicio: ejercicio,
+      reps: reps,
+    ));
+    historialReps.sort((a, b) => b.fecha.compareTo(a.fecha));
+    notifyListeners();
+    await _persistReps();
   }
 
   // =====================================================================

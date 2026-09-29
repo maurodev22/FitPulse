@@ -376,6 +376,25 @@ class AppStrings {
           'Today\'s metrics via Health Connect: $lista.');
   String get prPesoCorporal => _t('Peso Corporal', 'Body Weight');
   String get prRegistraPeso => _t('Registra tu peso cada semana', 'Log your weight every week');
+  String get prRegistrarPesoBtn => _t('Registrar peso', 'Log weight');
+  String get prPesoActual => _t('Actual', 'Current');
+  String get prPesoDePerfil => _t('Peso de tu perfil · registra el primero', 'Profile weight · log your first one');
+  String get prSinPesoTodavia =>
+      _t('Sin registros todavía. Con un peso por semana verás aquí tu evolución.',
+          'No logs yet. With one weight per week you\'ll see your evolution here.');
+  String prSemanaDel(String d) => _t('Semana del $d', 'Week of $d');
+  String get prPesoDialogTitulo => _t('Registrar peso', 'Log weight');
+  String get prPesoDialogSemana => _t('Queda un registro por semana: si ya tienes uno este lunes, se actualizará.', 'One entry per week: if you already have one this Monday, it will be updated.');
+  String get prGuardar => _t('Guardar', 'Save');
+  String get prCancelar => _t('Cancelar', 'Cancel');
+  String get prKg => _t('kg', 'kg');
+  String get prRepeticiones => _t('Repeticiones', 'Repetitions');
+  String prPesoRegistrado(double kg) =>
+      _t('Peso registrado: ${kg.toStringAsFixed(1)} kg', 'Weight logged: ${kg.toStringAsFixed(1)} kg');
+  String get prRepsRegistradas => _t('Repeticiones registradas', 'Logged repetitions');
+  String get prSinRepsTodavia =>
+      _t('Aún no hay repeticiones registradas. Aparecerán aquí al terminar cada ejercicio.',
+          'No repetitions logged yet. They will show here when you finish each exercise.');
   String get prRetoActual => _t('Reto actual', 'Current challenge');
   String get prCompletado => _t('¡Completado!', 'Completed!');
   String prRetoDias(int p, int o) => _t('$p/$o días', '$p/$o days');
@@ -614,6 +633,15 @@ class AppStrings {
   String get wpReanudar => _t('Reanudar', 'Resume');
   String get wpPausar => _t('Pausar', 'Pause');
   String get wpTerminar => _t('Terminar sesión', 'End workout');
+  String get wpRegistrarReps => _t('Registrar repeticiones', 'Log repetitions');
+  String get wpRepsDialogTitulo => _t('¿Cuántas repeticiones completaste?', 'How many repetitions did you complete?');
+  String get wpRepsDialogHint => _t(
+      'Cuenta real al terminar este ejercicio. Nunca inventamos datos de salud.',
+      'Real count when you finish this exercise. We never invent health data.');
+  String get wpRepsDefinidas => _t('Definidas: ', 'Target: ');
+  String wpRepsGuardadas(String ejercicio, int reps) => _t(
+      'Registradas: $reps reps · $ejercicio',
+      'Logged: $reps reps · $ejercicio');
 
   // ---- Entrenador de postura ----
   String get pcEncendiendo => _t('Encendiendo la cámara…', 'Turning on the camera…');

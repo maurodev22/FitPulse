@@ -357,6 +357,64 @@ void main() {
       expect(config2.premiumEnabled, isTrue);
     });
   });
+
+  group('Fase 9 · peso semanal y repeticiones', () {
+    test('registrarPeso sustituye el registro de la misma semana (lunes)', () async {
+      SharedPreferences.setMockInitialValues({});
+      final state = AppState();
+      await state.init();
+
+      final lun = DateTime(2026, 9, 28); // lunes
+      await state.registrarPeso(82.4, fecha: lun);
+      await state.registrarPeso(81.9, fecha: lun.add(const Duration(days: 2)));
+
+      expect(state.historialPeso, hasLength(1), reason: 'una entrada por semana');
+      expect(state.historialPeso.first.pesoKg, 81.9);
+    });
+
+    test('registrarPeso conserva semanas distintas y ordena desc', () async {
+      SharedPreferences.setMockInitialValues({});
+      final state = AppState();
+      await state.init();
+
+      final lun = DateTime(2026, 9, 28);
+      await state.registrarPeso(82.4, fecha: lun);
+      await state.registrarPeso(81.0, fecha: lun.subtract(const Duration(days: 7)));
+
+      expect(state.historialPeso, hasLength(2));
+      expect(state.historialPeso.first.pesoKg, 82.4);
+      expect(state.historialPeso.last.pesoKg, 81.0);
+    });
+
+    test('el historial de peso persiste entre inicios', () async {
+      SharedPreferences.setMockInitialValues({});
+      final state = AppState();
+      await state.init();
+      await state.registrarPeso(79.5, fecha: DateTime(2026, 9, 28));
+
+      final state2 = AppState();
+      await state2.init();
+      expect(state2.historialPeso, hasLength(1));
+      expect(state2.historialPeso.first.pesoKg, 79.5);
+    });
+
+    test('registrarRepeticiones acumula y persiste', () async {
+      SharedPreferences.setMockInitialValues({});
+      final state = AppState();
+      await state.init();
+
+      await state.registrarRepeticiones('Sentadillas', 15);
+      await state.registrarRepeticiones('Flexiones', 12);
+
+      expect(state.historialReps, hasLength(2));
+      expect(state.historialReps.first.ejercicio, 'Flexiones');
+
+      final state2 = AppState();
+      await state2.init();
+      expect(state2.historialReps, hasLength(2));
+      expect(state2.historialReps.last.reps, 15);
+    });
+  });
 }
 
 String _isoToday() {
