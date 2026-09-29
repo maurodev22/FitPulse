@@ -723,7 +723,7 @@ class _DiaIdealItem extends StatelessWidget {
                 child: Icon(
                   done ? Icons.check : icon,
                   size: 16,
-                  color: done ? Colors.white : fg,
+                  color: done ? AppColors.onPrimary : fg,
                 ),
               ),
               const SizedBox(width: 12),

@@ -763,7 +763,7 @@ class _MetaChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final strings = context.watch<LocaleService>().strings;
     final bg = selected ? AppColors.primary : AppColors.surfaceLowest;
-    final fg = selected ? Colors.white : AppColors.onSurface;
+    final fg = selected ? AppColors.onPrimary : AppColors.onSurface;
     return SizedBox(
       width: (MediaQuery.of(context).size.width - 54) / 2,
       child: Material(
@@ -803,7 +803,7 @@ class _MetaChip extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                if (selected) const Icon(Icons.check, size: 15, color: Colors.white),
+                if (selected) Icon(Icons.check, size: 15, color: AppColors.onPrimary),
               ],
             ),
           ),
@@ -848,16 +848,16 @@ class _RegFooter extends StatelessWidget {
                         strings.regSave,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontFamily: 'Inter',
                           fontSize: 14,
                           fontWeight: FontWeight.w700,
-                          color: Colors.white,
+                          color: AppColors.onPrimary,
                         ),
                       ),
                     ),
                     const SizedBox(width: 8),
-                    const Icon(Icons.arrow_forward, size: 18, color: Colors.white),
+                    Icon(Icons.arrow_forward, size: 18, color: AppColors.onPrimary),
                   ],
                 ),
               ),

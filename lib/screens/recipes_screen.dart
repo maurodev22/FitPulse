@@ -91,7 +91,7 @@ class _RecipesScreenState extends State<RecipesScreen> {
           final label = _categories[i];
           final selected = label == _category;
           final color = selected ? AppColors.primary : AppColors.surfaceLowest;
-          final textColor = selected ? Colors.white : AppColors.onSurfaceVariant;
+          final textColor = selected ? AppColors.onPrimary : AppColors.onSurfaceVariant;
           return Material(
             color: color,
             borderRadius: BorderRadius.circular(999),
@@ -948,7 +948,7 @@ class _Chip extends StatelessWidget {
           child: Text(
             label,
             style: AppType.labelMd.copyWith(
-              color: selected ? Colors.white : AppColors.onSurfaceVariant,
+              color: selected ? AppColors.onPrimary : AppColors.onSurfaceVariant,
               fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
             ),
           ),

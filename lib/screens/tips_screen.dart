@@ -236,13 +236,16 @@ class _CategoryPill extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           if (selected) ...[
-            const Icon(Icons.check, size: 13, color: Colors.white),
+            Icon(Icons.check, size: 13, color: AppColors.onPrimary),
             const SizedBox(width: 4),
           ],
           Text(
             label,
             style: AppType.labelMd.copyWith(
-              color: selected ? Colors.white : AppColors.onSurfaceVariant,
+              // F8: en el tema oscuro `primary` es verde claro, así que el
+              // texto del chip seleccionado debe usar `onPrimary` (verde
+              // oscuro) en vez de blanco fijo para cumplir contraste WCAG.
+              color: selected ? AppColors.onPrimary : AppColors.onSurfaceVariant,
               fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
             ),
           ),
