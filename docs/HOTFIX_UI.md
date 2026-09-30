@@ -94,4 +94,4 @@ Detectados durante la prueba física del hotfix y aprobados por el usuario
 - Tests nuevos: `test/perfil_test.dart` (hero en vivo, fin de "Datos Personales", mínimo 2 días)
   y `test/state_test.dart` (`registrarPeso` sincroniza `profile.pesoKg`).
 - Resultado: `flutter analyze` 0 issues · `flutter test` 116/116 en verde.
-- [ ] Commit local (sin push)
+- [x] Commit local (sin push) `b9b91d1`
