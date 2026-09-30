@@ -57,7 +57,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  _ProfileHero(profile: _profile),
+                  _ProfileHero(profile: context.watch<AppState>().profile),
                   const SizedBox(height: 16),
                   _buildMetasActividad(),
                   const SizedBox(height: 16),
@@ -65,7 +65,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   const SizedBox(height: 16),
                   _buildPremium(),
                   const SizedBox(height: 16),
-                  _buildDatosPersonales(),
+                  _buildNivelPreferencias(),
                   const SizedBox(height: 20),
                   _buildAcciones(),
                 ],
@@ -214,6 +214,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
             final active = _trainingDays.contains(d);
             return GestureDetector(
               onTap: () {
+                // Mínimo 2 días de entrenamiento obligatorios (plan de la
+                // sesión): no se puede deseleccionar el penúltimo.
+                if (active && _trainingDays.length <= 2) {
+                  ScaffoldMessenger.of(context)
+                    ..hideCurrentSnackBar()
+                    ..showSnackBar(
+                      SnackBar(content: Text(strings.pfMinimoDias)),
+                    );
+                  return;
+                }
                 setState(() {
                   if (active) {
                     _trainingDays.remove(d);
@@ -256,36 +266,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildDatosPersonales() {
+  Widget _buildNivelPreferencias() {
     final strings = context.watch<LocaleService>().strings;
     return SettingsCard(
       children: [
-        SettingsCardTitle(icon: Icons.person_pin, title: strings.profilePersonalData),
-        const SizedBox(height: 12),
-        _TextField(
-          label: strings.pfNombreCompleto,
-          icon: Icons.badge,
-          value: _profile.nombre,
+        SettingsCardTitle(
+          icon: Icons.fitness_center,
+          title: strings.pfNivelPreferencias,
         ),
         const SizedBox(height: 12),
-        _TextField(
-          label: strings.regWeightLabel,
-          icon: Icons.scale,
-          value: '${_profile.pesoKg} kg',
-        ),
-        const SizedBox(height: 12),
-        _TextField(
-          label: strings.regHeightLabel,
-          icon: Icons.straighten,
-          value: '${_profile.alturaM} m',
-        ),
-        const SizedBox(height: 12),
-        _TextField(
-          label: strings.pfImc,
-          icon: Icons.insights,
-          value: '${_profile.imcFormateado} — ${strings.imcNombre(_profile.imcCategoria)}',
-        ),
-        const SizedBox(height: 16),
         Text(
           strings.pfNivelCondicion,
           style: AppType.labelMd.copyWith(color: AppColors.onSurfaceVariant, fontWeight: FontWeight.w600),
@@ -924,47 +913,6 @@ class _MiniStat extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-class _TextField extends StatelessWidget {
-  const _TextField({required this.label, required this.icon, required this.value});
-
-  final String label;
-  final IconData icon;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: AppType.labelMd.copyWith(color: AppColors.onSurfaceVariant, fontWeight: FontWeight.w600),
-        ),
-        const SizedBox(height: 6),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          decoration: BoxDecoration(
-            color: AppColors.surfaceContainerLow,
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Row(
-            children: [
-              Icon(icon, size: 18, color: AppColors.outline),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  value,
-                  style: AppType.bodyMd.copyWith(color: AppColors.onSurface),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
     );
   }
 }

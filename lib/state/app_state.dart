@@ -554,6 +554,8 @@ class AppState extends ChangeNotifier {
   /// Registra un peso real de una semana. Si ya hay un registro de la misma
   /// semana (mismo lunes), se sustituye: periodicidad semanal.
   ///
+  /// Además sincroniza `profile.pesoKg` con el peso registrado, para que el
+  /// Perfil refleje al instante el último peso real (antes se quedaba obsoleto).
   /// [fecha] solo se usa en pruebas para simular días distintos.
   Future<void> registrarPeso(double kg, {DateTime? fecha}) async {
     final entrada = RegistroPeso(fecha: fecha ?? DateTime.now(), pesoKg: kg);
@@ -562,6 +564,10 @@ class AppState extends ChangeNotifier {
     historialPeso.sort((a, b) => b.fecha.compareTo(a.fecha));
     notifyListeners();
     await _persistPeso();
+
+    if ((profile.pesoKg - kg).abs() > 0.0001) {
+      await guardarPerfil(profile.copyWith(pesoKg: kg));
+    }
   }
 
   /// Registra las repeticiones reales hechas al terminar un ejercicio.

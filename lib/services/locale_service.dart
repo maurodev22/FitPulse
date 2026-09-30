@@ -576,6 +576,9 @@ class AppStrings {
   String get pfAbrirPermisos =>
       _t('Abrir permisos de Health Connect', 'Open Health Connect permissions');
   String get pfNombreCompleto => _t('Nombre completo', 'Full name');
+  String get pfNivelPreferencias => _t('Nivel y preferencias', 'Level & preferences');
+  String get pfMinimoDias =>
+      _t('Selecciona al menos 2 días de entrenamiento', 'Select at least 2 training days');
   String get pfNivelCondicion => _t('Nivel de condición física', 'Fitness level');
   String get pfTipoEntrenamiento => _t('Tipo de entrenamiento preferido', 'Preferred training type');
   String get pfHIIT => _t('HIIT', 'HIIT');

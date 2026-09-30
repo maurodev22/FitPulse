@@ -386,6 +386,18 @@ void main() {
       expect(state.historialPeso.last.pesoKg, 81.0);
     });
 
+    test('registrarPeso sincroniza también el peso del perfil (Progreso → Perfil)',
+        () async {
+      SharedPreferences.setMockInitialValues({});
+      final state = AppState();
+      await state.init();
+
+      expect(state.profile.pesoKg, 0);
+      await state.registrarPeso(72.5, fecha: DateTime(2026, 9, 28));
+      expect(state.profile.pesoKg, 72.5,
+          reason: 'el peso registrado en Progreso debe actualizar el Perfil');
+    });
+
     test('el historial de peso persiste entre inicios', () async {
       SharedPreferences.setMockInitialValues({});
       final state = AppState();

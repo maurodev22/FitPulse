@@ -77,3 +77,21 @@ Cubre 7 puntos reportados + 1 bug latente encontrado en la auditoría.
 Resultado: `flutter analyze` 0 issues · `flutter test` 112/112 en verde
 (incluye `test/hotfix_test.dart` nuevo con cobertura de P1 y P4).
 - [x] Commit local (sin push)
+
+---
+
+## Ajustes de la sesión posterior a la verificación en Pixel (30/09)
+
+Detectados durante la prueba física del hotfix y aprobados por el usuario
+("ajusta esto al plan · dime en qué fase estamos"):
+
+| # | Reporte del usuario | Causa/evidencia | Cambio |
+|---|---|---|---|
+| P8 | El peso de la vista Progreso no se actualiza en Perfil | `app_state.dart:558` `registrarPeso` guardaba en `historialPeso` **sin tocar `profile.pesoKg`**; y el Perfil pintaba la copia local `_profile` tomada en `initState` (`profile_screen.dart:40`), no el estado en vivo. | `registrarPeso` sincroniza `profile = profile.copyWith(pesoKg: kg)` cuando cambia; el hero del Perfil (`_ProfileHero`) lee ahora `context.watch<AppState>().profile` en lugar de la copia local. |
+| P9 | En Perfil la información personal se repite 2 veces; "Datos Personales" sobra pero se conservan nivel y tipo de entrenamiento | El hero ya muestra nombre, peso, altura, % grasa e IMC (QuickStats), y `_buildDatosPersonales` repetía nombre/peso/altura/IMC. | Se elimina la tarjeta "Datos Personales" duplicada y se sustituye por **"Nivel y preferencias"** (`pfNivelPreferencias`) que conserva el selector de nivel de condición física y el tipo de entrenamiento preferido (y la clase `_TextField` huérfana). |
+| P10 | En días de entrenamiento, dejar al menos 2 días obligatorios | El toggle permitía deseleccionar hasta 0 días (`profile_screen.dart:216-224`). | Bloqueo con aviso (`pfMinimoDias`): no se puede quitar un día si quedan ≤ 2 seleccionados. |
+
+- Tests nuevos: `test/perfil_test.dart` (hero en vivo, fin de "Datos Personales", mínimo 2 días)
+  y `test/state_test.dart` (`registrarPeso` sincroniza `profile.pesoKg`).
+- Resultado: `flutter analyze` 0 issues · `flutter test` 116/116 en verde.
+- [ ] Commit local (sin push)
