@@ -13,12 +13,12 @@
 
 | Fase | Estado | Objetivo |
 |---|---|---|
-| L1 — Correcciones UI (recetas / período / "Ver todo") | ✅ `fb8cdec` | Bugs de la lista del cliente corregidos |
+| L1 — Correcciones UI (recetas / período / "Ver todo") | ✅ `fb8cdec` + verificado en Pixel (2026-09-30) | Bugs de la lista del cliente corregidos |
 | L2 — Agua (registro manual + meta diaria) | ⏳ **siguiente** | Marcar vasos de 250 ml y ajustar meta (def. 3 L) |
 | L3 — Constructor de entrenamientos | ⏳ | Crear rutinas propias con descanso de 60 s |
 | L4 — Recetas originales por metas | ⏳ | Catálogo ~35-40 recetas propias (sin plagio) por meta |
 | L5 — Gamificación Fase A + B | ⏳ | XP/nivel/insignias con feedback sutil (sin modales/sonidos) |
-| Verificación física L1 + F9b | 🕐 pendiente | Pixel 6a (foco) y Xiaomi (dump MIUI) |
+| Verificación física L1 | ✅ Pixel 6a (30/09, píxeles+dump) · ⏳ Xiaomi (dump MIUI) | Guía: `docs/GUIA_TESTEO_INTEGRAL.md §12` |
 
 ---
 

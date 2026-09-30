@@ -347,8 +347,8 @@ móviles (esta sección es la que falta marcar PASA/FALLA).
 | # | Verificación | Resultado |
 |---|---|---|
 | 1 | `flutter test` (108) + `flutter analyze`. | Pasados desde `fb8cdec` (tests nuevos: `resumenPeriodo` unidad + integración). |
-| 2 | Tema oscuro + español intactos tras las pruebas. | ☐ PASA / ☐ FALLA |
-| 3 | Datos reales intactos. | ☐ PASA / ☐ FALLA |
+| 2 | Tema oscuro + español intactos tras las pruebas. | ✅ PASA (verificado 2026-09-30 en Pixel: fondo `#000000`, UI en español). |
+| 3 | Datos reales intactos. | ✅ PASA (racha 1 día, sesiones, peso 70.5 y reps persistieron tras arranque en frío). |
 
 ---
 
@@ -439,7 +439,7 @@ móviles (esta sección es la que falta marcar PASA/FALLA).
 | Fase 8 — Claro global + avatar (§9) | ☐ PASA / ☐ FALLA | |
 | Fase 9 — Avatar, chip, peso+reps (§10) | ☐ PASA / ☐ FALLA | |
 | Fase 9b — Bandas invertidas (§11) | ☐ PASA / ☐ FALLA | |
-| **L1 — Pills recetas, período, "Ver todo" (§12)** | ☐ PASA / ☐ FALLA | *pendiente físico* |
+| **L1 — Pills recetas, período, "Ver todo" (§12)** | ✅ PASA (Pixel, 2026-09-30) · ☐ Xiaomi | *verificado: catálogo filtrado, tabs activas, historial* |
 | Transversales A-H (§13) | ☐ PASA / ☐ FALLA | |
 | Logcat final | ☐ Sin FATAL/ANR | |
 | `flutter test` + `flutter analyze` | ☐ Verdes (108 tests) | |
@@ -455,7 +455,8 @@ móviles (esta sección es la que falta marcar PASA/FALLA).
 | 2026-09-24 | Xiaomi Redmi 8A | F4-F6 | ☑ PASA | ADB inalámbrico; pantalla encendida. |
 | 2026-09-25/28 | Pixel 6a / Xiaomi | F7-F8 | ☑ PASA | Oscuro/claro, texto máximo, idioma en vivo; Xiaomi F8 claro global + avatar ✅. |
 | 2026-09-29 | Pixel 6a | F9, F9b | ☑ PASA | Verificación por píxeles + dump (avatar CROP 9/12, chip onPrimary, peso 70.5 semanal, reps 10, bandas invertidas corregidas). *F9b en Xiaomi pendiente.* |
-|  | Pixel 6a + Xiaomi | **L1 (§12)** | ☐ PASA / ☐ FALLA | **Pendiente físico**: pills→catálogo filtrado, Semanal/Mensual/Año, "Ver todo"→historial. Código+tests aceptados (`fb8cdec`). |
+| 2026-09-30 | Pixel 6a | **L1 (§12)** | ✅ PASA | **Verificado físicamente** (píxeles + dump, sin lectura visual): pill "Alta Proteína" abre el catálogo ya filtrado (chip activo `#92D4A9`/onPrimary; solo recetas proteicas visibles; "Todas" restaura todas las categorías incl. Pre-entreno). Pestañas Semanal/Mensual/Año: tap cambia el estado (chip activo `#92D4A9`, uno a la vez en `#171B18` los demás); resumen real 3 sesiones/8 min/540 kcal/racha 1. "Ver todo" abre "Historial de sesiones" con 3 sesiones (mismo formato `SesionRow`), scroll estable y back sin pérdida de estado. Tema oscuro (`#000000`) + español + datos intactos tras arranque en frío. WhatsApp force-stopeado durante la prueba y relanzado al final. |
+|  | Xiaomi Redmi 8A | **L1 (§12)** | ☐ PASA / ☐ FALLA | Pendiente: re-verificar en el Xiaomi (workaround dump MIUI o muestreo). |
 |  | Pixel 6a | A-H (§13) | ☐ PASA / ☐ FALLA | Ciclo transversal completo. |
 
 ---
