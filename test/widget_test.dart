@@ -93,7 +93,7 @@ void main() {
     expect(find.text('BALANCE NUTRICIONAL DE HOY'), findsOneWidget);
   });
 
-  testWidgets('Navega a la pestaña de Progreso', (WidgetTester tester) async {
+  testWidgets('Navega a Progreso; las insignias viven en Perfil', (WidgetTester tester) async {
     await _enterDashboard(tester);
 
     await tester.tap(find.text('Progreso').first);
@@ -105,6 +105,9 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Sesiones Recientes'), findsOneWidget);
 
+    // P3: las insignias se mudaron de Progreso a Perfil.
+    await tester.tap(find.text('Perfil').first);
+    await tester.pumpAndSettle();
     await tester.scrollUntilVisible(find.text('Insignias & Logros'), 200);
     await tester.pumpAndSettle();
     expect(find.text('Insignias & Logros'), findsOneWidget);

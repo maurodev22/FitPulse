@@ -191,4 +191,46 @@ class AthleteProfile {
         pasosMeta: pasosMeta,
         fotoBase64: foto,
       );
+
+  /// Copia del perfil cambiando solo los campos indicados; preserva todo lo
+  /// demás (incluidas metas de pasos/calorías y foto). Evita el bug de perder
+  /// metas/foto al guardar desde las pantallas de ajustes.
+  AthleteProfile copyWith({
+    String? nombre,
+    int? edad,
+    String? sexo,
+    double? pesoKg,
+    double? alturaM,
+    List<String>? metas,
+    String? tipoCuerpo,
+    String? nivel,
+    List<String>? diasEntrenamiento,
+    bool? hidratacion,
+    bool? entrenamientoMatutino,
+    bool? healthKit,
+    bool? vibracion,
+    bool? compartirActividad,
+    double? caloriasMeta,
+    int? pasosMeta,
+  }) =>
+      AthleteProfile(
+        nombre: nombre ?? this.nombre,
+        edad: edad ?? this.edad,
+        sexo: sexo ?? this.sexo,
+        pesoKg: pesoKg ?? this.pesoKg,
+        alturaM: alturaM ?? this.alturaM,
+        metas: metas ?? List.of(this.metas),
+        tipoCuerpo: tipoCuerpo ?? this.tipoCuerpo,
+        nivel: nivel ?? this.nivel,
+        diasEntrenamiento: diasEntrenamiento ?? List.of(this.diasEntrenamiento),
+        hidratacion: hidratacion ?? this.hidratacion,
+        entrenamientoMatutino: entrenamientoMatutino ?? this.entrenamientoMatutino,
+        healthKit: healthKit ?? this.healthKit,
+        vibracion: vibracion ?? this.vibracion,
+        compartirActividad: compartirActividad ?? this.compartirActividad,
+        rachaDias: rachaDias,
+        caloriasMeta: caloriasMeta ?? this.caloriasMeta,
+        pasosMeta: pasosMeta ?? this.pasosMeta,
+        fotoBase64: fotoBase64,
+      );
 }

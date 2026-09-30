@@ -213,6 +213,8 @@ class AppStrings {
         'Recuperación' => _t('Recuperación', 'Recovery'),
         'Técnica' => _t('Técnica', 'Technique'),
         'Mentalidad' => _t('Mentalidad', 'Mindset'),
+        'Fuerza' => _t('Fuerza', 'Strength'),
+        'Bienestar' => _t('Bienestar', 'Wellness'),
         _ => es,
       };
   String diaNombre(String es) => switch (es) {
@@ -256,6 +258,11 @@ class AppStrings {
   // ---- Home ----
   String get homeResumenHoy => _t('Resumen de hoy', 'Today overview');
   String get homeVerDetalles => _t('Ver detalles', 'View details');
+  String get homeDetalleHoy => _t('Detalle del día de hoy', "Today's detail");
+  String homePasosMeta(int n) => _t('Meta: $n pasos', 'Goal: $n steps');
+  String homePasosDeHoy(int n) => _t('$n pasos de hoy', '$n steps today');
+  String get homeAguaHoy => _t('Agua de hoy', "Today's water");
+  String get homeCerrar => _t('Cerrar', 'Close');
   String get homeCalorias => _t('Calorías', 'Calories');
   String get homePulso => _t('Pulso', 'Heart rate');
   String homeMetaKcal(int kcal) => _t('Meta: $kcal kcal', 'Goal: $kcal kcal');
@@ -457,6 +464,7 @@ class AppStrings {
   String get prHoy => _t('Hoy', 'Today');
   String get prAyer => _t('Ayer', 'Yesterday');
   String prHaceDias(int n) => _t('Hace $n días', '$n days ago');
+  String prVentana(int dias) => _t('Últimos $dias días', 'Last $dias days');
 
   // ---- Consejos ----
   String get tipsPlanPersonalizado => _t('Plan Personalizado', 'Personalized Plan');
@@ -496,6 +504,10 @@ class AppStrings {
       'Ensure 7-8 hours of rest; night-time growth hormone maximizes fat burning.');
   String get tipsArticulosRecomendados => _t('Artículos Recomendados', 'Recommended Articles');
   String tipsVerTodos(int n) => _t('Ver todos ($n)', 'See all ($n)');
+  String get tipsSinResultados =>
+      _t('Sin consejos para esta búsqueda/filtro', 'No tips for this search/filter');
+  String get tipsTodosArticulos => _t('Todos los artículos', 'All articles');
+  String get tipsDetalleArticulo => _t('Artículo', 'Article');
   String get tipsArt1Titulo =>
       _t('5 Errores comunes al calcular tu déficit calórico',
           '5 Common mistakes when calculating your calorie deficit');
@@ -538,6 +550,10 @@ class AppStrings {
       'Real billing requires Google Play with an account outside Cuba (see PLAN.md, Phase 3). '
       'This button enables Premium locally to test that ads are hidden.');
   String get pfMetasActividad => _t('Metas de Actividad', 'Activity Goals');
+  String get pfEditarMetas => _t('Editar metas', 'Edit goals');
+  String get pfMetaPasos => _t('Meta de pasos diarios', 'Daily steps goal');
+  String get pfMetaCalorias => _t('Meta de calorías diarias (kcal)', 'Daily calories goal (kcal)');
+  String get pfMetaInvalida => _t('Introduce valores válidos (pasos > 0, kcal 500–10000)', 'Enter valid values (steps > 0, kcal 500–10000)');
   String get pfPasosDiarios => _t('Pasos diarios', 'Daily steps');
   String get pfCaloriasActivas => _t('Calorías activas', 'Active calories');
   String get pfCardioSemanal => _t('Cardio semanal', 'Weekly cardio');
@@ -589,6 +605,7 @@ class AppStrings {
   String get pfMiPerfil => _t('Mi Perfil', 'My Profile');
   String get pfSuperaLimites => _t('Supera tus límites hoy', 'Push your limits today');
   String get pfConfiguracionProx => _t('Configuración general disponible próximamente', 'General settings coming soon');
+  String get pfConfiguracion => _t('Configuración', 'Settings');
   String get pfFotoGuardada => _t('Foto de perfil actualizada', 'Profile photo updated');
   String get pfErrorFoto => _t('No se pudo cargar la foto', 'Could not load the photo');
   String pfRachaEnRacha(int n) => _t('$n días en racha', '$n-day streak');

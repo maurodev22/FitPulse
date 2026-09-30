@@ -6,6 +6,7 @@ import '../state/app_state.dart';
 import '../state/workout.dart';
 import '../theme.dart';
 import '../widgets/common.dart';
+import '../widgets/racha_chip.dart';
 import 'workout_player_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -58,6 +59,7 @@ class _HomeScreenState extends State<HomeScreen> {
         SectionHeader(
           title: strings.homeResumenHoy,
           actionLabel: strings.homeVerDetalles,
+          onAction: _mostrarDetalleHoy,
         ),
         const SizedBox(height: 12),
         Row(
@@ -125,6 +127,116 @@ class _HomeScreenState extends State<HomeScreen> {
           style: AppType.labelSm.copyWith(color: AppColors.outline),
         ),
       ],
+    );
+  }
+
+  /// Abre el detalle del día de hoy con las métricas REALES del momento:
+  /// pasos vs meta, kcal consumidas vs meta, pulso y agua (si hay permiso).
+  /// Nunca inventa un valor: cada fila muestra '—' cuando no hay dato.
+  Future<void> _mostrarDetalleHoy() async {
+    final strings = context.read<LocaleService>().strings;
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: AppColors.surface,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (sheetCtx) {
+        final s = context.read<AppState>();
+        final pasosDisponible = s.healthDisponible;
+        final pulso = s.pulsoHoy;
+        final agua = s.aguaHoy;
+        final tieneAgua = s.aguaConPermiso;
+        return Padding(
+          padding: EdgeInsets.fromLTRB(
+            20,
+            16,
+            20,
+            MediaQuery.of(sheetCtx).viewInsets.bottom > 0
+                ? 16
+                : MediaQuery.of(sheetCtx).padding.bottom + 16,
+          ),
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Center(
+                  child: Container(
+                    width: 36,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: AppColors.outlineVariant,
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  strings.homeDetalleHoy,
+                  style: AppType.headlineSm.copyWith(
+                    color: AppColors.onSurface,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                _FilaDetalleHoy(
+                  icon: Icons.directions_walk,
+                  label: strings.homePasos,
+                  valor: pasosDisponible
+                      ? _groupThousands(s.pasosHoy)
+                      : '—',
+                  sub: pasosDisponible
+                      ? strings.homePasosMeta(s.profile.pasosMeta)
+                      : strings.homeActivaPermiso,
+                ),
+                _FilaDetalleHoy(
+                  icon: Icons.local_fire_department,
+                  label: strings.homeCalorias,
+                  valor: '${s.caloriasConsumidas.round()}',
+                  sub: strings.homeMetaKcal(s.caloriasMeta.round()),
+                ),
+                _FilaDetalleHoy(
+                  icon: Icons.favorite,
+                  label: strings.homePulso,
+                  valor: pulso?.toString() ?? '—',
+                  sub: pulso != null
+                      ? strings.homeUltimaLectura
+                      : (s.pulsoConPermiso
+                          ? strings.homeSinLectura
+                          : (s.healthConnectDisponible
+                              ? strings.homeConectaHealth
+                              : strings.requiereHealthConnect)),
+                ),
+                _FilaDetalleHoy(
+                  icon: Icons.water_drop,
+                  label: strings.homeAgua,
+                  valor: tieneAgua && agua != null
+                      ? agua.toStringAsFixed(1)
+                      : '—',
+                  sub: tieneAgua && agua != null
+                      ? strings.homeAguaHoy
+                      : strings.requiereHealthConnect,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  strings.homeOrientativo,
+                  style: AppType.labelSm.copyWith(color: AppColors.outline),
+                ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.tonal(
+                    onPressed: () => Navigator.of(sheetCtx).pop(),
+                    child: Text(strings.homeCerrar),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -222,27 +334,7 @@ class _HomeHeader extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            decoration: BoxDecoration(
-              color: AppColors.surfaceContainerLow,
-              borderRadius: BorderRadius.circular(999),
-              border: Border.all(color: AppColors.outlineVariant.withValues(alpha: 0.3)),
-            ),
-            child: Row(
-              children: [
-                const Text('🔥', style: TextStyle(fontSize: 14)),
-                const SizedBox(width: 4),
-                Text(
-                  strings.rachaDias(state.rachaDias),
-                  style: AppType.labelMd.copyWith(
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ],
-            ),
-          ),
+          RachaChip(racha: state.rachaDias, borde: true),
           const SizedBox(width: 4),
           _IconButtonWithBadge(
             icon: Icons.notifications_outlined,
@@ -780,4 +872,68 @@ BoxDecoration _cardDecoration({double radius = 24}) {
       ),
     ],
   );
+}
+
+/// Fila de una métrica real del día dentro del bottom sheet "Detalle del día".
+class _FilaDetalleHoy extends StatelessWidget {
+  const _FilaDetalleHoy({
+    required this.icon,
+    required this.label,
+    required this.valor,
+    required this.sub,
+  });
+
+  final IconData icon;
+  final String label;
+  final String valor;
+  final String sub;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        children: [
+          Container(
+            width: 34,
+            height: 34,
+            decoration: BoxDecoration(
+              color: AppColors.surfaceContainerLow,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, size: 18, color: AppColors.primary),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: AppType.labelMd.copyWith(
+                    color: AppColors.onSurfaceVariant,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                Text(
+                  sub,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppType.bodySm.copyWith(color: AppColors.outline),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          Text(
+            valor,
+            style: AppType.headlineSm.copyWith(
+              color: AppColors.onSurface,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }

@@ -1,24 +1,20 @@
-import 'dart:convert';
-import 'dart:io';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
-import 'package:share_plus/share_plus.dart';
 
-import '../services/avisos_service.dart';
+import 'dart:convert';
+
 import '../services/config_service.dart';
-import '../services/data_backup_service.dart';
 import '../services/locale_service.dart';
 import '../state/app_state.dart';
 import '../state/athlete_profile.dart';
 import '../theme.dart';
 import '../utils/foto_avatar.dart';
 import '../widgets/common.dart';
-import 'eula_screen.dart';
-import 'privacy_screen.dart';
+import '../widgets/racha_chip.dart';
+import '../widgets/settings_widgets.dart';
+import 'configuracion_screen.dart';
 
 /// Perfil y Ajustes: muestra y edita los datos del atleta de la sesión.
 class ProfileScreen extends StatefulWidget {
@@ -29,14 +25,9 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  late final AthleteProfile _profile;
+  late AthleteProfile _profile;
   late Set<String> _trainingDays;
   late String _fitnessLevel;
-  late bool _hydration;
-  late bool _morningWorkout;
-  late bool _healthKit;
-  late bool _haptic;
-  late bool _shareActivity;
 
   @override
   void initState() {
@@ -49,11 +40,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _profile = context.read<AppState>().profile;
     _trainingDays = _profile.diasEntrenamiento.toSet();
     _fitnessLevel = _profile.nivel;
-    _hydration = _profile.hidratacion;
-    _morningWorkout = _profile.entrenamientoMatutino;
-    _healthKit = _profile.healthKit;
-    _haptic = _profile.vibracion;
-    _shareActivity = _profile.compartirActividad;
   }
 
   @override
@@ -75,18 +61,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   const SizedBox(height: 16),
                   _buildMetasActividad(),
                   const SizedBox(height: 16),
+                  _buildInsignias(),
+                  const SizedBox(height: 16),
                   _buildPremium(),
                   const SizedBox(height: 16),
-                  _buildConectarSalud(),
-                  const SizedBox(height: 16),
                   _buildDatosPersonales(),
-                  const SizedBox(height: 16),
-                  _buildPreferencias(),
-                  const SizedBox(height: 16),
-                  _buildTema(),
-                  _buildIdioma(),
-                  const SizedBox(height: 16),
-                  _buildPrivacidadDatos(),
                   const SizedBox(height: 20),
                   _buildAcciones(),
                 ],
@@ -102,9 +81,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final config = context.watch<ConfigService>();
     final strings = context.watch<LocaleService>().strings;
     final activo = config.premiumEnabled;
-    return _SettingsCard(
+    return SettingsCard(
       children: [
-        _CardTitle(icon: Icons.workspace_premium, title: strings.pfPremium),
+        SettingsCardTitle(icon: Icons.workspace_premium, title: strings.pfPremium),
         const SizedBox(height: 8),
         Text(
           activo ? strings.pfPremiumActivo : strings.pfPremiumQuitar,
@@ -112,7 +91,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
         const SizedBox(height: 12),
         // Consentimiento local de anuncios (Fase 3): el usuario puede apagarlos.
-        _ToggleRow(
+        ToggleRow(
           icon: Icons.campaign_outlined,
           title: strings.pfAnunciosHabilitados,
           subtitle: strings.pfAnunciosSub,
@@ -140,12 +119,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Widget _buildMetasActividad() {
     final strings = context.watch<LocaleService>().strings;
-    return _SettingsCard(
+    return SettingsCard(
       children: [
-        _CardTitle(
+        SettingsCardTitle(
           icon: Icons.track_changes,
           title: strings.pfMetasActividad,
-          action: _IconAction(icon: Icons.edit),
+          action: IconActionButton(icon: Icons.edit, onTap: _editarMetas),
         ),
         const SizedBox(height: 12),
         Container(
@@ -277,135 +256,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildConectarSalud() {
-    final strings = context.watch<LocaleService>().strings;
-    return _SettingsCard(
-      children: [
-        _CardTitle(icon: Icons.monitor_heart_outlined, title: strings.pfDatosSalud),
-        const SizedBox(height: 8),
-        Builder(builder: (context) {
-          final state = context.watch<AppState>();
-          final disponible = state.healthConnectDisponible;
-          final conectado = state.healthConnectConectado;
-          final pidiendo = state.healthConnectPidiendo;
-          final pulsoOk = state.pulsoConPermiso;
-          final aguaOk = state.aguaConPermiso;
-          final grasaOk = state.grasaConPermiso;
-          final suenioOk = state.suenioConPermiso;
-
-          if (!disponible) {
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _ToggleRow(
-                  icon: Icons.watch,
-                  title: strings.healthConnect,
-                  subtitle: strings.pfInstalaHealth,
-                  value: _healthKit,
-                  onChanged: (v) => setState(() => _healthKit = v),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  strings.pfSinHealth,
-                  style: AppType.bodySm.copyWith(color: AppColors.outline),
-                ),
-              ],
-            );
-          }
-          if (pidiendo) {
-            return Padding(
-              padding: EdgeInsets.symmetric(vertical: 12),
-              child: Row(
-                children: [
-                  SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  ),
-                  SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      strings.pfConcediendoPermisos,
-                      style: TextStyle(color: AppColors.onSurfaceVariant),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: AppColors.surfaceContainerLow,
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Column(
-                  children: [
-                    Row(
-                      children: [
-                        Icon(
-                          conectado ? Icons.check_circle : Icons.monitor_heart_outlined,
-                          size: 18,
-                          color: conectado ? AppColors.primary : AppColors.outline,
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            conectado ? strings.pfConectado : strings.pfDisponible,
-                            style: AppType.labelMd.copyWith(
-                              color: AppColors.onSurface,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Wrap(
-                      spacing: 6,
-                      runSpacing: 6,
-                      children: [
-                        _PermisoChip(ok: pulsoOk, label: strings.homePulso),
-                        _PermisoChip(ok: aguaOk, label: strings.homeAgua),
-                        _PermisoChip(ok: grasaOk, label: strings.pfGrasaPermiso),
-                        _PermisoChip(ok: suenioOk, label: strings.pfSuenio),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 12),
-              SizedBox(
-                height: 44,
-                child: OutlinedButton.icon(
-                  onPressed: () =>
-                      context.read<AppState>().solicitarPermisosHealthConnect(),
-                  icon: const Icon(Icons.link, size: 18),
-                  label: Text(strings.pfAbrirPermisos),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.primary,
-                    side: BorderSide(color: AppColors.primary.withValues(alpha: 0.5)),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          );
-        }),
-      ],
-    );
-  }
-
   Widget _buildDatosPersonales() {
     final strings = context.watch<LocaleService>().strings;
-    return _SettingsCard(
+    return SettingsCard(
       children: [
-        _CardTitle(icon: Icons.person_pin, title: strings.profilePersonalData),
+        SettingsCardTitle(icon: Icons.person_pin, title: strings.profilePersonalData),
         const SizedBox(height: 12),
         _TextField(
           label: strings.pfNombreCompleto,
@@ -509,383 +364,233 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildPreferencias() {
+  /// P3: insignias y logros del atleta. Catálogo real derivado del historial,
+  /// la racha máxima, el nivel y los retos completados (nunca se inventa).
+  Widget _buildInsignias() {
+    final state = context.watch<AppState>();
     final strings = context.watch<LocaleService>().strings;
-    return _SettingsCard(
-      children: [
-        _CardTitle(icon: Icons.tune, title: strings.pfPreferencias),
-        const SizedBox(height: 8),
-        _ToggleRow(
-          icon: Icons.water_drop,
-          title: strings.pfRecordatoriosHidratacion,
-          subtitle: strings.pfCadaHora,
-          value: _hydration,
-          onChanged: (v) {
-            setState(() => _hydration = v);
-            _aplicarAvisoHidratacion(v);
-          },
+    final insignias = <({IconData icono, String nombre, String detalle})>[
+      if (state.historial.isNotEmpty)
+        (
+          icono: Icons.fitness_center,
+          nombre: strings.prPrimeraSesion,
+          detalle: strings.prCompletada,
         ),
-        _ToggleRow(
-          icon: Icons.alarm,
-          title: strings.pfAvisoRacha,
-          subtitle: strings.pfDiario20,
-          value: _morningWorkout,
-          onChanged: (v) {
-            setState(() => _morningWorkout = v);
-            _aplicarAvisoRacha(v);
-          },
+      if (state.rachaMaxima >= 3)
+        (
+          icono: Icons.local_fire_department,
+          nombre: strings.prRacha3,
+          detalle: strings.prConstancia,
         ),
-        _ToggleRow(
-          icon: Icons.watch,
-          title: strings.pfHealthKit,
-          subtitle: strings.pfSincronizacion,
-          value: _healthKit,
-          onChanged: (v) => setState(() => _healthKit = v),
+      if (state.rachaMaxima >= 7)
+        (
+          icono: Icons.whatshot,
+          nombre: strings.prRacha7,
+          detalle: strings.prDisciplina,
         ),
-        _ToggleRow(
-          icon: Icons.vibration,
-          title: strings.pfVibracion,
-          subtitle: strings.pfAvisosIntervalo,
-          value: _haptic,
-          onChanged: (v) => setState(() => _haptic = v),
+      if (state.nivel >= 2)
+        (
+          icono: Icons.workspace_premium,
+          nombre: strings.prInsigniaNivel(state.nivel),
+          detalle: strings.nivelName(state.nombreNivel),
         ),
-        _ToggleRow(
-          icon: Icons.group,
-          title: strings.pfCompartirActividad,
-          subtitle: strings.pfVisibleAmigos,
-          value: _shareActivity,
-          iconColor: AppColors.outline,
-          onChanged: (v) => setState(() => _shareActivity = v),
+      if (state.retoCompletado)
+        (
+          icono: Icons.emoji_events,
+          nombre: strings.prInsigniaReto(state.retoObjetivo),
+          detalle: strings.prCompletado,
         ),
-      ],
-    );
-  }
+    ];
 
-  /// Fase 7: selector de tema (sistema / claro / oscuro), persistido y de
-  /// aplicación inmediata. La paleta activa la resuelve el MaterialApp.
-  Widget _buildTema() {
-    final config = context.watch<ConfigService>();
-    final strings = context.watch<LocaleService>().strings;
-    return _SettingsCard(
-      children: [
-        _CardTitle(
-          icon: Icons.dark_mode_outlined,
-          title: strings.pfTemaApp,
+    Widget tarjetaVacia() {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppColors.surfaceContainerLow,
+          borderRadius: BorderRadius.circular(16),
         ),
-        const SizedBox(height: 8),
-        SegmentedButton<AppThemeMode>(
-          segments: const [
-            ButtonSegment(
-              value: AppThemeMode.system,
-              icon: Icon(Icons.brightness_auto_outlined, size: 18),
-            ),
-            ButtonSegment(
-              value: AppThemeMode.light,
-              icon: Icon(Icons.light_mode_outlined, size: 18),
-            ),
-            ButtonSegment(
-              value: AppThemeMode.dark,
-              icon: Icon(Icons.dark_mode_outlined, size: 18),
+        child: Column(
+          children: [
+            Icon(Icons.emoji_events_outlined, size: 28, color: AppColors.outline),
+            const SizedBox(height: 8),
+            Text(
+              strings.prDesbloqueaInsignias,
+              textAlign: TextAlign.center,
+              style: AppType.bodySm.copyWith(color: AppColors.outline),
             ),
           ],
-          selected: {config.themeMode},
-          onSelectionChanged: (selection) {
-            if (selection.isNotEmpty) {
-              context.read<ConfigService>().setThemeMode(selection.first);
-            }
-          },
-          showSelectedIcon: false,
         ),
-        const SizedBox(height: 8),
-        Text(
-          strings.pfSeAplicaTema,
-          style: AppType.bodySm.copyWith(color: AppColors.outline),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildIdioma() {
-    final localeService = context.watch<LocaleService>();
-    final strings = localeService.strings;
-    return _SettingsCard(
-      children: [
-        _CardTitle(
-          icon: Icons.language,
-          title: strings.pfIdioma,
-        ),
-        const SizedBox(height: 8),
-        SegmentedButton<AppLocale>(
-          segments: [
-            ButtonSegment(value: AppLocale.es, label: Text(strings.pfIdiomaEs)),
-            ButtonSegment(value: AppLocale.en, label: Text(strings.pfIdiomaEn)),
-          ],
-          selected: {localeService.locale},
-          onSelectionChanged: (selection) {
-            if (selection.isNotEmpty) {
-              context.read<LocaleService>().setLocale(selection.first);
-            }
-          },
-          showSelectedIcon: false,
-        ),
-        const SizedBox(height: 8),
-        Text(
-          strings.pfSeAplicaIdioma,
-          style: AppType.bodySm.copyWith(color: AppColors.outline),
-        ),
-      ],
-    );
-  }
-
-  /// Fase 8: sección "Privacidad y datos" — exportar, importar, política de
-  /// privacidad y borrado total (derechos GDPR arts. 17 y 20).
-  Widget _buildPrivacidadDatos() {
-    final strings = context.watch<LocaleService>().strings;
-    return _SettingsCard(
-      children: [
-        _CardTitle(icon: Icons.shield_outlined, title: strings.pfPrivacidadDatos),
-        const SizedBox(height: 8),
-        _FilaAccion(
-          icon: Icons.upload_outlined,
-          title: strings.pfExportarDatos,
-          subtitle: strings.pfExportarDatosSub,
-          onTap: _exportarDatos,
-        ),
-        _FilaAccion(
-          icon: Icons.download_outlined,
-          title: strings.pfImportarBackup,
-          subtitle: strings.pfImportarBackupSub,
-          onTap: _importarBackup,
-        ),
-        _FilaAccion(
-          icon: Icons.privacy_tip_outlined,
-          title: strings.pfPoliticaPrivacidad,
-          subtitle: strings.pfPoliticaPrivacidadSub,
-          onTap: () => Navigator.of(context).push(
-            MaterialPageRoute<void>(builder: (_) => const PrivacyScreen()),
-          ),
-        ),
-        Divider(height: 24, color: AppColors.outlineVariant.withValues(alpha: 0.4)),
-        _FilaAccion(
-          icon: Icons.delete_forever_outlined,
-          title: strings.pfBorrarTodosLosDatos,
-          subtitle: strings.pfBorrarSub,
-          iconColor: AppColors.error,
-          titleColor: AppColors.error,
-          onTap: _confirmarBorrado,
-        ),
-      ],
-    );
-  }
-
-  DataBackupService _servicioBackup() => DataBackupService(
-        appState: context.read<AppState>(),
-        config: context.read<ConfigService>(),
-        locale: context.read<LocaleService>(),
       );
-
-  /// Exporta un backup JSON a los documentos de la app y abre el share-sheet
-  /// para que el usuario lo guarde donde quiera (portabilidad, art. 20).
-  Future<void> _exportarDatos() async {
-    final strings = context.read<LocaleService>().strings;
-    final messenger = ScaffoldMessenger.of(context);
-    try {
-      final dir = await getApplicationDocumentsDirectory();
-      final servicio = _servicioBackup();
-      final fichero = await servicio.exportarArchivo(directorio: dir);
-      await SharePlus.instance.share(
-        ShareParams(files: [XFile(fichero.path, mimeType: 'application/json')]),
-      );
-    } on Exception {
-      if (mounted) {
-        messenger.showSnackBar(SnackBar(content: Text(strings.pfBackupError)));
-      }
     }
-  }
 
-  /// Importa un backup: elige fichero entre los guardados, confirma y restaura.
-  Future<void> _importarBackup() async {
-    final strings = context.read<LocaleService>().strings;
-    final messenger = ScaffoldMessenger.of(context);
-    final navigator = Navigator.of(context);
-    final servicio = _servicioBackup();
-    final dir = await getApplicationDocumentsDirectory();
-    final backups = await servicio.listarBackups(directorio: dir);
-    if (backups.isEmpty || !mounted) {
-      messenger.showSnackBar(SnackBar(content: Text(strings.pfSinBackups)));
-      return;
-    }
-    final elegido = await showDialog<File>(
-      context: context,
-      builder: (ctx) => SimpleDialog(
-        title: Text(strings.pfElegirBackup),
-        children: [
-          for (final f in backups)
-            SimpleDialogOption(
-              onPressed: () => Navigator.of(ctx).pop(f),
-              child: Text(
-                f.path.split(RegExp(r'[/\\]')).last,
-                style: AppType.bodyMd.copyWith(color: AppColors.onSurface),
-              ),
-            ),
-        ],
-      ),
-    );
-    if (elegido == null || !mounted) return;
-    final r = await servicio.importarArchivo(elegido);
-    if (!mounted) return;
-    messenger.showSnackBar(
-      SnackBar(content: Text(r.ok ? strings.pfImportOk : strings.pfImportError)),
-    );
-    if (r.ok) navigator.pop();
-  }
-
-  /// Derecho al olvido (art. 17): doble confirmación antes de borrar todo.
-  Future<void> _confirmarBorrado() async {
-    final strings = context.read<LocaleService>().strings;
-    final messenger = ScaffoldMessenger.of(context);
-    final navigator = Navigator.of(context);
-
-    final primero = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(strings.pfConfirmarBorradoTitulo),
-        content: Text(strings.pfConfirmarBorradoCuerpo),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text(strings.pfCancelar),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: Text(strings.pfBorrarAhora),
-          ),
-        ],
-      ),
-    );
-    if (primero != true || !mounted) return;
-
-    final segundo = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(strings.pfConfirmarBorradoTitulo),
-        content: Text(strings.pfConfirmarBorradoCuerpo2),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text(strings.pfCancelar),
-          ),
-          FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.error,
-              foregroundColor: AppColors.onError,
-            ),
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: Text(strings.pfBorrarAhora),
-          ),
-        ],
-      ),
-    );
-    if (segundo != true || !mounted) return;
-
-    await _servicioBackup().borrarTodo();
-    if (!mounted) return;
-    messenger.showSnackBar(SnackBar(content: Text(strings.pfBorradoHecho)));
-    // Vuelve al flujo inicial: como el EULA y la sesión están borrados, el
-    // arranque mostrará los términos de nuevo.
-    navigator.pushAndRemoveUntil(
-      MaterialPageRoute<void>(builder: (_) => const EulaScreen()),
-      (_) => false,
-    );
-  }
-
-  Widget _buildAcciones() {
-    final strings = context.watch<LocaleService>().strings;
-    return Column(
+    return SettingsCard(
       children: [
-        SizedBox(
-          width: double.infinity,
-          child: Material(
-            color: AppColors.primary,
-            borderRadius: BorderRadius.circular(999),
-            child: InkWell(
-              onTap: _guardarCambios,
-              borderRadius: BorderRadius.circular(999),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.save, size: 20, color: AppColors.onPrimary),
-                    const SizedBox(width: 8),
-                    Flexible(
-                      child: Text(
-                        strings.pfGuardarCambios,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: AppType.labelLg.copyWith(color: AppColors.onPrimary, fontWeight: FontWeight.w700),
+        SettingsCardTitle(icon: Icons.emoji_events_outlined, title: strings.prInsignias),
+        const SizedBox(height: 12),
+        if (insignias.isEmpty)
+          tarjetaVacia()
+        else
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: [
+              for (final ins in insignias)
+                Container(
+                  width: 105,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceContainerLow,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Column(
+                    children: [
+                      Icon(ins.icono, size: 22, color: AppColors.primary),
+                      const SizedBox(height: 6),
+                      Text(
+                        ins.nombre,
+                        style: AppType.labelMd.copyWith(
+                          color: AppColors.onSurface,
+                          fontWeight: FontWeight.w700,
+                        ),
+                        textAlign: TextAlign.center,
                       ),
-                    ),
-                  ],
+                      Text(
+                        ins.detalle,
+                        style: AppType.labelSm.copyWith(color: AppColors.outline),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ),
+            ],
           ),
-        ),
-        const SizedBox(height: 16),
-        Text(
-          strings.pfVersion,
-          style: AppType.bodySm.copyWith(color: AppColors.outline),
-        ),
       ],
     );
-  }
-
-  /// Fase 6: aplica el recordatorio de hidratación (programa/cancela la
-  /// notificación periódica) mostrando un aviso honesto si no procede.
-  Future<void> _aplicarAvisoHidratacion(bool activar) async {
-    final r = await avisosService.setHidratacion(activar: activar);
-    if (!r.ok && mounted) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(r.mensaje)));
-    }
-  }
-
-  /// Fase 6: aplica el aviso diario de racha (20:00) con la racha real del
-  /// historial; cancela/programa según el toggle.
-  Future<void> _aplicarAvisoRacha(bool activar) async {
-    final racha = context.read<AppState>().rachaDias;
-    final r = await avisosService.setRacha(activar: activar, rachaDias: racha);
-    if (!r.ok && mounted) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(r.mensaje)));
-    }
   }
 
   /// Persiste la sesión editada con los cambios locales del formulario.
   void _guardarCambios() {
     final actual = context.read<AppState>().profile;
     context.read<AppState>().guardarPerfil(
-      AthleteProfile(
-        nombre: actual.nombre,
-        edad: actual.edad,
-        sexo: actual.sexo,
-        pesoKg: actual.pesoKg,
-        alturaM: actual.alturaM,
-        metas: List.of(actual.metas),
-        tipoCuerpo: actual.tipoCuerpo,
+      actual.copyWith(
         nivel: _fitnessLevel,
         diasEntrenamiento: _trainingDays.toList(),
-        hidratacion: _hydration,
-        entrenamientoMatutino: _morningWorkout,
-        healthKit: _healthKit,
-        vibracion: _haptic,
-        compartirActividad: _shareActivity,
-        rachaDias: actual.rachaDias,
       ),
     );
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(context.read<LocaleService>().strings.pfAjustesGuardados)),
+    );
+  }
+
+  /// P6: edita las metas de actividad (pasos diarios y calorías diarias).
+  /// Dialogo con validación real; persiste vía `actualizarMetas` sin perder
+  /// el resto del perfil (nombre, foto, racha, etc.).
+  Future<void> _editarMetas() async {
+    final strings = context.read<LocaleService>().strings;
+    final actual = context.read<AppState>().profile;
+    final pasosCtrl = TextEditingController(text: '${actual.pasosMeta}');
+    final kcalCtrl = TextEditingController(
+      text: actual.caloriasMeta.toStringAsFixed(0),
+    );
+    final formKey = GlobalKey<FormState>();
+
+    final guardar = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(strings.pfEditarMetas),
+        content: Form(
+          key: formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextFormField(
+                controller: pasosCtrl,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(
+                  labelText: strings.pfMetaPasos,
+                  icon: const Icon(Icons.directions_walk, size: 20),
+                ),
+                validator: (v) {
+                  final n = int.tryParse(v ?? '');
+                  if (n == null || n <= 0 || n > 100000) {
+                    return strings.pfMetaInvalida;
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: kcalCtrl,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(
+                  labelText: strings.pfMetaCalorias,
+                  icon: const Icon(Icons.local_fire_department, size: 20),
+                ),
+                validator: (v) {
+                  final n = double.tryParse(v ?? '');
+                  if (n == null || n < 500 || n > 10000) {
+                    return strings.pfMetaInvalida;
+                  }
+                  return null;
+                },
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(strings.pfCancelar),
+          ),
+          FilledButton(
+            onPressed: () {
+              if (formKey.currentState!.validate()) {
+                Navigator.of(ctx).pop(true);
+              }
+            },
+            child: Text(strings.pfGuardarCambios),
+          ),
+        ],
+      ),
+    );
+
+    if (guardar != true || !mounted) return;
+    await context.read<AppState>().actualizarMetas(
+          calorias: double.tryParse(kcalCtrl.text),
+          pasos: int.tryParse(pasosCtrl.text),
+        );
+    if (!mounted) return;
+    setState(() => _profile = context.read<AppState>().profile);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(strings.pfAjustesGuardados)),
+    );
+  }
+
+  /// Botón principal de guardado + versión de la app.
+  Widget _buildAcciones() {
+    final strings = context.read<LocaleService>().strings;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SizedBox(
+          height: 52,
+          child: FilledButton.icon(
+            onPressed: _guardarCambios,
+            icon: const Icon(Icons.save_outlined, size: 20),
+            label: Text(
+              strings.pfGuardarCambios,
+              style: AppType.labelLg.copyWith(fontWeight: FontWeight.w700),
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        Text(
+          strings.pfVersion,
+          textAlign: TextAlign.center,
+          style: AppType.labelSm.copyWith(color: AppColors.outline),
+        ),
+      ],
     );
   }
 }
@@ -922,28 +627,12 @@ class _ProfileHeader extends StatelessWidget {
               ],
             ),
           ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            decoration: BoxDecoration(
-              color: AppColors.surfaceContainerLow,
-              borderRadius: BorderRadius.circular(999),
-            ),
-            child: Row(
-              children: [
-                const Text('🔥', style: TextStyle(fontSize: 14)),
-                const SizedBox(width: 4),
-                Text(
-                  strings.rachaDias(context.watch<AppState>().rachaDias),
-                  style: AppType.labelMd.copyWith(color: AppColors.primary, fontWeight: FontWeight.w700),
-                ),
-              ],
-            ),
-          ),
+          RachaChip(racha: context.watch<AppState>().rachaDias),
           const SizedBox(width: 4),
           InkWell(
             onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(strings.pfConfiguracionProx)),
+              Navigator.of(context).push(
+                MaterialPageRoute<void>(builder: (_) => const ConfiguracionScreen()),
               );
             },
             borderRadius: BorderRadius.circular(999),
@@ -1064,8 +753,10 @@ class _ProfileHero extends StatelessWidget {
             ),
             child: Row(
               children: [
-                const Text('🔥', style: TextStyle(fontSize: 14)),
-                const SizedBox(width: 4),
+                if (context.watch<AppState>().rachaDias >= 7) ...[
+                  const Text('🔥', style: TextStyle(fontSize: 16)),
+                  const SizedBox(width: 5),
+                ],
                 Flexible(
                   child: Text(
                     strings.pfRachaEnRacha(context.watch<AppState>().rachaDias),
@@ -1175,87 +866,6 @@ class _QuickStat extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-class _SettingsCard extends StatelessWidget {
-  const _SettingsCard({required this.children});
-
-  final List<Widget> children;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceLowest,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primaryContainer.withValues(alpha: 0.06),
-            blurRadius: 20,
-            offset: const Offset(0, 4),
-            spreadRadius: -2,
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: children,
-      ),
-    );
-  }
-}
-
-class _CardTitle extends StatelessWidget {
-  const _CardTitle({required this.icon, required this.title, this.action});
-
-  final IconData icon;
-  final String title;
-  final Widget? action;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Container(
-          width: 32,
-          height: 32,
-          decoration: BoxDecoration(
-            color: AppColors.secondaryContainer.withValues(alpha: 0.6),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(icon, size: 18, color: AppColors.primary),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Text(
-            title,
-            style: AppType.headlineSm.copyWith(color: AppColors.onSurface, fontWeight: FontWeight.w700),
-          ),
-        ),
-        action ?? const SizedBox.shrink(),
-      ],
-    );
-  }
-}
-
-class _IconAction extends StatelessWidget {
-  const _IconAction({required this.icon});
-
-  final IconData icon;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 32,
-      height: 32,
-      decoration: BoxDecoration(
-        color: AppColors.surfaceContainer,
-        shape: BoxShape.circle,
-      ),
-      child: Icon(icon, size: 16, color: AppColors.onSurfaceVariant),
     );
   }
 }
@@ -1422,177 +1032,6 @@ class _AddPreferenceTag extends StatelessWidget {
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _ToggleRow extends StatelessWidget {
-  const _ToggleRow({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.value,
-    required this.onChanged,
-    this.iconColor,
-  });
-
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final bool value;
-  final ValueChanged<bool> onChanged;
-  final Color? iconColor;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10),
-      child: Row(
-        children: [
-          Container(
-            width: 32,
-            height: 32,
-            decoration: BoxDecoration(
-              color: AppColors.surfaceContainerLow,
-              shape: BoxShape.circle,
-            ),
-            child: Icon(icon, size: 18, color: iconColor ?? AppColors.primary),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: AppType.labelLg.copyWith(color: AppColors.onSurface, fontWeight: FontWeight.w600),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  subtitle,
-                  style: AppType.bodySm.copyWith(color: AppColors.onSurfaceVariant),
-                ),
-              ],
-            ),
-          ),
-          Switch(
-            value: value,
-            onChanged: onChanged,
-            activeThumbColor: AppColors.onPrimary,
-            activeTrackColor: AppColors.primary,
-            inactiveThumbColor: AppColors.onPrimary,
-            inactiveTrackColor: AppColors.surfaceContainerHighest,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Fila de acción táctil con icono, título y subtítulo (sección privacidad).
-class _FilaAccion extends StatelessWidget {
-  const _FilaAccion({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.onTap,
-    this.iconColor,
-    this.titleColor,
-  });
-
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final VoidCallback onTap;
-  final Color? iconColor;
-  final Color? titleColor;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(14),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 10),
-        child: Row(
-          children: [
-            Container(
-              width: 32,
-              height: 32,
-              decoration: BoxDecoration(
-                color: AppColors.surfaceContainerLow,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                icon,
-                size: 18,
-                color: iconColor ?? AppColors.primary,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: AppType.labelLg.copyWith(
-                      color: titleColor ?? AppColors.onSurface,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    subtitle,
-                    style: AppType.bodySm.copyWith(
-                      color: AppColors.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 8),
-            Icon(Icons.chevron_right, size: 20, color: AppColors.outline),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// Chip de estado de un permiso de Health Connect (concedido o no).
-class _PermisoChip extends StatelessWidget {
-  const _PermisoChip({required this.ok, required this.label});
-
-  final bool ok;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: ok ? AppColors.secondaryContainer : AppColors.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            ok ? Icons.check : Icons.block,
-            size: 12,
-            color: ok ? AppColors.onSecondaryContainer : AppColors.outline,
-          ),
-          const SizedBox(width: 4),
-          Text(
-            label,
-            style: AppType.labelSm.copyWith(
-              color: ok ? AppColors.onSecondaryContainer : AppColors.outline,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
       ),
     );
   }

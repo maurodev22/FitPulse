@@ -9,6 +9,7 @@ import '../services/ads_service.dart';
 import '../services/config_service.dart';
 import '../theme.dart';
 import '../widgets/common.dart';
+import '../widgets/racha_chip.dart';
 import '../widgets/sesion_row.dart';
 import 'historial_sesiones_screen.dart';
 
@@ -193,10 +194,6 @@ class _ProgressScreenState extends State<ProgressScreen> {
                   ),
                   const SizedBox(height: 12),
                   _buildSesiones(state, strings),
-                  const SizedBox(height: 20),
-                  SectionHeader(title: strings.prInsignias),
-                  const SizedBox(height: 12),
-                  _buildInsignias(state, strings),
                 ],
               ),
             ),
@@ -734,6 +731,9 @@ class _ProgressScreenState extends State<ProgressScreen> {
   /// Resumen REAL de la ventana activa (sesiones, minutos, kcal y racha máx).
   Widget _buildResumenPeriodo(AppState state, AppStrings strings) {
     final r = resumenPeriodo(state.historial, _diasPeriodo(_periodo));
+    // Etiqueta honesta de la ventana activa: hace perceptible el filtrado incluso
+    // cuando las cifras coinciden en ventanas con pocos datos.
+    final etiquetaVentana = strings.prVentana(_diasPeriodo(_periodo));
     if (r.sesiones == 0) {
       return Container(
         width: double.infinity,
@@ -742,6 +742,8 @@ class _ProgressScreenState extends State<ProgressScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            _EtiquetaVentana(texto: etiquetaVentana),
+            const SizedBox(height: 8),
             Text(
               strings.prSinSesionesPeriodo,
               style: AppType.labelMd.copyWith(
@@ -768,29 +770,36 @@ class _ProgressScreenState extends State<ProgressScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: _cardDecoration(radius: 16),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          for (final (icono, valor, etiqueta) in stats)
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(icono, size: 18, color: AppColors.primary),
-                  const SizedBox(height: 6),
-                  Text(
-                    valor,
-                    style: AppType.labelLg.copyWith(
-                      color: AppColors.onSurface,
-                      fontWeight: FontWeight.w800,
-                    ),
+          _EtiquetaVentana(texto: etiquetaVentana),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              for (final (icono, valor, etiqueta) in stats)
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(icono, size: 18, color: AppColors.primary),
+                      const SizedBox(height: 6),
+                      Text(
+                        valor,
+                        style: AppType.labelLg.copyWith(
+                          color: AppColors.onSurface,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      Text(
+                        etiqueta,
+                        style: AppType.labelSm.copyWith(color: AppColors.outline),
+                      ),
+                    ],
                   ),
-                  Text(
-                    etiqueta,
-                    style: AppType.labelSm.copyWith(color: AppColors.outline),
-                  ),
-                ],
-              ),
-            ),
+                ),
+            ],
+          ),
         ],
       ),
     );
@@ -920,90 +929,6 @@ class _ProgressScreenState extends State<ProgressScreen> {
       ],
     );
   }
-
-  Widget _buildInsignias(AppState state, AppStrings strings) {
-    final insignias = <({IconData icono, String nombre, String detalle})>[
-      if (state.historial.isNotEmpty)
-        (
-          icono: Icons.fitness_center,
-          nombre: strings.prPrimeraSesion,
-          detalle: strings.prCompletada
-        ),
-      if (state.rachaMaxima >= 3)
-        (
-          icono: Icons.local_fire_department,
-          nombre: strings.prRacha3,
-          detalle: strings.prConstancia
-        ),
-      if (state.rachaMaxima >= 7)
-        (
-          icono: Icons.whatshot,
-          nombre: strings.prRacha7,
-          detalle: strings.prDisciplina
-        ),
-      if (state.nivel >= 2)
-        (
-          icono: Icons.workspace_premium,
-          nombre: strings.prInsigniaNivel(state.nivel),
-          detalle: strings.nivelName(state.nombreNivel)
-        ),
-      if (state.retoCompletado)
-        (
-          icono: Icons.emoji_events,
-          nombre: strings.prInsigniaReto(state.retoObjetivo),
-          detalle: strings.prCompletado
-        ),
-    ];
-    if (insignias.isEmpty) {
-      return Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(16),
-        decoration: _cardDecoration(radius: 16),
-        child: Column(
-          children: [
-            Icon(Icons.emoji_events_outlined, size: 28, color: AppColors.outline),
-            const SizedBox(height: 8),
-            Text(
-              strings.prDesbloqueaInsignias,
-              textAlign: TextAlign.center,
-              style: AppType.bodySm.copyWith(color: AppColors.outline),
-            ),
-          ],
-        ),
-      );
-    }
-    return Wrap(
-      spacing: 10,
-      runSpacing: 10,
-      children: [
-        for (final ins in insignias)
-          Container(
-            width: 105,
-            padding: const EdgeInsets.all(12),
-            decoration: _cardDecoration(radius: 16),
-            child: Column(
-              children: [
-                Icon(ins.icono, size: 22, color: AppColors.primary),
-                const SizedBox(height: 6),
-                Text(
-                  ins.nombre,
-                  style: AppType.labelMd.copyWith(
-                    color: AppColors.onSurface,
-                    fontWeight: FontWeight.w700,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                Text(
-                  ins.detalle,
-                  style: AppType.labelSm.copyWith(color: AppColors.outline),
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ),
-          ),
-      ],
-    );
-  }
 }
 
 class _ProgressHeader extends StatelessWidget {
@@ -1034,27 +959,7 @@ class _ProgressHeader extends StatelessWidget {
               ],
             ),
           ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            decoration: BoxDecoration(
-              color: AppColors.surfaceContainerLow,
-              borderRadius: BorderRadius.circular(999),
-              border: Border.all(color: AppColors.outlineVariant.withValues(alpha: 0.3)),
-            ),
-            child: Row(
-              children: [
-                const Text('🔥', style: TextStyle(fontSize: 14)),
-                const SizedBox(width: 4),
-                Text(
-                  strings.rachaDias(state.rachaDias),
-                  style: AppType.labelMd.copyWith(
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ],
-            ),
-          ),
+          RachaChip(racha: state.rachaDias, borde: true),
           const SizedBox(width: 4),
           IconButton(
             onPressed: () {},
@@ -1409,4 +1314,44 @@ String _nombrePeriodo(PeriodoRecorte p, AppStrings strings) => switch (p) {
     anterior = d;
   }
   return (sesiones: sesiones, minutos: minutos, kcal: kcal, rachaMaxima: rachaMax);
+}
+
+/// Etiqueta compacta de la ventana activa (p. ej. "Últimos 7 días") que hace
+/// perceptible el filtrado de período incluso con pocos datos.
+class _EtiquetaVentana extends StatelessWidget {
+  const _EtiquetaVentana({required this.texto});
+
+  final String texto;
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        decoration: BoxDecoration(
+          color: AppColors.secondaryContainer.withValues(alpha: 0.4),
+          borderRadius: BorderRadius.circular(999),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.date_range, size: 14, color: AppColors.primary),
+            const SizedBox(width: 6),
+            Flexible(
+              child: Text(
+                texto,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppType.labelMd.copyWith(
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
