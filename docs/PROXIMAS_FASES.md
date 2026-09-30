@@ -14,6 +14,8 @@
 | Fase | Estado | Objetivo |
 |---|---|---|
 | L1 — Correcciones UI (recetas / período / "Ver todo") | ✅ `fb8cdec` + verificado en Pixel (2026-09-30) | Bugs de la lista del cliente corregidos |
+| Hotfix UI P1–P10 (aprobado 30/09) | ✅ `0bf3f15` (P1–P7) + `b9b91d1` (P8–P10, sesión) | Detalle del día, ventana visible, insignias a Perfil, Consejos funcionales, racha ≥7, editar metas, Configuración, peso Progreso→Perfil, sin duplicados en Perfil, mínimo 2 días |
+| Verificación física del hotfix en Pixel 6a | ⏳ **en curso** | `docs/HOTFIX_UI.md` + `docs/GUIA_TESTEO_INTEGRAL.md §12-13` |
 | L2 — Agua (registro manual + meta diaria) | ⏳ **siguiente** | Marcar vasos de 250 ml y ajustar meta (def. 3 L) |
 | L3 — Constructor de entrenamientos | ⏳ | Crear rutinas propias con descanso de 60 s |
 | L4 — Recetas originales por metas | ⏳ | Catálogo ~35-40 recetas propias (sin plagio) por meta |
