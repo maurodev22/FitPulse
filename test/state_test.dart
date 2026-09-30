@@ -403,11 +403,14 @@ void main() {
       final state = AppState();
       await state.init();
 
-      await state.registrarRepeticiones('Sentadillas', 15);
-      await state.registrarRepeticiones('Flexiones', 12);
+      await state.registrarRepeticiones('Sentadillas', 15,
+          fecha: DateTime(2026, 9, 28));
+      await state.registrarRepeticiones('Flexiones', 12,
+          fecha: DateTime(2026, 9, 29));
 
       expect(state.historialReps, hasLength(2));
-      expect(state.historialReps.first.ejercicio, 'Flexiones');
+      expect(state.historialReps.first.ejercicio, 'Flexiones',
+          reason: 'la más reciente primero (orden desc por fecha)');
 
       final state2 = AppState();
       await state2.init();
