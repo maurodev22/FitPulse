@@ -380,6 +380,49 @@ Pixel 6a (muestreo de píxeles + `uiautomator dump`, tema oscuro y español inta
 
 ---
 
+## 11.6 Fase 10 — Feedback del usuario P11–P16 (2026-10-02) 🚧
+
+Feedback del usuario incorporado en la sesión del 2026-10-02. Registro detallado y
+pasos de verificación en `docs/GUIA_TESTEO_COMPLETA.md` §21 (P11–P13) y §22 (P14–P16).
+
+### P11–P13 — Reproductor rediseñado ✅ código (verificación física pendiente)
+
+- ✅ **P11**: reproductor a **pantalla completa** (el hero y la ficha del ejercicio
+  ocupan todo el ancho; controles y nombre a un solo nivel, sin la barra envolvente
+  del shell).
+- ✅ **P12**: **repeticiones al final** — el episodio activo del ejercicio se marca en
+  rojo y el contador real de repeticiones/tiempo se muestra de forma destacada.
+- ✅ **P13**: el **entrenador con cámara es Premium** ("Solo Premium"): sin Premium se
+  muestra el aviso honesto con cómo activarlo (modo prueba); con Premium activo se abre.
+- Estado: 116/116 tests, 0 issues en `flutter analyze`. APK release reconstruido e
+  instalado. Reportes de testeo manual del usuario (P11–P13) pendientes.
+
+### P14–P16 — Agua manual, hidratación 30 min e inactividad 2 días 🚧
+
+- ✅ **P14 — Registro manual de agua 2,5 L/día**: en la tarjeta **Día ideal** del Home
+  la fila **Agua** es pulsable → diálogo "Registra tu agua de hoy" (+0,25 L / +0,50 L /
+  +1 L + cantidad libre). Suma al total diario real de Health Connect si existe (nunca
+  inventa: solo cuenta lo que el usuario declara). Meta 2,5 L → "Agua · 2,5 / 2,5 L · ✓".
+  **PASA** — verificado físicamente en el Pixel 6a el 2026-10-02 (DÍA IDEAL 2/3).
+- ✅ **P15 — Hidratación cada 30 min**: el aviso pasa de "cada hora" a cada 30 minutos
+  (`periodicallyShowWithDuration(30 min)`, ID 9001). Texto serio sin emojis: "Hidrátate /
+  Ha pasado un tiempo desde que tomaste agua, por favor hidrátate."
+- ✅ **P16 — Inactividad a los 2 días**: en cada arranque se (re)programa un aviso único
+  a **+48 h** (ID 9004): si el usuario no abre la app en 2 días llega "FitPulse — Regresa
+  y entrena, mantente en forma!" (seria, sin emojis). Si vuelve antes, se reprograma.
+- 🔧 **FATAL del small icon corregido**: `isShrinkResources=true` (R8) eliminaba
+  `ic_stat_fitpulse` del release (referenciado solo por nombre en Dart, no por
+  `R.drawable`) → `getIdentifier()=0` → "Invalid notification (no valid small icon)" al
+  mostrar un aviso. Fix: `android/app/src/main/res/raw/keep.xml` con
+  `tools:keep="@drawable/ic_stat_fitpulse"`. Con el APK reconstruido las **3 alarmas**
+  entran al AlarmManager: 9001 (próximo ciclo 30 min), 9002 (20:00) y **9004 (+48 h)** —
+  confirmadas en `dumpsys alarm` el 2026-10-02 (el mismo fallo también impedía programar
+  el one-shot 9004; con el icono vivo `sincronizar` completa todo el flujo).
+- Estado: 122/122 tests, 0 issues. Verificación física de la cadena de avisos (P15/P16)
+  en curso con el dispositivo re-conectado.
+
+---
+
 ## 12. Principios que se mantienen
 
 - Todo funciona en el propio móvil: sin cuentas ni servidores.
