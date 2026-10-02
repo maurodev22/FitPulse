@@ -133,8 +133,10 @@
   `ConfigService.setAds`); los anuncios solo se cargan tras el EULA (la app entera lo
   requiere) y si el flag está activo.
 - ✅ **Premium "Quitar anuncios"**: tarjeta en Perfil con estado, botón
+  - ✅ **Premium "Quitar anuncios"**: tarjeta en Perfil con estado, botón
   "Activar/Desactivar Premium (modo prueba)" (`ConfigService.setPremium`) y nota honesta
-  de que el cobro real requiere Google Play con entidad fuera de Cuba. Con Premium activo
+  de que el cobro real requiere Google Play con entidad fuera de Cuba (ver
+  `docs/COBRO_PREMIUM.md`, el procedimiento de cobro). Con Premium activo
   se ocultan banner y recompensado.
 - ✅ **App ligera**: `isMinifyEnabled` + `isShrinkResources` (R8) en el build de release;
   el APK debug sigue siendo grande a propósito (contiene símbolos de depuración).

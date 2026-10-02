@@ -113,6 +113,9 @@ repite, hacer una **captura de pantalla** y mandarla con el número.
    La app ya sabe mostrarlo sola cuando se necesita (Europa/Reino Unido).
 4. **Cuenta de desarrollador en Google Play Console** (play.google.com/console,
    pago único de 25 USD) desde su país, con sus datos fiscales/bancarios.
+   > Si el plan es **cobrar por Premium** además de los anuncios, ver la guía
+   > aparte **`docs/COBRO_PREMIUM.md`** (cómo vincular el cobro, el producto
+   > `fitpulse_premium_remover_anuncios` y la cuenta bancaria).
 5. Enviarme los 4 códigos de AdMob (paso 2) → **yo los pongo en la app en unos
    minutos** y entrego el AAB final para subir.
 
