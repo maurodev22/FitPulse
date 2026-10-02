@@ -123,4 +123,38 @@ void main() {
       findsOneWidget,
     );
   });
+
+  testWidgets('P14: la fila Agua del Día ideal abre el registro manual',
+      (tester) async {
+    await pumpApp(tester, const HomeScreen());
+
+    // El Home no muestra agua (sin permiso HC ni registro manual).
+    expect(find.text('Objetivo: 2.5 L'), findsOneWidget);
+
+    // Tocar la fila Agua abre el diálogo de registro manual (P14).
+    await tester.tap(find.text('Objetivo: 2.5 L'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Registra tu agua de hoy'), findsOneWidget);
+    expect(find.text('+0,25 L'), findsOneWidget);
+    expect(find.text('+0,50 L'), findsOneWidget);
+    expect(find.text('+1 L'), findsOneWidget);
+
+    // +0,50 L registra, cierra el diálogo y confirma con snackbar.
+    await tester.tap(find.text('+0,50 L'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Registra tu agua de hoy'), findsNothing);
+    expect(find.text('Agua registrada: 0.50 L'), findsOneWidget);
+    expect(find.text('0.5 / 2.5 L'), findsOneWidget);
+
+    // +1 L más → 1.5 L total; la meta (2.5 L) aún no se cumple.
+    await tester.tap(find.text('0.5 / 2.5 L'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('+1 L'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Agua registrada: 1.00 L'), findsOneWidget);
+    expect(find.text('1.5 / 2.5 L'), findsOneWidget);
+  });
 }

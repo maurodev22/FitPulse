@@ -597,7 +597,7 @@ pill, solo quedan los artículos de esa categoría.
 | **P16** — Inactividad a los 2 días (§22) | ☐ PASA / ☐ FALLA | Ídem. |
 | Transversales A-H (§16) | ☐ PASA / ☐ FALLA | |
 | Logcat final | ☐ Sin FATAL/ANR | *FATAL pre-existente de avisos (§20) se registra aparte.* |
-| `flutter test` + `flutter analyze` | ✅ 121/121 · 0 issues (código actual) | |
+| `flutter test` + `flutter analyze` | ✅ 122/122 · 0 issues (código actual) | |
 
 ---
 
@@ -638,7 +638,7 @@ adb -s <SERIAL> shell uiautomator dump /sdcard/restaurado.xml
 | 2026-09-30 | Pixel 6a | **L1 (§10)** | ✅ PASA | Verificado físicamente (píxeles + dump): pill "Alta Proteína" abre catálogo filtrado, tabs Semanal/Mensual/Año cambian estado, "Ver todo" → Historial de sesiones (3 sesiones). Tema oscuro + español + datos intactos. |
 | 2026-10-02 | Pixel 6a | **Hotfix P1–P10 (testeo manual del usuario)** | ☑ PASA (1–8) | Ítems 1–8 ✅ (P1, Fase1, P2, P8, P3/P6/P9/P10, P7, P4, L1). Ítem 9 (Ayuda) sin veredicto. Reproductor (ítem 10) → rediseño pedido: reloj a pantalla completa, reps al final, coach Premium → **P11–P13**. |
 | 2026-10-02 | Pixel 6a | **P11–P13 (§21)** | ☐ PASA / ☐ FALLA | Nuevo lote desde feedback del usuario (reloj fullscreen, reps al final, coach Premium). APK release reconstruido + código ✅ (116/116, 0 issues). Verificación física en curso. |
-| 2026-10-02 | Pixel 6a | **P14–P16 (§22)** | ☐ PASA / ☐ FALLA | Pedido directo del usuario: registro manual de agua (meta 2,5 L/día), hidratación cada 30 min y aviso de inactividad a los 2 días. Código ✅ (121/121, 0 issues). Verificación física en curso. |
+| 2026-10-02 | Pixel 6a | **P14–P16 (§22)** | ☐ PASA / ☐ FALLA | Pedido directo del usuario: registro manual de agua (meta 2,5 L/día), hidratación cada 30 min y aviso de inactividad a los 2 días. Código ✅ (122/122, 0 issues). Verificación física en curso. |
 |  | Xiaomi Redmi 8A | **L1** | ☐ PASA / ☐ FALLA | Pendiente (workaround dump MIUI o muestreo). |
 |  | Pixel 6a | A-H (§16) | ☐ PASA / ☐ FALLA | Ciclo transversal completo. |
 
@@ -700,7 +700,7 @@ Nuevo lote derivado del pedido directo del usuario:
 > serio; al 2º día de no ingresar a la aplicación envía una notificación que diga:
 > 'regresa y entrena, mantente en forma!'"*
 
-### Comportamiento esperado (código ✅, 121/121 tests, 0 issues)
+### Comportamiento esperado (código ✅, 122/122 tests, 0 issues)
 
 | Ítem | Qué debe verse/hacerse |
 |---|---|
