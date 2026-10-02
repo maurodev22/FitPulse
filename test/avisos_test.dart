@@ -27,6 +27,25 @@ void main() {
       expect(utc.millisecondsSinceEpoch, local.millisecondsSinceEpoch);
     });
 
+    test('P15: textos de hidratación serios y sin emojis', () {
+      expect(textoAvisoHidratacionTitulo, 'Hidrátate');
+      expect(
+        textoAvisoHidratacionCuerpo.toLowerCase(),
+        contains('ha pasado un tiempo desde que tomaste agua'),
+      );
+      expect(textoAvisoHidratacionCuerpo, contains('hidrátate'));
+      expect(_sinEmojis(textoAvisoHidratacionTitulo), isTrue);
+      expect(_sinEmojis(textoAvisoHidratacionCuerpo), isTrue);
+    });
+
+    test('P16: texto de inactividad serio y sin emojis', () {
+      expect(textoAvisoInactividadTitulo, 'FitPulse');
+      expect(textoAvisoInactividadCuerpo, contains('Regresa y entrena'));
+      expect(textoAvisoInactividadCuerpo, contains('mantente en forma'));
+      expect(_sinEmojis(textoAvisoInactividadTitulo), isTrue);
+      expect(_sinEmojis(textoAvisoInactividadCuerpo), isTrue);
+    });
+
     test('textoAvisoRacha usa la racha real (0, 1, N)', () {
       expect(textoAvisoRacha(0), contains('empezar'));
       expect(textoAvisoRacha(1), contains('1 día'));
@@ -58,4 +77,12 @@ void main() {
       expect(json, contains('"calorias":null'));
     });
   });
+}
+
+/// true si el texto no contiene emojis (solo caracteres básicos ISO-8859/ASCII
+/// más los acentos y tildes del español).
+bool _sinEmojis(String texto) {
+  return texto.codeUnits.every(
+    (u) => u <= 0x7F || (u >= 0xC0 && u <= 0xFF) || u == 0x2019,
+  );
 }

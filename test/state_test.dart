@@ -189,6 +189,58 @@ void main() {
     });
   });
 
+  group('P14 · registro manual de agua', () {
+    test('registrarAgua suma litros, expone aguaHoy y persiste', () async {
+      SharedPreferences.setMockInitialValues({});
+      final state = AppState();
+      await state.init();
+
+      expect(state.aguaHoy, isNull);
+      expect(state.aguaManualHoy, 0);
+
+      await state.registrarAgua(0.5);
+      await state.registrarAgua(0.75);
+      expect(state.aguaManualHoy, closeTo(1.25, 0.001));
+      expect(state.aguaHoy, closeTo(1.25, 0.001));
+
+      // Persiste al reinstanciar (mismo día).
+      final state2 = AppState();
+      await state2.init();
+      expect(state2.aguaManualHoy, closeTo(1.25, 0.001));
+      expect(state2.aguaHoy, closeTo(1.25, 0.001));
+    });
+
+    test('agua manual se suma a la lectura de Health Connect del día', () async {
+      SharedPreferences.setMockInitialValues({});
+      final state = AppState();
+      await state.init();
+
+      await state.registrarAgua(1.0);
+      state.setHealthConnect(_FakeHealthConnect(
+        datos: const HealthToday(
+          funciono: true,
+          aguaLitros: 1.8,
+          metricasConPermiso: {HealthMetricas.agua},
+        ),
+      ));
+      await state.initHealthConnect();
+
+      expect(state.aguaManualHoy, closeTo(1.0, 0.001));
+      expect(state.aguaHoy, closeTo(2.8, 0.001));
+    });
+
+    test('cantidades no positivas no registran nada', () async {
+      SharedPreferences.setMockInitialValues({});
+      final state = AppState();
+      await state.init();
+
+      await state.registrarAgua(0);
+      await state.registrarAgua(-0.5);
+      expect(state.aguaManualHoy, 0);
+      expect(state.aguaHoy, isNull);
+    });
+  });
+
   group('Fase 2 · historial, racha, puntos y retos', () {
     test('registrar una sesión suma puntos y persiste', () async {
       SharedPreferences.setMockInitialValues({});

@@ -592,9 +592,12 @@ pill, solo quedan los artículos de esa categoría.
 | **P11** — Reproductor: reloj a pantalla completa sin scroll (§21) | ☐ PASA / ☐ FALLA | Nuevo APK (build en curso 2026-10-02). |
 | **P12** — Registrar reps al final del entrenamiento (§21) | ☐ PASA / ☐ FALLA | Ídem. |
 | **P13** — Coach de cámara solo Premium (§21) | ☐ PASA / ☐ FALLA | Ídem. |
+| **P14** — Registro manual de agua, meta 2,5 L/día (§22) | ☐ PASA / ☐ FALLA | Nuevo pedido del usuario (2026-10-02). APK (build en curso). |
+| **P15** — Hidratación cada 30 min sin emojis (§22) | ☐ PASA / ☐ FALLA | Ídem. |
+| **P16** — Inactividad a los 2 días (§22) | ☐ PASA / ☐ FALLA | Ídem. |
 | Transversales A-H (§16) | ☐ PASA / ☐ FALLA | |
 | Logcat final | ☐ Sin FATAL/ANR | *FATAL pre-existente de avisos (§20) se registra aparte.* |
-| `flutter test` + `flutter analyze` | ✅ 116/116 · 0 issues (código actual) | |
+| `flutter test` + `flutter analyze` | ✅ 121/121 · 0 issues (código actual) | |
 
 ---
 
@@ -635,6 +638,7 @@ adb -s <SERIAL> shell uiautomator dump /sdcard/restaurado.xml
 | 2026-09-30 | Pixel 6a | **L1 (§10)** | ✅ PASA | Verificado físicamente (píxeles + dump): pill "Alta Proteína" abre catálogo filtrado, tabs Semanal/Mensual/Año cambian estado, "Ver todo" → Historial de sesiones (3 sesiones). Tema oscuro + español + datos intactos. |
 | 2026-10-02 | Pixel 6a | **Hotfix P1–P10 (testeo manual del usuario)** | ☑ PASA (1–8) | Ítems 1–8 ✅ (P1, Fase1, P2, P8, P3/P6/P9/P10, P7, P4, L1). Ítem 9 (Ayuda) sin veredicto. Reproductor (ítem 10) → rediseño pedido: reloj a pantalla completa, reps al final, coach Premium → **P11–P13**. |
 | 2026-10-02 | Pixel 6a | **P11–P13 (§21)** | ☐ PASA / ☐ FALLA | Nuevo lote desde feedback del usuario (reloj fullscreen, reps al final, coach Premium). APK release reconstruido + código ✅ (116/116, 0 issues). Verificación física en curso. |
+| 2026-10-02 | Pixel 6a | **P14–P16 (§22)** | ☐ PASA / ☐ FALLA | Pedido directo del usuario: registro manual de agua (meta 2,5 L/día), hidratación cada 30 min y aviso de inactividad a los 2 días. Código ✅ (121/121, 0 issues). Verificación física en curso. |
 |  | Xiaomi Redmi 8A | **L1** | ☐ PASA / ☐ FALLA | Pendiente (workaround dump MIUI o muestreo). |
 |  | Pixel 6a | A-H (§16) | ☐ PASA / ☐ FALLA | Ciclo transversal completo. |
 
@@ -646,9 +650,10 @@ adb -s <SERIAL> shell uiautomator dump /sdcard/restaurado.xml
   `com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver` —
   `Invalid notification (no valid small icon)` — se repite al amanecer; se investiga aparte.
   No forma parte del lote P1–P10.
-- **Roadmap L2–L5** (NO implementadas, no probar): agua editable/registro manual (L2),
-  constructor de rutinas (L3), catálogo de recetas por metas (L4), gamificación con
-  feedback (L5). Detalles: `docs/PROXIMAS_FASES.md`.
+- **Roadmap L2–L5** (NO implementadas, no probar): constructor de rutinas (L3),
+  catálogo de recetas por metas (L4), gamificación con feedback (L5). El registro
+  **manual de agua** (antiguo L2) ya se implementó como **P14 (§22)**. Detalles:
+  `docs/PROXIMAS_FASES.md`.
 - **AdMob 403 en Cuba**: esperado (bloqueo geográfico), la app muestra placeholder honesto.
 
 ---
@@ -682,6 +687,40 @@ Nuevo lote derivado del **ítem 10** del testeo manual del usuario:
 
 > Nota: tras este lote, la **Fase 5 (cámara + reps)** queda redistribuida: cámara = P13 (Premium),
 > reps = P12 (al final del entrenamiento).
+
+---
+
+## 22. P14–P16 — Agua manual, hidratación cada 30 min e inactividad a los 2 días (feedback del usuario, 2026-10-02)
+
+Nuevo lote derivado del pedido directo del usuario:
+
+> *"pon en el plan la posibilidad de ingresar manualmente la cantidad de agua aproximada
+> que se consumió, mínimo 2,5 L al día; cada 30 minutos envía una notificación que diga:
+> 'ha pasado un tiempo desde que tomaste agua, por favor hidrátate', sin emojis, algo
+> serio; al 2º día de no ingresar a la aplicación envía una notificación que diga:
+> 'regresa y entrena, mantente en forma!'"*
+
+### Comportamiento esperado (código ✅, 121/121 tests, 0 issues)
+
+| Ítem | Qué debe verse/hacerse |
+|---|---|
+| **P14** — Registro manual de agua | En la tarjeta **Día ideal** del Home, la fila **Agua** ahora es pulsable y abre el diálogo **"Registra tu agua de hoy"** con: total del día, botones rápidos (+0,25 L, +0,50 L, +1 L) y campo de cantidad libre (L). Cada registro suma al total diario, persiste en el dispositivo y confirma con snackbar. La meta (2,5 L → ✔) se cumple aunque **no** haya permiso de Health Connect; y se **suma** a la lectura real de HC si la hay (nunca inventa: solo cuenta lo que el usuario declara). El panel **"Ver detalles"** (Agua de hoy) también muestra el total manual sin necesidad de permiso HC. |
+| **P15** — Hidratación cada 30 min | El aviso de hidratación (toggle de Perfil/Configuración) pasa de "cada hora" a **cada 30 minutos** con `periodicallyShowWithDuration`. Texto serio, sin emojis: título **"Hidrátate"**, cuerpo **"Ha pasado un tiempo desde que tomaste agua, por favor hidrátate."** |
+| **P16** — Inactividad a los 2 días | En cada arranque se (re)programa un aviso único a **+48 h**: si el usuario **no abre la app en 2 días**, llega la notificación **"FitPulse — Regresa y entrena, mantente en forma!"** (seria, sin emojis). Si vuelve antes, se reprograma desde esa apertura. |
+
+### Pasos de verificación manual (P14–P16)
+
+1. **P14**: Inicio → tarjeta **Día ideal** → tocar la fila **Agua**.
+   - Debe abrirse "Registra tu agua de hoy" con el total actual (0,00 L) y los botones +0,25 / +0,50 / +1 L.
+   - Pulsar **+0,25 L** dos veces y **+1 L** → snackbar de confirmación; el subtítulo de la fila pasa a `1,50 / 2,5 L` y **no** hace falta permiso de Health Connect.
+   - Escribir una cantidad libre (p. ej. `0,5`) y pulsar **Añadir** → suma al total.
+   - **Alcanzar 2,5 L** → el check del Día ideal se completa y el contador "N de 3" sube a 3.
+   - "Ver detalles" → la fila **Agua** muestra el total aunque no haya permiso de HC.
+2. **P15**: Perfil → Configuración → **Recordatorios de hidratación** activado. Con el teléfono en reposo, verificar que llega la notificación cada ~30 min con el texto serio sin emojis: *"Ha pasado un tiempo desde que tomaste agua, por favor hidrátate."*
+3. **P16**: dejar la app **sin abrir 2 días** → debe llegar "FitPulse / Regresa y entrena, mantente en forma!". Si se abre antes, la cuenta vuelve a 48 h.
+
+> Nota: P16 es a propósito un aviso **único reprogramable** (no se acumula); P15 sigue dependiendo
+> del toggle de hidratación del perfil. Ambos textos sin emojis y en tono serio, como pidió el usuario.
 
 ---
 

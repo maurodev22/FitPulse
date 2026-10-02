@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../services/locale_service.dart';
@@ -8,6 +9,97 @@ import '../theme.dart';
 import '../widgets/common.dart';
 import '../widgets/racha_chip.dart';
 import 'workout_player_screen.dart';
+
+/// Abre el diálogo para registrar MANUALMENTE el agua consumida hoy (P14):
+/// botones rápidos (+250 ml, +500 ml, +1 L) y una cantidad libre aproximada.
+/// Cada acción suma al total diario persistido y confirma con un snackbar.
+Future<void> _mostrarDialogoRegistrarAgua(BuildContext context) async {
+  final state = context.read<AppState>();
+  final strings = context.read<LocaleService>().strings;
+  final messenger = ScaffoldMessenger.of(context);
+  final controller = TextEditingController();
+
+  void confirmar(String mensaje) {
+    messenger
+      ..clearSnackBars()
+      ..showSnackBar(SnackBar(content: Text(mensaje)));
+  }
+
+  Future<void> registrar(double litros) async {
+    await state.registrarAgua(litros);
+    confirmar(strings.homeAguaRegistrada(litros));
+    if (context.mounted) Navigator.of(context).pop();
+  }
+
+  await showDialog<void>(
+    context: context,
+    builder: (dialogCtx) => AlertDialog(
+      backgroundColor: AppColors.surface,
+      title: Text(strings.homeTituloRegistrarAgua),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '${strings.homeAguaTotal}: '
+              '${(state.aguaHoy ?? 0).toStringAsFixed(2)} L',
+              style: AppType.bodyMd.copyWith(color: AppColors.onSurface),
+            ),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                ActionChip(
+                  label: const Text('+0,25 L'),
+                  onPressed: () => registrar(0.25),
+                ),
+                ActionChip(
+                  label: const Text('+0,50 L'),
+                  onPressed: () => registrar(0.5),
+                ),
+                ActionChip(
+                  label: const Text('+1 L'),
+                  onPressed: () => registrar(1.0),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: controller,
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
+              ],
+              decoration: InputDecoration(
+                labelText: strings.homeAguaCantidad,
+                hintText: '0,3',
+              ),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(dialogCtx).pop(),
+          child: Text(strings.homeCerrar),
+        ),
+        FilledButton(
+          onPressed: () {
+            final texto = controller.text.trim().replaceAll(',', '.');
+            final litros = double.tryParse(texto);
+            if (litros == null || litros <= 0) return;
+            registrar(litros);
+          },
+          child: Text(strings.homeAguaAnadir),
+        ),
+      ],
+    ),
+  );
+  controller.dispose();
+}
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -147,7 +239,9 @@ class _HomeScreenState extends State<HomeScreen> {
         final pasosDisponible = s.healthDisponible;
         final pulso = s.pulsoHoy;
         final agua = s.aguaHoy;
-        final tieneAgua = s.aguaConPermiso;
+        // Hay dato de agua si HC tiene permiso, o si el usuario registró agua
+        // manualmente (P14: se muestra aunque no exista permiso de HC).
+        final tieneAgua = s.aguaConPermiso || s.aguaManualHoy > 0;
         return Padding(
           padding: EdgeInsets.fromLTRB(
             20,
@@ -688,7 +782,10 @@ class _DiaIdealCard extends StatelessWidget {
     final metaOk = state.progresoCalorias >= 1.0;
     final aguaActual = state.aguaHoy;
     final aguaObjetivo = 2.5;
-    final aguaOk = state.aguaConPermiso && (aguaActual ?? 0) >= aguaObjetivo;
+    // P14: la meta de agua se puede cumplir con el registro manual (no hace
+    // falta permiso de Health Connect); nunca se inventa, solo cuenta lo que
+    // el usuario declara o lo que HC lee realmente.
+    final aguaOk = (aguaActual ?? 0) >= aguaObjetivo;
     final completados = [entrenado, metaOk, aguaOk].where((v) => v).length;
     final recomendado = state.entrenamientoRecomendado;
 
@@ -762,11 +859,11 @@ class _DiaIdealCard extends StatelessWidget {
           _DiaIdealItem(
             icon: Icons.water_drop_outlined,
             title: strings.homeAgua,
-            subtitle: state.aguaConPermiso && aguaActual != null
+            subtitle: aguaActual != null
                 ? '${aguaActual.toStringAsFixed(1)} / $aguaObjetivo L'
                 : strings.homeObjetivoAgua(aguaObjetivo.toString()),
             done: aguaOk,
-            onTap: () {},
+            onTap: () => _mostrarDialogoRegistrarAgua(context),
           ),
         ],
       ),

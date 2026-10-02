@@ -9,11 +9,13 @@ library;
 
 /// IDs de notificación fijos por tipo de aviso (Fase 6).
 ///
-/// - [hidratacionAvisoId]: recordatorio de hidratación (periódico).
+/// - [hidratacionAvisoId]: recordatorio de hidratación cada 30 minutos (P15).
 /// - [rachaAvisoId]: aviso diario de racha en riesgo (20:00).
+/// - [inactividadAvisoId]: aviso único a los 2 días sin abrir la app (P16).
 abstract final class AvisosIds {
   static const int hidratacion = 9001;
   static const int racha = 9002;
+  static const int inactividad = 9004;
 }
 
 /// Devuelve la próxima ocurrencia local de [hora]:[minuto] a partir de [ahora]
@@ -29,6 +31,18 @@ DateTime proximaHoraLocal(DateTime ahora, int hora, int minuto) {
   }
   return d;
 }
+
+/// Texto serio (sin emojis) del recordatorio de hidratación (P15): se envía
+/// cada 30 minutos y pide hidratarse sin distracciones.
+const String textoAvisoHidratacionTitulo = 'Hidrátate';
+const String textoAvisoHidratacionCuerpo =
+    'Ha pasado un tiempo desde que tomaste agua, por favor hidrátate.';
+
+/// Texto del aviso de inactividad (P16): se envía a los 2 días sin abrir la
+/// app. Serio y directo, sin emojis.
+const String textoAvisoInactividadTitulo = 'FitPulse';
+const String textoAvisoInactividadCuerpo =
+    'Regresa y entrena, mantente en forma!';
 
 /// Convierte un [DateTime] local en un instante absoluto UTC (epoch).
 ///

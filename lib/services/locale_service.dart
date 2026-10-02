@@ -293,6 +293,18 @@ class AppStrings {
   String get homeMacros => _t('Macros', 'Macros');
   String get homeAgua => _t('Agua', 'Water');
   String homeObjetivoAgua(String litros) => _t('Objetivo: $litros L', 'Goal: $litros L');
+  String get homeRegistrarAgua => _t('Registrar agua', 'Log water');
+  String get homeTituloRegistrarAgua =>
+      _t('Registra tu agua de hoy', 'Log today\'s water');
+  String get homeAguaTotal => _t('Total de hoy', 'Today\'s total');
+  String homeAguaVasos(int n) => _t('$n vasos', '$n glasses');
+  String get homeAguaCantidad => _t('Cantidad (L)', 'Amount (L)');
+  String get homeAguaAnadir => _t('Añadir', 'Add');
+  String homeAguaRegistrada(double litros) => _t(
+      'Agua registrada: ${litros.toStringAsFixed(2)} L',
+      'Water logged: ${litros.toStringAsFixed(2)} L');
+  String get homeAguaMetaCumplida =>
+      _t('Meta de 2,5 L cumplida', '2.5 L goal reached');
   String get homePendiente => _t('Pendiente', 'Pending');
 
   // ---- Recetas ----

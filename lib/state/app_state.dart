@@ -32,6 +32,11 @@ class AppState extends ChangeNotifier {
   static const _pasosBaseKey = 'fitpulse_pasos_base_v1';
   static const _pasosBaseDateKey = 'fitpulse_pasos_base_date_v1';
 
+  // P14: agua registrada MANUALMENTE por el usuario (litros del día), con su
+  // propia fecha para reiniciarlo cada día sin tocar el balance de calorías.
+  static const _aguaManualKey = 'fitpulse_agua_manual_v1';
+  static const _aguaManualDateKey = 'fitpulse_agua_manual_date_v1';
+
   // Fase 2: historial de sesiones, puntos y retos.
   static const _historyKey = 'fitpulse_workout_history_v1';
   static const _xpKey = 'fitpulse_xp_v1';
@@ -116,9 +121,10 @@ class AppState extends ChangeNotifier {
   void _onPasos(int raw) {
     final today = _dayKey(DateTime.now());
 
-    // Si cambió el día, reseteamos el balance y el baseline de pasos.
+    // Si cambió el día, reseteamos el balance, el agua manual y el baseline.
     if (_prefs?.getString(_balanceDateKey) != today) {
       _resetBalance();
+      _resetAguaManual();
       _pasosBase = null;
       _prefs?.setString(_balanceDateKey, today);
     }
@@ -144,6 +150,14 @@ class AppState extends ChangeNotifier {
     _prefs?.setDouble(_proteinasKey, 0);
     _prefs?.setDouble(_carbosKey, 0);
     _prefs?.setDouble(_grasasKey, 0);
+  }
+
+  /// P14: pone a cero el agua manual del día (se llama al cambiar de día).
+  void _resetAguaManual() {
+    aguaManualHoy = 0;
+    final today = _dayKey(DateTime.now());
+    _prefs?.setDouble(_aguaManualKey, 0);
+    _prefs?.setString(_aguaManualDateKey, today);
   }
 
   /// Inicializa el estado cargando la sesión persistida del dispositivo.
@@ -177,6 +191,13 @@ class AppState extends ChangeNotifier {
       // Mismo día: restauramos el baseline de pasos para continuar el conteo.
       _pasosBase = _prefs!.getInt(_pasosBaseKey);
       pasosHoy = 0;
+    }
+
+    // P14: agua registrada manualmente — pertenece al día actual (o 0).
+    if (_prefs!.getString(_aguaManualDateKey) == today) {
+      aguaManualHoy = _prefs!.getDouble(_aguaManualKey) ?? 0;
+    } else {
+      _resetAguaManual();
     }
     notifyListeners();
   }
@@ -214,7 +235,30 @@ class AppState extends ChangeNotifier {
   Duration? get suenioHoy => _healthToday.suenioMin != null
       ? Duration(minutes: _healthToday.suenioMin!)
       : null;
-  double? get aguaHoy => _healthToday.aguaLitros;
+  /// Agua del día registrada MANUALMENTE por el usuario (litros). Independiente
+  /// de Health Connect: siempre se puede registrar un vaso (P14).
+  double aguaManualHoy = 0;
+
+  /// Registra manualmente una cantidad aproximada de agua consumida (litros),
+  /// la suma al día y la persiste. Nunca inventa datos: solo cuenta lo que el
+  /// usuario declara.
+  Future<void> registrarAgua(double litros) async {
+    if (litros <= 0) return;
+    aguaManualHoy += litros;
+    final today = _dayKey(DateTime.now());
+    await _prefs?.setDouble(_aguaManualKey, aguaManualHoy);
+    await _prefs?.setString(_aguaManualDateKey, today);
+    notifyListeners();
+  }
+
+  /// Agua total del día: lo registrado manualmente + lo leído de Health Connect
+  /// cuando existe (nunca se inventa; si no hay dato, se suman solo los reales).
+  double? get aguaHoy {
+    final hc = _healthToday.aguaLitros;
+    if (aguaManualHoy > 0 && hc != null) return aguaManualHoy + hc;
+    if (aguaManualHoy > 0) return aguaManualHoy;
+    return hc;
+  }
   double? get gastoActivoHoy => _healthToday.gastoActivoKcal;
   int? get tiempoActivoMin => _healthToday.tiempoActivoMin;
 

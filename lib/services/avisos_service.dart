@@ -105,8 +105,9 @@ class AvisosService {
       );
 
   /// Sincronización única al arrancar: pide el permiso UNA vez y programa (o
-  /// cancela) ambos avisos según los toggles persistidos del perfil. Al ser un
-  /// único flujo serializado no hay carrera entre avisos ni doble diálogo.
+  /// cancela) los avisos según los toggles persistidos del perfil y el aviso de
+  /// inactividad. Al ser un único flujo serializado no hay carrera entre avisos
+  /// ni doble diálogo.
   Future<void> sincronizar({
     required bool hidratacion,
     required bool racha,
@@ -124,12 +125,16 @@ class AvisosService {
       if (racha) {
         await _programarRacha(rachaDias);
       }
+      // P16: el aviso de inactividad se reprograma en cada arranque a +48 h.
+      // Si el usuario no abre la app en 2 días, le llega el recordatorio.
+      await _plugin.cancel(id: AvisosIds.inactividad);
+      await _programarInactividad();
     } catch (_) {
       // Si falla, simplemente no hay avisos; nunca inventa nada.
     }
   }
 
-  /// Activa (programa el recordatorio periódico) o desactiva la hidratación.
+  /// Activa (programa el recordatorio cada 30 min) o desactiva la hidratación.
   Future<AvisoResultado> setHidratacion({required bool activar}) async {
     if (!await _permiso()) {
       return const AvisoResultado(
@@ -187,13 +192,30 @@ class AvisosService {
     }
   }
 
-  /// Programa el recordatorio periódico de hidratación (cada hora).
+  /// Programa el recordatorio de hidratación cada 30 minutos (P15) con el
+  /// intervalo nativo por duración del plugin. Texto serio, sin emojis.
   Future<void> _programarHidratacion() async {
-    await _plugin.periodicallyShow(
+    await _plugin.periodicallyShowWithDuration(
       id: AvisosIds.hidratacion,
-      title: '💧 ¿Agua?',
-      body: 'Llevas un rato sin hidratarte: un vaso ahora.',
-      repeatInterval: RepeatInterval.hourly,
+      title: textoAvisoHidratacionTitulo,
+      body: textoAvisoHidratacionCuerpo,
+      repeatDurationInterval: const Duration(minutes: 30),
+      notificationDetails: _detallesComunes,
+      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+    );
+  }
+
+  /// Programa el aviso único de inactividad (P16): a los 2 días (48 h) de la
+  /// última apertura. Cada arranque lo reprograma, así solo llega si el usuario
+  /// no abre la app en ese plazo. Texto serio, sin emojis.
+  Future<void> _programarInactividad() async {
+    final cuando = DateTime.now().add(const Duration(days: 2));
+    final cuandoUtc = tz.TZDateTime.from(comoInstantUtc(cuando), tz.UTC);
+    await _plugin.zonedSchedule(
+      id: AvisosIds.inactividad,
+      title: textoAvisoInactividadTitulo,
+      body: textoAvisoInactividadCuerpo,
+      scheduledDate: cuandoUtc,
       notificationDetails: _detallesComunes,
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
     );
