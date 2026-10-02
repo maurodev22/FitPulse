@@ -129,8 +129,11 @@ class AvisosService {
       // Si el usuario no abre la app en 2 días, le llega el recordatorio.
       await _plugin.cancel(id: AvisosIds.inactividad);
       await _programarInactividad();
-    } catch (_) {
-      // Si falla, simplemente no hay avisos; nunca inventa nada.
+    } catch (e, st) {
+      // Diagnóstico (P16): si falla, no hay avisos (honesto, nunca se finge
+      // activo); se registra el motivo real para poder depurarlo en logcat.
+      // ignore: avoid_print
+      print('FitPulse sincronizar avisos: error al programar -> $e\n$st');
     }
   }
 

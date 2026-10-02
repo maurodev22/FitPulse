@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Fase 6: el small icon de los avisos (ic_stat_fitpulse) se referencia solo
+  por nombre en Dart (AndroidInitializationSettings), no via R.drawable.
+  Con isShrinkResources=true el shrinker lo elimina/renombra del APK release y
+  el ScheduledNotificationReceiver crasheaba: "Invalid notification (no valid
+  small icon)". tools:keep lo conserva con su nombre original para que el
+  plugin lo resuelva con getIdentifier en runtime.
+-->
+<resources xmlns:tools="http://schemas.android.com/tools"
+    tools:keep="@drawable/ic_stat_fitpulse" />

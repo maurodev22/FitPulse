@@ -589,14 +589,14 @@ pill, solo quedan los artículos de esa categoría.
 | Fase 6 — Widget + avisos (§13) | ☐ PASA / ☐ FALLA | |
 | Fase 7/8/9/9b — Tema, idioma, avatar, chip, bandas (§14) | ☐ PASA / ☐ FALLA | |
 | Ayuda (§15) | ☐ PASA / ☐ FALLA | ⚠ Sin veredicto en el testeo manual 2026-10-02 (ítem 9 sin respuesta). |
-| **P11** — Reproductor: reloj a pantalla completa sin scroll (§21) | ☐ PASA / ☐ FALLA | Nuevo APK (build en curso 2026-10-02). |
+| **P11** — Reproductor: reloj a pantalla completa sin scroll (§21) | ☐ PASA / ☐ FALLA | Código ✅ + APK release. Verificación física pendiente (testeo manual del usuario). |
 | **P12** — Registrar reps al final del entrenamiento (§21) | ☐ PASA / ☐ FALLA | Ídem. |
 | **P13** — Coach de cámara solo Premium (§21) | ☐ PASA / ☐ FALLA | Ídem. |
-| **P14** — Registro manual de agua, meta 2,5 L/día (§22) | ☐ PASA / ☐ FALLA | Nuevo pedido del usuario (2026-10-02). APK (build en curso). |
-| **P15** — Hidratación cada 30 min sin emojis (§22) | ☐ PASA / ☐ FALLA | Ídem. |
-| **P16** — Inactividad a los 2 días (§22) | ☐ PASA / ☐ FALLA | Ídem. |
+| **P14** — Registro manual de agua, meta 2,5 L/día (§22) | ☑ PASA | Verificado físicamente 2026-10-02: fila Agua pulsable, diálogo, +0,25/+0,50/+1 L, "Agua · 2,5 / 2,5 L · ✓", DÍA IDEAL 2/3. |
+| **P15** — Hidratación cada 30 min sin emojis (§22) | ☐ PASA / ☐ FALLA | FATAL del small icon diagnosticado y corregido (keep.xml, §20) + APK reconstruido (drawable presente). Verificación física pendiente (dispositivo desconectado). |
+| **P16** — Inactividad a los 2 días (§22) | ☐ PASA / ☐ FALLA | Ídem. Flujo 9004 instrumentado (print del error real en logcat) para diagnóstico en el re-install. |
 | Transversales A-H (§16) | ☐ PASA / ☐ FALLA | |
-| Logcat final | ☐ Sin FATAL/ANR | *FATAL pre-existente de avisos (§20) se registra aparte.* |
+| Logcat final | ☐ Sin FATAL/ANR | *FATAL del small icon (§20): causa raíz corregida (keep.xml), re-verificar tras re-install.* |
 | `flutter test` + `flutter analyze` | ✅ 122/122 · 0 issues (código actual) | |
 
 ---
@@ -638,7 +638,7 @@ adb -s <SERIAL> shell uiautomator dump /sdcard/restaurado.xml
 | 2026-09-30 | Pixel 6a | **L1 (§10)** | ✅ PASA | Verificado físicamente (píxeles + dump): pill "Alta Proteína" abre catálogo filtrado, tabs Semanal/Mensual/Año cambian estado, "Ver todo" → Historial de sesiones (3 sesiones). Tema oscuro + español + datos intactos. |
 | 2026-10-02 | Pixel 6a | **Hotfix P1–P10 (testeo manual del usuario)** | ☑ PASA (1–8) | Ítems 1–8 ✅ (P1, Fase1, P2, P8, P3/P6/P9/P10, P7, P4, L1). Ítem 9 (Ayuda) sin veredicto. Reproductor (ítem 10) → rediseño pedido: reloj a pantalla completa, reps al final, coach Premium → **P11–P13**. |
 | 2026-10-02 | Pixel 6a | **P11–P13 (§21)** | ☐ PASA / ☐ FALLA | Nuevo lote desde feedback del usuario (reloj fullscreen, reps al final, coach Premium). APK release reconstruido + código ✅ (116/116, 0 issues). Verificación física en curso. |
-| 2026-10-02 | Pixel 6a | **P14–P16 (§22)** | ☐ PASA / ☐ FALLA | Pedido directo del usuario: registro manual de agua (meta 2,5 L/día), hidratación cada 30 min y aviso de inactividad a los 2 días. Código ✅ (122/122, 0 issues). Verificación física en curso. |
+| 2026-10-02 | Pixel 6a | **P14–P16 (§22)** | ☑ PASA (P14) / ☐ P15–P16 | **P14** verificado físicamente (fila Agua, diálogo, +0,25/+0,50/+1 L, "Agua · 2,5 / 2,5 L · ✓", DÍA IDEAL 2/3). **P15/P16**: FATAL del small icon diagnosticado (causa raíz: resource shrinking elimina `ic_stat_fitpulse`, solo referenciado por nombre en Dart) y corregido con `res/raw/keep.xml` (`tools:keep`); APK release reconstruido con el drawable presente (verificado por contenido). Verificación física de la cadena de avisos pendiente (dispositivo desconectado); flujo 9004 instrumentado para el diagnóstico. |
 |  | Xiaomi Redmi 8A | **L1** | ☐ PASA / ☐ FALLA | Pendiente (workaround dump MIUI o muestreo). |
 |  | Pixel 6a | A-H (§16) | ☐ PASA / ☐ FALLA | Ciclo transversal completo. |
 
@@ -646,10 +646,16 @@ adb -s <SERIAL> shell uiautomator dump /sdcard/restaurado.xml
 
 ## 20. Conocido / no aplica (no probar como bug)
 
-- **FATAL pre-existente** (documentado, ajeno al hotfix): 
+- **FATAL del small icon — diagnosticado y corregido (2026-10-02), pendiente de re-verificación**:
   `com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver` —
-  `Invalid notification (no valid small icon)` — se repite al amanecer; se investiga aparte.
-  No forma parte del lote P1–P10.
+  `Invalid notification (no valid small icon)` al mostrar un aviso (bloquea P15/P16).
+  **Causa raíz confirmada por APK**: `isShrinkResources=true` elimina `ic_stat_fitpulse`
+  del release (referenciado solo por nombre en Dart, no vía `R.drawable`) →
+  `getIdentifier()` = 0 → `setSmallIcon` inválido.
+  **Fix aplicado**: `android/app/src/main/res/raw/keep.xml` con
+  `tools:keep="@drawable/ic_stat_fitpulse"`. APK reconstruido: el drawable sobrevive
+  al shrinker (verificado por contenido dentro del APK).
+  **Pendiente**: `install -r` en el Pixel y re-verificar la cadena de avisos (P15/P16, §22).
 - **Roadmap L2–L5** (NO implementadas, no probar): constructor de rutinas (L3),
   catálogo de recetas por metas (L4), gamificación con feedback (L5). El registro
   **manual de agua** (antiguo L2) ya se implementó como **P14 (§22)**. Detalles:
@@ -718,6 +724,18 @@ Nuevo lote derivado del pedido directo del usuario:
    - "Ver detalles" → la fila **Agua** muestra el total aunque no haya permiso de HC.
 2. **P15**: Perfil → Configuración → **Recordatorios de hidratación** activado. Con el teléfono en reposo, verificar que llega la notificación cada ~30 min con el texto serio sin emojis: *"Ha pasado un tiempo desde que tomaste agua, por favor hidrátate."*
 3. **P16**: dejar la app **sin abrir 2 días** → debe llegar "FitPulse / Regresa y entrena, mantente en forma!". Si se abre antes, la cuenta vuelve a 48 h.
+
+### Estado (2026-10-02)
+
+- **P14 ✅ PASA**: verificado físicamente en el Pixel 6a (fila **Agua** pulsable → diálogo de
+  registro; +0,25/+0,50/+1 L y cantidad libre; al llegar a la meta la fila muestra
+  `Agua · 2,5 / 2,5 L · ✓` y el Día ideal queda 2/3).
+- **P15/P16 ⏳**: el FATAL del small icon (§20) bloqueaba la cadena de avisos al mostrarse la
+  notificación (getIdentifier = 0 → setSmallIcon inválido). Causa raíz corregida con
+  `res/raw/keep.xml` y APK release reconstruido (el drawable ya está dentro del APK). Queda
+  `install -r` en el Pixel y verificar: cadena +30 min sin FATAL (P15) y presencia de 9004 a
+  +48 h en `dumpsys alarm` (P16). Si 9004 sigue ausente, el `print` del catch de
+  `sincronizar` (nuevo, §20) dará el motivo real en logcat.
 
 > Nota: P16 es a propósito un aviso **único reprogramable** (no se acumula); P15 sigue dependiendo
 > del toggle de hidratación del perfil. Ambos textos sin emojis y en tono serio, como pidió el usuario.
