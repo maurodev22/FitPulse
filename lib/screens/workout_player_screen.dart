@@ -204,7 +204,7 @@ class _WorkoutPlayerScreenState extends State<WorkoutPlayerScreen> {
         _enDescanso = false;
         _restante = _ejercicio.duracion;
       } else {
-        _finalizar();
+        _finalizar(ofrecerReps: true);
       }
     } else {
       // Trabajo terminado → descanso, o siguiente ejercicio sin descanso.
@@ -215,12 +215,61 @@ class _WorkoutPlayerScreenState extends State<WorkoutPlayerScreen> {
         _indice++;
         _restante = _ejercicio.duracion;
       } else {
-        _finalizar();
+        _finalizar(ofrecerReps: true);
       }
     }
   }
 
-  void _finalizar() {
+  /// P13: el entrenador con cámara es Premium. Sin Premium se muestra el
+  /// candado y al tocarlo se explica cómo activarlo (modo prueba).
+  Future<void> _mostrarAvisoPremium() async {
+    final strings = context.read<LocaleService>().strings;
+    final config = context.read<ConfigService>();
+    final activar = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: AppColors.surfaceLowest,
+        title: Text(
+          strings.wpPremiumCoachTitulo,
+          style: AppType.headlineSm.copyWith(
+            color: AppColors.onSurface,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+        content: Text(
+          strings.wpPremiumCoachMensaje,
+          style: AppType.bodyMd.copyWith(color: AppColors.onSurfaceVariant),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: Text(
+              strings.prCancelar,
+              style: TextStyle(color: AppColors.onSurfaceVariant),
+            ),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: AppColors.onPrimary,
+            ),
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: Text(
+              strings.pfActivarPremium,
+              style: const TextStyle(fontWeight: FontWeight.w700),
+            ),
+          ),
+        ],
+      ),
+    );
+    if (activar == true && mounted) {
+      await config.setPremium(true);
+      if (!mounted) return;
+      _abrirEntrenadorCamara();
+    }
+  }
+
+  Future<void> _finalizar({bool ofrecerReps = false}) async {
     _terminado = true;
     _timer?.cancel();
     final strings = context.read<LocaleService>().strings;
@@ -237,6 +286,12 @@ class _WorkoutPlayerScreenState extends State<WorkoutPlayerScreen> {
       state.rachaDias,
       reprogramar: state.profile.entrenamientoMatutino,
     );
+    // P12: al completar el último ejercicio se ofrece registrar la cuenta real
+    // del ejercicio final (no interrumpe el flujo de trabajo).
+    if (ofrecerReps && mounted) {
+      await _registrarReps();
+    }
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(strings.wpSesionCompletada(widget.program.nombre)),
@@ -265,6 +320,7 @@ class _WorkoutPlayerScreenState extends State<WorkoutPlayerScreen> {
   @override
   Widget build(BuildContext context) {
     final strings = context.watch<LocaleService>().strings;
+    final config = context.watch<ConfigService>();
     final total = widget.program.ejercicios.length;
     final progreso = (total == 0) ? 0.0 : (_indice + (_enDescanso ? 0 : 1)) / total;
     final intensidad = strings.wpIntensidad(widget.program.intensidad);
@@ -326,123 +382,123 @@ class _WorkoutPlayerScreenState extends State<WorkoutPlayerScreen> {
                   ),
                 ],
               ),
-              const Spacer(),
-              // Tarjeta central del ejercicio. En pantallas pequeñas (o con
-              // texto grande) puede scrollarse en lugar de desbordar.
-              Flexible(
-                child: SingleChildScrollView(
-                  child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  color: AppColors.surfaceLowest,
-                  borderRadius: BorderRadius.circular(28),
-                  border: Border.all(
-                    color: _enDescanso
-                        ? AppColors.secondaryFixed.withValues(alpha: 0.5)
-                        : AppColors.primary.withValues(alpha: 0.35),
-                    width: 1.5,
+              // P11: reloj protagonista — ocupa la zona central a pantalla
+              // completa sin scroll. FittedBox escala hacia abajo si la
+              // pantalla es pequeña o la fuente es 2.0× (sin desbordar).
+              Expanded(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        _enDescanso ? strings.wpDescanso : strings.wpEjercicio,
+                        style: AppType.labelMd.copyWith(
+                          color: _enDescanso
+                              ? AppColors.secondaryFixed
+                              : AppColors.primary,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 1.2,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Container(
+                        width: 260,
+                        height: 260,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: _enDescanso
+                              ? AppColors.secondaryContainer
+                              : AppColors.primaryContainer,
+                          border: Border.all(
+                            color: _enDescanso
+                                ? AppColors.secondaryFixed
+                                    .withValues(alpha: 0.5)
+                                : AppColors.primary.withValues(alpha: 0.35),
+                            width: 1.5,
+                          ),
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          _mmss(_restante),
+                          style: AppType.metricVal.copyWith(
+                            color: AppColors.onSurface,
+                            fontSize: 64,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 340),
+                        child: Text(
+                          _ejercicio.nombre.toUpperCase(),
+                          textAlign: TextAlign.center,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppType.headlineMd.copyWith(
+                            color: AppColors.onSurface,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 0.4,
+                          ),
+                        ),
+                      ),
+                      if (_ejercicio.repeticiones.isNotEmpty) ...[
+                        const SizedBox(height: 6),
+                        Text(
+                          strings.wpRepeticiones(_ejercicio.repeticiones),
+                          style: AppType.bodyMd.copyWith(
+                            color: AppColors.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                      // P13: coach de cámara = Premium (candado sin Premium).
+                      if (!_enDescanso &&
+                          _tipoCoachable != TipoPostura.libre) ...[
+                        const SizedBox(height: 14),
+                        if (config.premiumEnabled)
+                          TextButton.icon(
+                            onPressed: _abrirEntrenadorCamara,
+                            icon: Icon(
+                              Icons.videocam_outlined,
+                              size: 18,
+                              color: AppColors.primary,
+                            ),
+                            label: Text(
+                              strings.wpCorregirPostura,
+                              style: TextStyle(
+                                color: AppColors.primary,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          )
+                        else
+                          OutlinedButton.icon(
+                            onPressed: _mostrarAvisoPremium,
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: AppColors.primary,
+                              side: BorderSide(color: AppColors.outlineVariant),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 10,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(999),
+                              ),
+                            ),
+                            icon: const Icon(Icons.lock_outline, size: 18),
+                            label: Text(
+                              strings.wpCorregirPosturaPremium,
+                              style: AppType.labelMd.copyWith(
+                                color: AppColors.primary,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ],
                   ),
                 ),
-                child: Column(
-                  children: [
-                    Text(
-                      _enDescanso ? strings.wpDescanso : strings.wpEjercicio,
-                      style: AppType.labelMd.copyWith(
-                        color: _enDescanso
-                            ? AppColors.secondaryFixed
-                            : AppColors.primary,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 1.2,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Container(
-                      width: 128,
-                      height: 128,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: _enDescanso
-                            ? AppColors.secondaryContainer
-                            : AppColors.primaryContainer,
-                      ),
-                      alignment: Alignment.center,
-                      child: Text(
-                        _mmss(_restante),
-                        style: AppType.metricVal.copyWith(
-                          color: AppColors.onSurface,
-                          fontSize: 40,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    Text(
-                      _ejercicio.nombre.toUpperCase(),
-                      textAlign: TextAlign.center,
-                      style: AppType.headlineMd.copyWith(
-                        color: AppColors.onSurface,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 0.4,
-                      ),
-                    ),
-                    if (_ejercicio.repeticiones.isNotEmpty) ...[
-                      const SizedBox(height: 6),
-                      Text(
-                        strings.wpRepeticiones(_ejercicio.repeticiones),
-                        style: AppType.bodyMd.copyWith(
-                          color: AppColors.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                    if (!_enDescanso && _tipoCoachable != TipoPostura.libre) ...[
-                      const SizedBox(height: 14),
-                      TextButton.icon(
-                        onPressed: _abrirEntrenadorCamara,
-                        icon: Icon(
-                          Icons.videocam_outlined,
-                          size: 18,
-                          color: AppColors.primary,
-                        ),
-                        label: Text(
-                          strings.wpCorregirPostura,
-                          style: TextStyle(
-                            color: AppColors.primary,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
-                    ],
-                    if (!_enDescanso) ...[
-                      const SizedBox(height: 12),
-                      OutlinedButton.icon(
-                        onPressed: _registrarReps,
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: AppColors.primary,
-                          side: BorderSide(color: AppColors.outlineVariant),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 10,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(999),
-                          ),
-                        ),
-                        icon: const Icon(Icons.onetwothree, size: 18),
-                        label: Text(
-                          strings.wpRegistrarReps,
-                          style: AppType.labelMd.copyWith(
-                            color: AppColors.primary,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
               ),
-            ),
-          ),
-          const Spacer(),
           // Controles.
           Row(
                 children: [

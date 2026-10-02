@@ -655,6 +655,16 @@ class AppStrings {
   String get wpDescanso => _t('DESCANSO', 'REST');
   String get wpEjercicio => _t('EJERCICIO', 'EXERCISE');
   String get wpCorregirPostura => _t('Corregir postura con cámara', 'Fix posture with camera');
+  String get wpCorregirPosturaPremium => _t('Solo Premium', 'Premium only');
+  String get wpPremiumCoachTitulo =>
+      _t('Entrenador con cámara · Solo Premium', 'Camera coach · Premium only');
+  String get wpPremiumCoachMensaje => _t(
+      'La corrección de postura con IA en cámara es una función de FitPulse '
+      'Premium: análisis 100 % local en tu móvil (la cámara no graba ni sube '
+      'nada). Activa Premium para desbloquearla.',
+      'On-camera AI posture coaching is a FitPulse Premium feature: 100 % '
+      'on-device analysis (the camera never records or uploads anything). '
+      'Enable Premium to unlock it.');
   String get wpSaltar => _t('Saltar', 'Skip');
   String get wpReanudar => _t('Reanudar', 'Resume');
   String get wpPausar => _t('Pausar', 'Pause');

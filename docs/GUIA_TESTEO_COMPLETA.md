@@ -573,24 +573,27 @@ pill, solo quedan los artículos de esa categoría.
 | Área | Resultado | Notas / evidencia |
 |---|---|---|
 | Onboarding + sesión (§2) | ☐ PASA / ☐ FALLA | |
-| Fase 1 — Pasos + Health Connect (§3) | ☐ PASA / ☐ FALLA | |
-| **P1** — Detalle del día (§4) | ☐ PASA / ☐ FALLA | |
-| Fase 2 — Día ideal, reproductor, racha, retos, XP (§5) | ☐ PASA / ☐ FALLA | |
-| **P2 + L1.2** — Ventana y pestañas Progreso (§6) | ☐ PASA / ☐ FALLA | |
-| Fase 3 — Anuncios de prueba + Premium (§7) | ☐ PASA / ☐ FALLA | |
+| Fase 1 — Pasos + Health Connect (§3) | ☑ PASA | Testeo manual 2026-10-02 (ítem 2). |
+| **P1** — Detalle del día (§4) | ☑ PASA | Testeo manual 2026-10-02 (ítem 1). |
+| Fase 2 — Día ideal, reproductor, racha, retos, XP (§5) | ☑ PASA | Testeo manual 2026-10-02: Día ideal y racha OK (ítems 2 y 5). *Reproductor → P11–P13 (nuevo lote, §21).* |
+| **P2 + L1.2** — Ventana y pestañas Progreso (§6) | ☑ PASA | Testeo manual 2026-10-02 (ítem 3). |
+| Fase 3 — Anuncios de prueba + Premium (§7) | ☑ PASA | Testeo manual 2026-10-02 (ítem 6: Configuración). |
 | Fase 4 — Plan semanal + lista de la compra (§9) | ☐ PASA / ☐ FALLA | |
-| **L1.1/L1.3** — Pills recetas + "Ver todo" historial (§10) | ☐ PASA / ☐ FALLA | *L1 ✅ Pixel 2026-09-30* |
-| Fase 5 — Entrenador con cámara + reps (§8) | ☐ PASA / ☐ FALLA | |
-| **P4** — Consejos funcionales (§11) | ☐ PASA / ☐ FALLA | |
-| **P6/P3/P7** — Metas editables, Insignias, Configuración (§12.2-12.4) | ☐ PASA / ☐ FALLA | |
-| **P8** — Peso Progreso→Perfil (§12.5) | ☐ PASA / ☐ FALLA | |
-| **P9** — Sin duplicados, Nivel y preferencias (§12.6) | ☐ PASA / ☐ FALLA | |
-| **P10** — Mínimo 2 días de entrenamiento (§12.7) | ☐ PASA / ☐ FALLA | |
+| **L1.1/L1.3** — Pills recetas + "Ver todo" historial (§10) | ☑ PASA | L1 ✅ Pixel 2026-09-30 + testeo manual 2026-10-02 (ítem 8). |
+| Fase 5 — Entrenador con cámara + reps (§8) | ☑ PASA / ⚠ | Cámara→ **P13** (solo Premium). Reps→ **P12** (al final). Ver §21. |
+| **P4** — Consejos funcionales (§11) | ☑ PASA | Testeo manual 2026-10-02 (ítem 7). |
+| **P6/P3/P7** — Metas editables, Insignias, Configuración (§12.2-12.4) | ☑ PASA | Testeo manual 2026-10-02 (ítems 5 y 6). |
+| **P8** — Peso Progreso→Perfil (§12.5) | ☑ PASA | Testeo manual 2026-10-02 (ítem 4). |
+| **P9** — Sin duplicados, Nivel y preferencias (§12.6) | ☑ PASA | Testeo manual 2026-10-02 (ítem 5). |
+| **P10** — Mínimo 2 días de entrenamiento (§12.7) | ☑ PASA | Testeo manual 2026-10-02 (ítem 5). |
 | Fase 6 — Widget + avisos (§13) | ☐ PASA / ☐ FALLA | |
 | Fase 7/8/9/9b — Tema, idioma, avatar, chip, bandas (§14) | ☐ PASA / ☐ FALLA | |
-| Ayuda (§15) | ☐ PASA / ☐ FALLA | |
+| Ayuda (§15) | ☐ PASA / ☐ FALLA | ⚠ Sin veredicto en el testeo manual 2026-10-02 (ítem 9 sin respuesta). |
+| **P11** — Reproductor: reloj a pantalla completa sin scroll (§21) | ☐ PASA / ☐ FALLA | Nuevo APK (build en curso 2026-10-02). |
+| **P12** — Registrar reps al final del entrenamiento (§21) | ☐ PASA / ☐ FALLA | Ídem. |
+| **P13** — Coach de cámara solo Premium (§21) | ☐ PASA / ☐ FALLA | Ídem. |
 | Transversales A-H (§16) | ☐ PASA / ☐ FALLA | |
-| Logcat final | ☐ Sin FATAL/ANR | |
+| Logcat final | ☐ Sin FATAL/ANR | *FATAL pre-existente de avisos (§20) se registra aparte.* |
 | `flutter test` + `flutter analyze` | ✅ 116/116 · 0 issues (código actual) | |
 
 ---
@@ -630,8 +633,9 @@ adb -s <SERIAL> shell uiautomator dump /sdcard/restaurado.xml
 | 2026-09-25/28 | Pixel 6a / Xiaomi | F7-F8 | ☑ PASA | Oscuro/claro, texto máximo, idioma en vivo; Xiaomi F8 claro global + avatar ✅. |
 | 2026-09-29 | Pixel 6a | F9, F9b | ☑ PASA | Píxeles + dump (avatar CROP 9/12, chip onPrimary, peso 70.5 semanal, reps 10, bandas invertidas corregidas). *F9b en Xiaomi pendiente.* |
 | 2026-09-30 | Pixel 6a | **L1 (§10)** | ✅ PASA | Verificado físicamente (píxeles + dump): pill "Alta Proteína" abre catálogo filtrado, tabs Semanal/Mensual/Año cambian estado, "Ver todo" → Historial de sesiones (3 sesiones). Tema oscuro + español + datos intactos. |
+| 2026-10-02 | Pixel 6a | **Hotfix P1–P10 (testeo manual del usuario)** | ☑ PASA (1–8) | Ítems 1–8 ✅ (P1, Fase1, P2, P8, P3/P6/P9/P10, P7, P4, L1). Ítem 9 (Ayuda) sin veredicto. Reproductor (ítem 10) → rediseño pedido: reloj a pantalla completa, reps al final, coach Premium → **P11–P13**. |
+| 2026-10-02 | Pixel 6a | **P11–P13 (§21)** | ☐ PASA / ☐ FALLA | Nuevo lote desde feedback del usuario (reloj fullscreen, reps al final, coach Premium). APK release reconstruido + código ✅ (116/116, 0 issues). Verificación física en curso. |
 |  | Xiaomi Redmi 8A | **L1** | ☐ PASA / ☐ FALLA | Pendiente (workaround dump MIUI o muestreo). |
-|  | Pixel 6a | **Hotfix P1–P10** | ☐ PASA / ☐ FALLA | Verificación física en curso (código ✅, este documento §4, §6, §11, §12). |
 |  | Pixel 6a | A-H (§16) | ☐ PASA / ☐ FALLA | Ciclo transversal completo. |
 
 ---
@@ -646,6 +650,38 @@ adb -s <SERIAL> shell uiautomator dump /sdcard/restaurado.xml
   constructor de rutinas (L3), catálogo de recetas por metas (L4), gamificación con
   feedback (L5). Detalles: `docs/PROXIMAS_FASES.md`.
 - **AdMob 403 en Cuba**: esperado (bloqueo geográfico), la app muestra placeholder honesto.
+
+---
+
+## 21. P11–P13 — Reproductor rediseñado (feedback del usuario, 2026-10-02)
+
+Nuevo lote derivado del **ítem 10** del testeo manual del usuario:
+
+> *"existe un scroll, como que el reloj no se pone a pantalla entera, lo de registrar
+> repeticiones lo dejamos para el final del entrenamiento para no interrumpir el flujo
+> de ejercicios, además el entrenador asistido por IA local con la cámara no funciona,
+> lo ponemos como un feature premium solamente para fomentar"*
+
+### Comportamiento esperado (código ✅, 116/116 tests, 0 issues)
+
+| Ítem | Qué debe verse/hacerse |
+|---|---|
+| **P11** — Reloj a pantalla completa | El reloj ahora es protagonista: círculo grande (260 dp) centrado, sin scroll. En pantallas pequeñas o fuente 2.0× todo escala con `FittedBox` (sin desbordes ni scroll). Etiqueta EJERCICIO/DESCANSO arriba, nombre del ejercicio debajo, botones fijos abajo (Saltar/Pausar/Terminar). |
+| **P12** — Reps al final | El botón "Registrar repeticiones" **desaparece de la tarjeta**. Al completar el último ejercicio (temporizador o Saltar), justo antes de cerrar la sesión se abre el diálogo de reps del ejercicio final (Guardar/Cancelar). Así no interrumpe el flujo de trabajo. |
+| **P13** — Coach de cámara Premium | Sin Premium: el botón de cámara muestra candado + "Solo Premium"; al tocarlo abre un diálogo que explica la función y ofrece **Activar Premium (modo prueba)**. Con Premium activo: entra al entrenador con cámara como antes (si el modelo ML Kit no está disponible, estado honesto "no disponible" ya existente). |
+
+### Pasos de verificación manual (P11–P13)
+
+1. Inicio → **Comenzar entrenamiento** → reproductor.
+   - **P11**: el reloj (min:seg) ocupa la zona central grande, no hay scroll vertical en la tarjeta, los botones Saltar/Pausar/Terminar quedan fijos abajo.
+2. Con **Premium apagado** (Perfil → Desactivar Premium si está activo):
+   - **P13**: en ejercicios con postura corregible debe verse el botón de cámara con **candado 🔒 + "Solo Premium"**. Tocarlo → diálogo "Entrenador con cámara · Solo Premium" con "Activar Premium (modo prueba)".
+   - Pulsar "Activar Premium (modo prueba)" → el botón pasa a "Corregir postura con cámara" (desbloqueado) y abre el coach.
+3. **P12**: volver al inicio y comenzar un entrenamiento corto. **No debe aparecer** "Registrar repeticiones" durante los ejercicios. Llegar al último ejercicio (o pulsar Saltar varias veces) → al completarse aparece el diálogo "¿Cuántas repeticiones completaste?" del ejercicio final → Guardar registra la sesión + reps; Cancelar cierra solo la sesión.
+4. **Al terminar**: relanzar la app y confirmar que la sesión quedó en Progreso/Historial.
+
+> Nota: tras este lote, la **Fase 5 (cámara + reps)** queda redistribuida: cámara = P13 (Premium),
+> reps = P12 (al final del entrenamiento).
 
 ---
 
