@@ -44,6 +44,12 @@ Future<void> _exploreConEscala(WidgetTester tester, Size size) async {
   await tester.tap(find.text('Guardar y Entrar al Dashboard'));
   await tester.pumpAndSettle();
 
+  // P17: la SetupScreen de configuración inicial (tema + avisos) aparece una
+  // vez tras el registro; también recorre esta pantalla con la escala 2.0×.
+  expect(find.text('Personaliza FitPulse'), findsOneWidget);
+  await tester.tap(find.text('Continuar'));
+  await tester.pumpAndSettle();
+
   // Recorre cada pestaña y hace scroll de arriba a abajo.
   final tabs = <IconData>[
     Icons.home,

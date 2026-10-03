@@ -423,6 +423,26 @@ pasos de verificación en `docs/GUIA_TESTEO_COMPLETA.md` §21 (P11–P13) y §22
 - Estado: 122/122 tests, 0 issues. Verificación física de la cadena de avisos (P15/P16)
   en curso con el dispositivo re-conectado.
 
+### P17 — Configuración inicial ligera (tema + avisos opt-in) ✅
+
+- ✅ Nueva pantalla `SetupScreen` entre Registro y Home: aparece **una sola vez** tras
+  registrarse (`registration_screen._goToDashboard` → `SetupScreen` → `AppShell`).
+- ✅ **Tema con vista previa**: tres tarjetas Sistema/Claro/Oscuro que muestran los
+  colores reales de las paletas (`lightFitPalette`/`darkFitPalette`); tocar aplica y
+  persiste al instante con `ConfigService.setThemeMode`.
+- ✅ **Avisos opt-in**: toggles de "Recordatorios de hidratación" (cada 30 min) y "Aviso
+  de racha en riesgo" (20:00) que guardan `hidratacion`/`entrenamientoMatutino` en el
+  perfil. "Continuar" sincroniza los avisos en contexto; "Ahora no" entra al Home sin
+  tocar nada.
+- ✅ **Permiso de notificaciones en contexto, no en cascada**: la Setup NO pide el
+  diálogo del sistema. `main.dart` ahora solo ejecuta `sincronizar()` cuando hay sesión
+  (`isLoggedIn`), así el permiso se pide UNA sola vez cuando el usuario activa un aviso
+  (flujo `AvisosService._permiso()` ya existente: pendiente/concedido/denegado,
+  denegado → no se programa nada, honesto).
+- ✅ 126/126 tests (nuevos `test/setup_screen_test.dart` con render, tema persistido,
+  Continuar guarda toggles y "Ahora no" no toca el perfil), 0 issues en `flutter analyze`.
+  Verificación física de la pantalla pendiente en el dispositivo.
+
 ---
 
 ## 12. Principios que se mantienen

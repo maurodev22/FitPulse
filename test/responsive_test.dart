@@ -43,6 +43,12 @@ Future<void> _exploreShell(WidgetTester tester, Size size) async {
   await tester.tap(find.text('Guardar y Entrar al Dashboard'));
   await tester.pumpAndSettle();
 
+  // P17: la SetupScreen de configuración inicial aparece una vez tras el
+  // registro; se supera también a cada ancho para comprobar que no desborda.
+  expect(find.text('Personaliza FitPulse'), findsOneWidget);
+  await tester.tap(find.text('Continuar'));
+  await tester.pumpAndSettle();
+
   // Recorre cada pestaña y hace scroll de arriba a abajo.
   final tabs = <IconData>[Icons.home, Icons.restaurant_menu, Icons.insights, Icons.lightbulb_outline, Icons.person, Icons.help_outline];
   for (final icon in tabs) {

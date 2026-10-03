@@ -730,15 +730,66 @@ Nuevo lote derivado del pedido directo del usuario:
 - **P14 ✅ PASA**: verificado físicamente en el Pixel 6a (fila **Agua** pulsable → diálogo de
   registro; +0,25/+0,50/+1 L y cantidad libre; al llegar a la meta la fila muestra
   `Agua · 2,5 / 2,5 L · ✓` y el Día ideal queda 2/3).
-- **P15/P16 ⏳**: el FATAL del small icon (§20) bloqueaba la cadena de avisos al mostrarse la
-  notificación (getIdentifier = 0 → setSmallIcon inválido). Causa raíz corregida con
-  `res/raw/keep.xml` y APK release reconstruido (el drawable ya está dentro del APK). Queda
-  `install -r` en el Pixel y verificar: cadena +30 min sin FATAL (P15) y presencia de 9004 a
-  +48 h en `dumpsys alarm` (P16). Si 9004 sigue ausente, el `print` del catch de
-  `sincronizar` (nuevo, §20) dará el motivo real en logcat.
+- **P15 ✅ PASA**: verificado físicamente el 2026-10-02 tras el fix del small icon. La
+  notificación **9001 "Hidrátate — Ha pasado un tiempo desde que tomaste agua, por favor
+  hidrátate."** se publica (canal `fitpulse_avisos`, importance 4, icono RESOURCE
+  `ic_stat_fitpulse` presente) y la alarma se rearma a los ~30 min exactos
+  (disparo 22:29:36 → rearmado 22:59:36 confirmado en `dumpsys alarm`). **Sin FATAL**
+  en logcat: la cadena completa (sincronizar → alarma → notificación → rearmado) funciona.
+- **P16 ✅ PASA (programación)**: el aviso de inactividad **9004** está programado a
+  **+48 h exactas** desde la última sincronización (2026-10-02 21:29 → 2026-10-04 21:29)
+  confirmado en `dumpsys alarm` (one-shot RTC_WAKEUP con `ScheduledNotificationReceiver`).
+  El disparo real a los 2 días no se espera en la prueba: basta con la presencia del
+  one-shot a +48 h en el AlarmManager.
 
 > Nota: P16 es a propósito un aviso **único reprogramable** (no se acumula); P15 sigue dependiendo
 > del toggle de hidratación del perfil. Ambos textos sin emojis y en tono serio, como pidió el usuario.
+
+---
+
+## 23. P17 — Configuración inicial ligera (tema con vista previa + avisos opt-in)
+
+Pantalla nueva (**SetupScreen**) que aparece **una sola vez**, justo después del Registro, pensada
+para que el teléfono "se sienta del usuario" desde el primer segundo. No es un wizard con diálogos
+en bloque: es ligera, saltable y solo guarda preferencias del perfil.
+
+### Comportamiento esperado (código ✅, 126/126 tests, 0 issues)
+
+| Ítem | Qué debe verse/hacerse |
+|---|---|
+| **Tema con vista previa** | Tres tarjetas: **Sistema**, **Claro**, **Oscuro**. Al pulsar una, la app cambia el tema **al instante** (vista previa real, no un mockup) y la selección queda marcada. El valor persiste en el perfil. |
+| **Avisos opt-in** | Dos toggles: **Recordatorios de hidratación** (cada 30 min) y **Racha de entrenamiento** (diaria a las 20:00). Solo guardan la preferencia en el perfil; **no** abren ningún diálogo del sistema aquí. |
+| **Continuar** | Guarda el tema + los toggles y entra al Home. Y **solo en este momento**, en contexto de usuario (tras el registro), se pide una única vez el permiso de notificaciones si algún aviso quedó activado. Si se deniega, no se programa nada (honesto, sin re-preguntar). |
+| **Ahora no** | Botón saltable: entra al Home **sin** abrir el diálogo del sistema y **sin** tocar el perfil (todo queda en valores por defecto: tema Sistema). |
+
+Regla de arranque asociada: `main.dart` solo llama a `sincronizar()` (programar avisos) cuando ya
+hay sesión iniciada. Así el permiso de notificaciones **nunca** se pide en frío antes del registro.
+
+### Pasos de verificación manual (P17)
+
+1. **Registro → Setup**: instalar el APK nuevo, registrarse y confirmar que **tras el Registro
+   aparece la pantalla de configuración inicial** (no el Home directo).
+2. **Vista previa de tema**: pulsar **Oscuro** → toda la app (fondos, tarjetas, textos) cambia
+   al instante y la tarjeta queda marcada. Pulsar **Claro** y **Sistema** para comprobar que
+   cada selección aplica al momento.
+3. **Toggles**: activar **Recordatorios de hidratación** y **Racha de entrenamiento**. No debe
+   saltar ningún diálogo del sistema en esta pantalla.
+4. **Continuar**: primera vez que la app pide el permiso de notificaciones (justo al pulsar
+   Continuar, en contexto). Aceptar → entra al Home con el tema elegido.
+   - Repetir el flujo desde cero (**Registrar otro perfil** o reinstalar) con el permiso
+     denegado: al pulsar Continuar **no se vuelve a preguntar** y no se programa nada.
+5. **Ahora no**: en un registro nuevo, pulsar **Ahora no** → entra al Home sin diálogo del
+   sistema y el tema queda en **Sistema** (perfil intacto).
+6. **Arranque en frío**: matar la app y relanzarla estando **sin sesión** → no debe pedir el
+   permiso de notificaciones (solo sale el botón de Registro/Inicio de sesión).
+
+### Estado (2026-10-02)
+
+- **P17 ⏳ código verificado** (126/126 tests, `flutter analyze` 0 issues; test específico
+  `test/setup_screen_test.dart`): render de la pantalla, el tema elegido persiste, "Continuar"
+  guarda los toggles y "Ahora no" no toca el perfil.
+- **P17 ⏳ física pendiente**: el APK release en el Pixel 6a es de la etapa P15/P16 (sin la
+  SetupScreen). Falta `install -r` del nuevo APK y seguir los pasos 1–6 de esta sección.
 
 ---
 

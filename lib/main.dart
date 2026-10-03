@@ -53,13 +53,17 @@ Future<void> main() async {
   // Fase 6: avisos locales (hidratación + racha en riesgo) según los toggles
   // persistidos del perfil; un único flujo serializado pide el permiso una sola
   // vez y, si se deniega, no se programa nada (honesto, nunca se finge activo).
-  unawaited(
-    avisosService.sincronizar(
-      hidratacion: appState.isLoggedIn && appState.profile.hidratacion,
-      racha: appState.isLoggedIn && appState.profile.entrenamientoMatutino,
-      rachaDias: appState.rachaDias,
-    ),
-  );
+  // Solo se sincroniza con sesión: antes del registro no hay avisos que
+  // programar y el permiso del sistema se pide en contexto (P17), no en frío.
+  if (appState.isLoggedIn) {
+    unawaited(
+      avisosService.sincronizar(
+        hidratacion: appState.profile.hidratacion,
+        racha: appState.profile.entrenamientoMatutino,
+        rachaDias: appState.rachaDias,
+      ),
+    );
+  }
   // Fase 6: widget de home — snapshot con datos reales (pasos, calorías, racha).
   final widgetBridge = HomeWidgetBridge(appState);
   widgetBridge.sincronizarAhora();

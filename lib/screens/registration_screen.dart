@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
-import '../main.dart';
 import '../services/locale_service.dart';
 import '../state/app_state.dart';
 import '../state/athlete_profile.dart';
@@ -12,6 +11,7 @@ import '../theme.dart';
 import '../utils/validators.dart';
 import '../widgets/common.dart';
 import '../widgets/wheel_number_picker.dart';
+import 'setup_screen.dart';
 
 class RegistrationScreen extends StatefulWidget {
   const RegistrationScreen({super.key});
@@ -65,8 +65,10 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   void _goToDashboard() {
     context.read<AppState>().guardarPerfil(_buildProfile());
 
+    // P17: tras el registro, la pantalla de configuración inicial ligera
+    // (tema + avisos opt-in); luego entra en el AppShell.
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute<void>(builder: (_) => const AppShell()),
+      MaterialPageRoute<void>(builder: (_) => const SetupScreen()),
     );
   }
 

@@ -600,6 +600,7 @@ class AppStrings {
   String get pfPreferencias => _t('Preferencias & Sincronización', 'Preferences & Sync');
   String get pfRecordatoriosHidratacion => _t('Recordatorios de hidratación', 'Hydration reminders');
   String get pfCadaHora => _t('Cada hora · notificación local', 'Every hour · local notification');
+  String get pfCadaMediaHora => _t('Cada 30 min · notificación local', 'Every 30 min · local notification');
   String get pfAvisoRacha => _t('Aviso de racha en riesgo', 'Streak-at-risk alert');
   String get pfDiario20 => _t('Diario a las 20:00 con tu racha real', 'Daily at 8:00 PM with your real streak');
   String get pfHealthKit => _t('HealthKit / Smartwatch', 'HealthKit / Smartwatch');
@@ -610,6 +611,24 @@ class AppStrings {
   String get pfVisibleAmigos => _t('Visible solo para amigos seguidos', 'Visible only to followed friends');
   String get pfTemaApp => _t('Tema de la app', 'App theme');
   String get pfSeAplicaTema => _t('Se aplica al instante y queda guardado.', 'Applies instantly and is saved.');
+
+  // ---- SetupScreen (P17: configuración inicial ligera tras el registro) ----
+  String get setupTitulo => _t('Personaliza FitPulse', 'Personalize FitPulse');
+  String get setupSubtitulo =>
+      _t('Elige tu tema y decide si quieres avisos. Podrás cambiarlo todo después en tu Perfil.',
+          'Pick your theme and decide on reminders. You can change it all later in your Profile.');
+  String get setupTema => _t('Tema', 'Theme');
+  String get setupTemaSistema => _t('Sistema', 'System');
+  String get setupTemaClaro => _t('Claro', 'Light');
+  String get setupTemaOscuro => _t('Oscuro', 'Dark');
+  String get setupAvisos => _t('Avisos (opcional)', 'Reminders (optional)');
+  String get setupNotaAvisos =>
+      _t('Los avisos solo llegan si concedes el permiso de notificaciones; si lo '
+          'deniegas no se programa nada y puedes activarlos desde Perfil.',
+          'Reminders only arrive if you grant the notification permission; if you '
+          'deny it, nothing is scheduled and you can enable them from Profile.');
+  String get setupContinuar => _t('Continuar', 'Continue');
+  String get setupAhoraNo => _t('Ahora no', 'Not now');
   String get pfIdioma => _t('Idioma / Language', 'Idioma / Language');
   String get pfIdiomaEs => _t('Español', 'Spanish');
   String get pfIdiomaEn => _t('English', 'English');

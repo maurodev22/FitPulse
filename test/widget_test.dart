@@ -46,6 +46,12 @@ Future<void> _enterDashboard(WidgetTester tester) async {
   // Guardar y entrar.
   await tester.tap(find.text('Guardar y Entrar al Dashboard'));
   await tester.pumpAndSettle();
+
+  // P17: la configuración inicial (tema + avisos opt-in) aparece una sola vez
+  // tras el registro; "Continuar" entra al dashboard.
+  expect(find.text('Personaliza FitPulse'), findsOneWidget);
+  await tester.tap(find.text('Continuar'));
+  await tester.pumpAndSettle();
 }
 
 void main() {
