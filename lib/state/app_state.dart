@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../services/health_service.dart';
 import '../services/usage_log_service.dart';
 import 'athlete_profile.dart';
+import 'estado_salud.dart';
 import 'registros.dart';
 import 'workout.dart';
 import 'workout_catalog.dart';
@@ -269,6 +270,19 @@ class AppState extends ChangeNotifier {
   }
   double? get gastoActivoHoy => _healthToday.gastoActivoKcal;
   int? get tiempoActivoMin => _healthToday.tiempoActivoMin;
+
+  /// Estado de salud honesto del día (P20): clasifica las métricas REALES
+  /// disponibles (IMC del perfil, pasos del sensor, gasto activo/sueño/agua
+  /// de Health Connect o manual). Nunca inventa: con menos de 2 métricas con
+  /// dato devuelve "sin datos suficientes".
+  ResultadoEstadoSalud get estadoSalud => clasificarEstadoSalud(
+        imc: (profile.alturaM > 0 && profile.pesoKg > 0) ? profile.imc : null,
+        edad: profile.edad > 0 ? profile.edad : null,
+        pasos: healthDisponible ? pasosHoy : null,
+        gastoActivoKcal: gastoActivoConPermiso ? gastoActivoHoy : null,
+        suenio: suenioConPermiso ? suenioHoy : null,
+        aguaLitros: aguaHoy,
+      );
 
   // --- Permisos concedidos por métrica (para textos honestos) ---
   bool get pulsoConPermiso =>

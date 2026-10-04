@@ -38,6 +38,28 @@ void main() {
       expect(Validators.validarAguaDiaria(5.0, aviso), isNull);
       expect(Validators.validarAguaDiaria(2.5, aviso), isNull);
     });
+
+    test('P20 validarMetaPasos: mínimo honesto 1000 (no 1)', () {
+      const aviso = 'La meta de pasos debe estar entre 1000 y 100000';
+      expect(Validators.validarMetaPasos(null, aviso), aviso);
+      expect(Validators.validarMetaPasos(999, aviso), aviso);
+      expect(Validators.validarMetaPasos(0, aviso), aviso);
+      expect(Validators.validarMetaPasos(1000, aviso), isNull);
+      expect(Validators.validarMetaPasos(10000, aviso), isNull);
+      expect(Validators.validarMetaPasos(100000, aviso), isNull);
+      expect(Validators.validarMetaPasos(100001, aviso), aviso);
+    });
+
+    test('P20 validarMetaKcal: mínimo investigado 1200 (no 500)', () {
+      const aviso = 'La meta de calorías debe estar entre 1200 y 10000 kcal';
+      expect(Validators.validarMetaKcal(null, aviso), aviso);
+      expect(Validators.validarMetaKcal(500, aviso), aviso);
+      expect(Validators.validarMetaKcal(1199.9, aviso), aviso);
+      expect(Validators.validarMetaKcal(1200, aviso), isNull);
+      expect(Validators.validarMetaKcal(2100, aviso), isNull);
+      expect(Validators.validarMetaKcal(10000, aviso), isNull);
+      expect(Validators.validarMetaKcal(10000.1, aviso), aviso);
+    });
   });
 
   group('P19 · Dialogo de agua (Home)', () {

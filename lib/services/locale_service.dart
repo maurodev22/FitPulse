@@ -199,6 +199,30 @@ class AppStrings {
         'Obesidad' => _t('Obesidad', 'Obesity'),
         _ => es,
       };
+
+  // ---- Estado de salud (P20) ----
+  String get esTitulo => _t('Estado de salud', 'Health status');
+  String get esSub => _t('Con datos reales de hoy', 'From real data today');
+  String get esMalo => _t('Malo', 'Poor');
+  String get esRegular => _t('Regular', 'Fair');
+  String get esBueno => _t('Bueno', 'Good');
+  String get esExcelente => _t('Excelente', 'Excellent');
+  String get esSinDatos => _t('Sin datos suficientes', 'Not enough data');
+  String get esSinDatosSub => _t(
+      'Completa tu perfil (peso y altura) y conecta Health Connect para '
+      'calcular tu estado con datos reales.',
+      'Complete your profile (weight & height) and connect Health Connect to '
+      'calculate your status from real data.');
+  String esBasadoEn(int n) =>
+      _t('Basado en $n métricas reales', 'Based on $n real metrics');
+  String get esOrientativo => _t(
+      'Orientativo: no sustituye un diagnóstico profesional',
+      'For reference only: not a professional diagnosis');
+  String get esMetImc => _t('IMC', 'BMI');
+  String get esMetPasos => _t('Pasos', 'Steps');
+  String get esMetGasto => _t('Gasto activo', 'Active burn');
+  String get esMetSuenio => _t('Sueño', 'Sleep');
+  String get esMetAgua => _t('Agua', 'Water');
   String recetaCategoria(String es) => switch (es) {
         'Todas' => _t('Todas', 'All'),
         'Alta Proteína' => _t('Alta Proteína', 'High Protein'),
@@ -572,7 +596,15 @@ class AppStrings {
   String get pfEditarMetas => _t('Editar metas', 'Edit goals');
   String get pfMetaPasos => _t('Meta de pasos diarios', 'Daily steps goal');
   String get pfMetaCalorias => _t('Meta de calorías diarias (kcal)', 'Daily calories goal (kcal)');
-  String get pfMetaInvalida => _t('Introduce valores válidos (pasos > 0, kcal 500–10000)', 'Enter valid values (steps > 0, kcal 500–10000)');
+  String get pfMetaPasosMin => _t(
+      'La meta de pasos debe estar entre 1000 y 100000',
+      'Steps goal must be between 1000 and 100000');
+  String get pfMetaKcalMin => _t(
+      'La meta de calorías debe estar entre 1200 y 10000 kcal',
+      'Calories goal must be between 1200 and 10000 kcal');
+  String get pfMetaInvalida => _t(
+      'Introduce valores válidos (pasos ≥ 1000, kcal 1200–10000)',
+      'Enter valid values (steps ≥ 1000, kcal 1200–10000)');
   String get pfPasosDiarios => _t('Pasos diarios', 'Daily steps');
   String get pfCaloriasActivas => _t('Calorías activas', 'Active calories');
   String get pfCardioSemanal => _t('Cardio semanal', 'Weekly cardio');

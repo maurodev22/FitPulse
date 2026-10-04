@@ -10,6 +10,7 @@ import '../state/workout.dart';
 import '../theme.dart';
 import '../utils/validators.dart';
 import '../widgets/common.dart';
+import '../widgets/estado_salud_card.dart';
 import '../widgets/racha_chip.dart';
 import 'workout_player_screen.dart';
 
@@ -161,6 +162,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const _DiaIdealCard(),
+                  const SizedBox(height: 24),
+                  const EstadoSaludCard(),
                   const SizedBox(height: 24),
                   _buildResumenHoy(),
                   const SizedBox(height: 24),

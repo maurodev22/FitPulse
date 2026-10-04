@@ -11,7 +11,9 @@ import '../state/app_state.dart';
 import '../state/athlete_profile.dart';
 import '../theme.dart';
 import '../utils/foto_avatar.dart';
+import '../utils/validators.dart';
 import '../widgets/common.dart';
+import '../widgets/estado_salud_card.dart';
 import '../widgets/racha_chip.dart';
 import '../widgets/settings_widgets.dart';
 import 'configuracion_screen.dart';
@@ -58,6 +60,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   _ProfileHero(profile: context.watch<AppState>().profile),
+                  const SizedBox(height: 16),
+                  const EstadoSaludCard(compact: true),
                   const SizedBox(height: 16),
                   _buildMetasActividad(),
                   const SizedBox(height: 16),
@@ -502,10 +506,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
                 validator: (v) {
                   final n = int.tryParse(v ?? '');
-                  if (n == null || n <= 0 || n > 100000) {
-                    return strings.pfMetaInvalida;
-                  }
-                  return null;
+                  return Validators.validarMetaPasos(
+                    n,
+                    strings.pfMetaPasosMin,
+                  );
                 },
               ),
               const SizedBox(height: 12),
@@ -518,10 +522,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
                 validator: (v) {
                   final n = double.tryParse(v ?? '');
-                  if (n == null || n < 500 || n > 10000) {
-                    return strings.pfMetaInvalida;
-                  }
-                  return null;
+                  return Validators.validarMetaKcal(
+                    n,
+                    strings.pfMetaKcalMin,
+                  );
                 },
               ),
             ],

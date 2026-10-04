@@ -15,6 +15,15 @@ abstract final class Validators {
   /// 5 L. Por encima se trata como un error de sinceridad, no como un dato.
   static const double maxAguaDiariaLitros = 5.0;
 
+  /// Metas de actividad honestas (Perfil): el mínimo de pasos es 1000 (una
+  /// meta de 0–999 pasos no es una meta de caminar) y el mínimo de calorías
+  /// diarias es 1200 kcal (suelo nutricional seguro según guías médicas; por
+  /// debajo hay riesgo de déficit sin supervisión profesional).
+  static const int minPasosMeta = 1000;
+  static const int maxPasosMeta = 100000;
+  static const double minKcalMeta = 1200.0;
+  static const double maxKcalMeta = 10000.0;
+
   static final RegExp _nombreRe = RegExp(r"^[A-Za-zÁÉÍÓÚáéíóúÑñÜü' ]+$");
 
   /// Valida el nombre completo (3-60, solo letras/espacios/apóstrofes).
@@ -65,6 +74,24 @@ abstract final class Validators {
   /// si el total del día (lo ya registrado + lo nuevo) se pasa del límite.
   static String? validarAguaDiaria(double totalDelDia, String mensaje) {
     if (totalDelDia > maxAguaDiariaLitros) return mensaje;
+    return null;
+  }
+
+  /// Valida la meta diaria de pasos (1000–100000). `mensaje` es el texto
+  /// localizado que el llamador quiera mostrar si el valor queda fuera.
+  static String? validarMetaPasos(int? pasos, String mensaje) {
+    if (pasos == null || pasos < minPasosMeta || pasos > maxPasosMeta) {
+      return mensaje;
+    }
+    return null;
+  }
+
+  /// Valida la meta diaria de calorías (1200–10000 kcal). `mensaje` es el
+  /// texto localizado que el llamador quiera mostrar si el valor queda fuera.
+  static String? validarMetaKcal(double? kcal, String mensaje) {
+    if (kcal == null || kcal < minKcalMeta || kcal > maxKcalMeta) {
+      return mensaje;
+    }
     return null;
   }
 }

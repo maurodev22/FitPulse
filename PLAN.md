@@ -491,6 +491,44 @@ con validaciones (ver inventario abajo).
   0 no cierra con aviso motivador / 1 sí guarda), 0 issues en `flutter analyze`.
   Verificación física pendiente en el dispositivo.
 
+### P20 — Estado de salud honesto + metas mínimas investigadas ✅ código
+
+Pedido del usuario (2026-10-03): *"pon meta mínima de pasos en 1000, en kcal algún
+valor que busques en internet acorde"* y *"investiga qué es un estado de salud
+malo/regular/bueno/excelente para establecer una opción basada en los datos de
+salud de la app* (cada estado con su color). Se confirmó con el usuario: **excelente = azul**
+(regular ya era amarillo), aparece **en Home y en Perfil**, y **kcal mín = 1200**.
+
+**Investigación (fuentes accesibles + literatura establecida):** OMS/CDC/NHS
+150–300 min/sem de actividad moderada; Paluch et al., *Lancet Public Health* 2022
+(pasos óptimos: 8.000–10.000 <60 años, 6.000–8.000 ≥60); categorías IMC
+OMS/NHLBI; suelo nutricional seguro de **1.200 kcal/día** (guías médicas) — la app
+permitía 500.
+
+- ✅ **Metas mínimas honestas**: `Validators.minPasosMeta = 1000` (antes 1) y
+  `Validators.minKcalMeta = 1200` (antes 500), con `validarMetaPasos`/
+  `validarMetaKcal` usados por `_editarMetas` (`profile_screen.dart`); mensajes
+  localizados `pfMetaPasosMin`/`pfMetaKcalMin`.
+- ✅ **Estado de salud** (`lib/state/estado_salud.dart`, puro Dart): cada métrica
+  con dato REAL puntúa 0–3 (IMC, pasos por edad, gasto activo, sueño, agua) y el
+  promedio decide **Malo / Regular / Bueno / Excelente**. Con **menos de 2 métricas
+  con dato → "Sin datos suficientes"** (nunca inventa). El pulso queda FUERA: solo
+  hay promedio del día, no pulso en reposo.
+- ✅ **Tarjeta** (`lib/widgets/estado_salud_card.dart`) en **Home** (debajo del Día
+  ideal, con desglose por métrica y nota "no sustituye un diagnóstico
+  profesional") y en **Perfil** (versión compacta bajo el hero). Aviso disclaimar
+  obligatorio por integridad.
+- ✅ **Colores** (claro/oscuro con contraste WCAG AA): malo rojo, regular amarillo,
+  bueno verde, excelente azul (`colorEstadoSalud` + `onColorEstadoSalud`).
+- ✅ **Getter central**: `AppState.estadoSalud` pasa SOLO datos con fuente real
+  (`healthDisponible`, `gastoActivoConPermiso`, `suenioConPermiso`, `aguaHoy`,
+  IMC del perfil).
+- ✅ 159/159 tests (nuevo `test/estado_salud_test.dart`: 4 estados + umbral de
+  pasos por edad + gasto/sueño/agua + detalles no inventados + contraste WCAG de
+  los 4 colores en claro/oscuro + tarjeta con perfil/agua y con estado vacío;
+  2 reglas más en `validaciones_test.dart`), 0 issues en `flutter analyze`.
+  Verificación física pendiente en el dispositivo.
+
 #### Inventario completo de validaciones (2026-10-03)
 
 | Campo | Pantalla | Estado |
@@ -498,7 +536,7 @@ con validaciones (ver inventario abajo).
 | Repeticiones (0–999) | Reproductor | ✅ P19: 0 bloqueado con aviso motivador |
 | Agua manual (botones + campo libre) | Home | ✅ P19: tope 5 L/día con snackbar de 5 s |
 | Peso semanal | Progreso | ✅ stepper clamp 20–300 kg (nota: registro inicial usa 45–300) |
-| Metas: pasos 1–100000, kcal 500–10000 | Perfil | ✅ validator propio de formulario |
+| Metas: pasos 1000–100000, kcal 1200–10000 | Perfil | ✅ P20: `validarMetaPasos`/`validarMetaKcal` (mínimos investigados) |
 | Registro inicial: nombre 3–60, edad 16–85, peso 45–300, altura 1,20–2,10 | Registro | ✅ `Validators` |
 | Búsquedas (recetas / consejos) | Recetas / Consejos | ✅ texto libre sin validación numérica necesaria |
 | Registrar consumo de receta | Recetas | ✅ usa datos del catálogo, sin entrada libre |

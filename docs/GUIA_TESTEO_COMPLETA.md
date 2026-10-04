@@ -840,7 +840,7 @@ validaciones. Se implementaron las dos reglas y se inventariaron todos los campo
 | Repeticiones (0–999) | Reproductor | ✅ P19: 0 bloqueado con aviso motivador |
 | Agua manual (botones + campo libre) | Home | ✅ P19: tope 5 L/día con snackbar de 5 s |
 | Peso semanal | Progreso | ✅ stepper clamp 20–300 kg (nota: registro inicial usa 45–300) |
-| Metas: pasos 1–100000, kcal 500–10000 | Perfil | ✅ validator propio de formulario |
+| Metas: pasos 1000–100000, kcal 1200–10000 | Perfil | ✅ P20: `validarMetaPasos`/`validarMetaKcal` (mínimos investigados) |
 | Registro inicial: nombre 3–60, edad 16–85, peso 45–300, altura 1,20–2,10 | Registro | ✅ `Validators` |
 | Búsquedas (recetas / consejos) | Recetas / Consejos | ✅ texto libre sin validación numérica necesaria |
 | Registrar consumo de receta | Recetas | ✅ usa datos del catálogo, sin entrada libre |
@@ -853,6 +853,64 @@ validaciones. Se implementaron las dos reglas y se inventariaron todos los campo
   guarda con 1).
 - **P19 ⏳ física pendiente**: instalar el APK nuevo en el Pixel 6a y seguir los pasos
   1–7 de esta sección.
+
+---
+
+## 26. P20 — Estado de salud honesto + metas mínimas investigadas
+
+Pedido del usuario (2026-10-03): *"pon meta mínima de pasos en 1000, en kcal algún valor
+que busques en internet acorde"* y establecer una opción de **estado de salud**
+(malo/regular/bueno/excelente) basada en los datos reales de la app. Confirmado con el
+usuario: **excelente = azul** (regular ya era amarillo), la tarjeta va **en Home y en
+Perfil**, y **kcal mín = 1200** (suelo nutricional seguro investigado; la app permitía 500).
+
+### Comportamiento esperado (código ✅, 159/159 tests, 0 issues)
+
+| Ítem | Qué debe verse/hacerse |
+|---|---|
+| **Metas mínimas honestas** | En Perfil → **Editar metas**: pasos por debajo de **1000** se rechazan con "La meta de pasos debe estar entre 1000 y 100000"; kcal por debajo de **1200** se rechazan con "La meta de calorías debe estar entre 1200 y 10000 kcal". El diálogo NO se cierra con valores fuera de rango. |
+| **Estado de salud en Home** | Tarjeta "Estado de salud" debajo del Día ideal. Muestra el estado (Malo rojo / Regular amarillo / Bueno verde / Excelente azul) + desglose por métrica real (IMC, Pasos, Gasto activo, Sueño, Agua con sus puntos ●●●) + nota "Basado en N métricas reales · Orientativo: no sustituye un diagnóstico profesional". |
+| **Estado de salud en Perfil** | Tarjeta compacta bajo el hero (con peso/altura/IMC): mismo estado y color, sin desglose. |
+| **Sin datos suficientes** | Con menos de 2 métricas reales (p. ej. solo IMC, o perfil vacío) la tarjeta muestra "Sin datos suficientes" en gris neutro con la explicación: completar perfil y conectar Health Connect. NUNCA inventa un color ni un estado. |
+| **Pasos según edad** | El óptimo de pasos usa la edad del perfil: <60 años ≥8.000 pasos = excelente; ≥60 años ≥6.000 = excelente (Paluch, *Lancet Public Health* 2022). |
+| **Colores con contraste** | Los 4 colores cumplen WCAG AA (≥4,5:1) con el texto encima, en tema claro y oscuro. |
+
+### Pasos de verificación manual (P20)
+
+**Metas mínimas:**
+1. Perfil → **Editar metas** → en "Meta de pasos diarios" escribir **999** (o **100**):
+   - ✅ Se rechaza: mensaje "La meta de pasos debe estar entre 1000 y 100000" y el
+     diálogo **no** se cierra.
+2. Escribir **1000** → ✅ Guardar acepta (mensaje de guardado "Ajustes guardados").
+3. En "Meta de calorías diarias" escribir **500** (valor antiguo) → ✅ Se rechaza con
+   "La meta de calorías debe estar entre 1200 y 10000 kcal", el diálogo **no** se cierra.
+4. Escribir **1200** → ✅ Guardar acepta.
+
+**Estado de salud en Home:**
+5. Con el perfil completo (peso y altura) y Health Connect conectado → ✅ Home debajo del
+   Día ideal muestra la tarjeta con un estado real (p. ej. "Bueno" en verde) y el desglose
+   de las métricas que tienen dato (IMC, Pasos, Gasto activo, Sueño, Agua).
+6. Registrar **0,5 L** de agua → ✅ la fila Agua del desglose cambia de puntos según el
+   nuevo total (dato real, nunca fijo).
+7. Usuario de 60+ años y la tarjeta cambiando de color según la edad y los pasos reales.
+
+**Sin datos suficientes:**
+8. Con un perfil recién creado SIN conectar Health Connect (y sin agua registrada) →
+   ✅ la tarjeta muestra "Sin datos suficientes" en gris, sin color inventado.
+
+**Modo oscuro:**
+9. Cambiar a tema **Oscuro** → ✅ los 4 estados siguen legibles (colores claros sobre
+   tarjeta oscura) y la tarjeta mantiene su forma.
+
+### Estado (2026-10-03)
+
+- **P20 ✅ código verificado**: 159/159 tests, `flutter analyze` 0 issues. Nuevos
+  `test/estado_salud_test.dart` (clasificador honesto: 4 estados, umbral de pasos por
+  edad, gasto/sueño/agua, detalles reales no inventados, contraste WCAG AA de los 4
+  colores en claro/oscuro, tarjeta con perfil+agua = Excelente y con estado vacío =
+  Sin datos suficientes) + 2 reglas de metas en `validaciones_test.dart`.
+- **P20 ⏳ física pendiente**: instalar el APK nuevo en el Pixel 6a y seguir los pasos
+  1–9 de esta sección.
 
 ---
 
