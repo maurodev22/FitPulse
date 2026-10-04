@@ -7,6 +7,14 @@ abstract final class Validators {
   static const minAlturaM = 1.20;
   static const maxAlturaM = 2.10;
 
+  /// Repeticiones mínimas honestas: nadie "completa" 0 repeticiones de un
+  /// ejercicio. 0 se interpreta como "no pude" y se responde motivando.
+  static const int minReps = 1;
+
+  /// Límite diario plausible de agua (litros): ningún humano declara más de
+  /// 5 L. Por encima se trata como un error de sinceridad, no como un dato.
+  static const double maxAguaDiariaLitros = 5.0;
+
   static final RegExp _nombreRe = RegExp(r"^[A-Za-zÁÉÍÓÚáéíóúÑñÜü' ]+$");
 
   /// Valida el nombre completo (3-60, solo letras/espacios/apóstrofes).
@@ -40,6 +48,23 @@ abstract final class Validators {
     if (value < minAlturaM || value > maxAlturaM) {
       return 'La altura debe estar entre ${minAlturaM.toStringAsFixed(2)} y ${maxAlturaM.toStringAsFixed(2)} m';
     }
+    return null;
+  }
+
+  /// Valida las repeticiones completadas de un ejercicio. 0 no es una cuenta
+  /// real: o fue un error, o la persona no pudo; en ambos casos se motiva a
+  /// conseguir al menos 1 repetición más. `esfuerzate` es el mensaje
+  /// localizado que el llamador quiera mostrar cuando la validación falle.
+  static String? validarReps(int reps, String esfuerzate) {
+    if (reps < minReps) return esfuerzate;
+    return null;
+  }
+
+  /// Valida el agua declarada del día: la cantidad añadida no puede superar el
+  /// tope diario plausible (5 L). Devuelve el mensaje de sinceridad `mensaje`
+  /// si el total del día (lo ya registrado + lo nuevo) se pasa del límite.
+  static String? validarAguaDiaria(double totalDelDia, String mensaje) {
+    if (totalDelDia > maxAguaDiariaLitros) return mensaje;
     return null;
   }
 }

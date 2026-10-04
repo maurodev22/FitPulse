@@ -305,6 +305,9 @@ class AppStrings {
       'Water logged: ${litros.toStringAsFixed(2)} L');
   String get homeAguaMetaCumplida =>
       _t('Meta de 2,5 L cumplida', '2.5 L goal reached');
+  String get homeAguaSinceridad => _t(
+      'La sinceridad es lo que te ayuda a crecer: máximo 5 L de agua al día.',
+      'Honesty is what helps you grow: max 5 L of water a day.');
   String get homePendiente => _t('Pendiente', 'Pending');
   String get homeDiaIdealCelebracion =>
       _t('¡Día ideal completado!', 'Ideal day completed!');
@@ -709,6 +712,10 @@ class AppStrings {
   String get wpRepsDialogHint => _t(
       'Cuenta real al terminar este ejercicio. Nunca inventamos datos de salud.',
       'Real count when you finish this exercise. We never invent health data.');
+
+  String get wpRepsEsfuerzate => _t(
+      'Esfuérzate para conseguir 1 repetición más',
+      'Push yourself to get 1 more rep');
   String get wpRepsDefinidas => _t('Definidas: ', 'Target: ');
   String wpRepsGuardadas(String ejercicio, int reps) => _t(
       'Registradas: $reps reps · $ejercicio',

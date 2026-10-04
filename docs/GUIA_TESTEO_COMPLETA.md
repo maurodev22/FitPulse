@@ -792,6 +792,70 @@ celebración sutil, sin ruido y sin modales.
 
 ---
 
+## 25. P19 — Validaciones honestas: reps ≥ 1 y agua con tope de 5 L/día
+
+Lote pedido por el usuario (2026-10-03): *"nadie hace 0 repeticiones de un ejercicio"*,
+*"ningún humano toma +5 L de agua al día"* y revisar **todos** los campos con
+validaciones. Se implementaron las dos reglas y se inventariaron todos los campos.
+
+### Comportamiento esperado (código ✅, 136/136 tests, 0 issues)
+
+| Ítem | Qué debe verse/hacerse |
+|---|---|
+| **Reps en 0 → aviso motivador, sin cerrar** | En el diálogo "¿Cuántas repeticiones completaste?" (al terminar el último ejercicio), pulsar **Guardar** con el valor **0** deja el diálogo abierto y muestra dentro del propio diálogo: **"Esfuérzate para conseguir 1 repetición más"**. |
+| **Reps ≥ 1 → guarda normal** | Con el valor en 1 o más (botones −5/−1/+1/+5), Guardar cierra el diálogo, registra la cuenta real y confirma con "Registradas: N reps". |
+| **Agua > 5 L/día → aviso de sinceridad 5 s** | En "Registra tu agua de hoy", si el total del día (lo ya declarado + lo nuevo, con botones rápidos **o** campo libre) supera **5 L**, NO se registra, el diálogo **no** se cierra y aparece un toast (SnackBar) de **5 segundos**: **"La sinceridad es lo que te ayuda a crecer: máximo 5 L de agua al día."** |
+| **Agua ≤ 5 L/día → suma normal** | Cantidades plausibles (p. ej. 0,5 L) siguen sumando y confirmando con "Agua registrada: 0.50 L"; el tope de 5 L es solo contra lo imposible. |
+
+### Pasos de verificación manual (P19)
+
+**Reps:**
+1. Iniciar un entrenamiento y llegar a su último ejercicio (terminar o saltar los
+   anteriores).
+2. Al finalizar el último ejercicio aparece el diálogo de repeticiones con el valor en
+   **0**. Pulsar **Guardar**:
+   - ✅ El diálogo **no** se cierra.
+   - ✅ Se ve el aviso **"Esfuérzate para conseguir 1 repetición más"** dentro del
+     diálogo.
+3. Pulsar **+1** (o +5) y **Guardar**:
+   - ✅ El diálogo se cierra y aparece "Registradas: N reps · <ejercicio>".
+   - ✅ En Progreso → repeticiones, la cuenta queda registrada con N.
+
+**Agua:**
+4. Home → tarjeta **Día ideal** → fila **Agua** → diálogo "Registra tu agua de hoy".
+5. Campo libre: escribir **6** (o **6,0**) y pulsar **Añadir**:
+   - ✅ **No** se registra nada, el diálogo sigue abierto y aparece el toast de
+     **5 segundos** "La sinceridad es lo que te ayuda a crecer: máximo 5 L de agua al día.".
+   - ✅ El contador "Total de hoy" no cambia.
+6. Botones rápidos: con el total cerca del tope (p. ej. 4,8 L acumulado), pulsar
+   **+0,50 L** o **+1 L**:
+   - ✅ Igual que el punto 5: aviso de 5 s y **no** se suma más allá de 5 L.
+7. Cantidad plausibles: escribir **0,5** y **Añadir** → ✅ suma, cierra y confirma
+   "Agua registrada: 0.50 L".
+
+### Inventario completo de validaciones (2026-10-03)
+
+| Campo | Pantalla | Estado |
+|---|---|---|
+| Repeticiones (0–999) | Reproductor | ✅ P19: 0 bloqueado con aviso motivador |
+| Agua manual (botones + campo libre) | Home | ✅ P19: tope 5 L/día con snackbar de 5 s |
+| Peso semanal | Progreso | ✅ stepper clamp 20–300 kg (nota: registro inicial usa 45–300) |
+| Metas: pasos 1–100000, kcal 500–10000 | Perfil | ✅ validator propio de formulario |
+| Registro inicial: nombre 3–60, edad 16–85, peso 45–300, altura 1,20–2,10 | Registro | ✅ `Validators` |
+| Búsquedas (recetas / consejos) | Recetas / Consejos | ✅ texto libre sin validación numérica necesaria |
+| Registrar consumo de receta | Recetas | ✅ usa datos del catálogo, sin entrada libre |
+
+### Estado (2026-10-03)
+
+- **P19 ✅ código verificado** (136/136 tests, `flutter analyze` 0 issues; nuevo
+  `test/validaciones_test.dart`: reglas unitarias de `Validators`, diálogo de agua
+  rechaza 6 L con snackbar de 5 s y acepta 0,5 L, diálogo de reps no cierra con 0 y sí
+  guarda con 1).
+- **P19 ⏳ física pendiente**: instalar el APK nuevo en el Pixel 6a y seguir los pasos
+  1–7 de esta sección.
+
+---
+
 ## 23. P17 — Configuración inicial ligera (tema con vista previa + avisos opt-in)
 
 Pantalla nueva (**SetupScreen**) que aparece **una sola vez**, justo después del Registro, pensada

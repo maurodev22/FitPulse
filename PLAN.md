@@ -464,6 +464,45 @@ visual que estimule permanecer en la apk"*. Implementa la **Fase B4** de la gami
   premia 3/3 solo una vez, celebración aparece y desaparece sin reaparecer hoy),
   0 issues en `flutter analyze`. Verificación física pendiente en el dispositivo.
 
+### P19 — Validaciones honestas: reps mínimas y agua con tope diario ✅ código
+
+Lote pedido por el usuario tras revisar el código: *"nadie hace 0 repeticiones de un
+ejercicio"*, *"ningún humano toma +5 L de agua al día"* y listar **todos** los campos
+con validaciones (ver inventario abajo).
+
+- ✅ **Reps: el 0 no es una cuenta real.** En `_dialogoReps` (`workout_player_screen.dart`)
+  el botón "Guardar" con 0 repeticiones NO cierra el diálogo y muestra el aviso
+  motivador dentro del diálogo: *"Esfuérzate para conseguir 1 repetición más"*
+  (`strings.wpRepsEsfuerzate`). Se interpreta como "error o no pude", tal como pidió
+  el usuario. Con ≥ 1 guarda y cierra como antes.
+- ✅ **Agua: tope diario de 5 L con aviso de sinceridad de 5 s.** En
+  `_mostrarDialogoRegistrarAgua` (`home_screen.dart`) si el total del día
+  (declarado + nuevo, botones rápidos y campo libre incluidos) supera 5 L, NO se
+  registra, NO se cierra el diálogo y se muestra un SnackBar de 5 segundos:
+  *"La sinceridad es lo que te ayuda a crecer: máximo 5 L de agua al día."*
+  (`strings.homeAguaSinceridad`).
+- ✅ **Reglas centralizadas**: `Validators.minReps = 1`,
+  `Validators.maxAguaDiariaLitros = 5.0`, `Validators.validarReps(...)` y
+  `Validators.validarAguaDiaria(...)`. El diálogo de agua pasó a `StatefulWidget`
+  que posee su `TextEditingController` (evita usarlo tras la liberación durante la
+  animación de cierre).
+- ✅ 136/136 tests (nuevo `test/validaciones_test.dart`: reglas unitarias + diálogo de
+  agua 6 L rechazado con snackbar de 5 s / 0,5 L registrado + diálogo de reps
+  0 no cierra con aviso motivador / 1 sí guarda), 0 issues en `flutter analyze`.
+  Verificación física pendiente en el dispositivo.
+
+#### Inventario completo de validaciones (2026-10-03)
+
+| Campo | Pantalla | Estado |
+|---|---|---|
+| Repeticiones (0–999) | Reproductor | ✅ P19: 0 bloqueado con aviso motivador |
+| Agua manual (botones + campo libre) | Home | ✅ P19: tope 5 L/día con snackbar de 5 s |
+| Peso semanal | Progreso | ✅ stepper clamp 20–300 kg (nota: registro inicial usa 45–300) |
+| Metas: pasos 1–100000, kcal 500–10000 | Perfil | ✅ validator propio de formulario |
+| Registro inicial: nombre 3–60, edad 16–85, peso 45–300, altura 1,20–2,10 | Registro | ✅ `Validators` |
+| Búsquedas (recetas / consejos) | Recetas / Consejos | ✅ texto libre sin validación numérica necesaria |
+| Registrar consumo de receta | Recetas | ✅ usa datos del catálogo, sin entrada libre |
+
 ---
 
 ## 12. Principios que se mantienen

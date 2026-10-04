@@ -13,6 +13,7 @@ import '../services/avisos_service.dart';
 import '../services/config_service.dart';
 import '../services/locale_service.dart';
 import '../theme.dart';
+import '../utils/validators.dart';
 
 /// Reproductor de entrenamiento (Fase 2).
 ///
@@ -100,9 +101,12 @@ class _WorkoutPlayerScreenState extends State<WorkoutPlayerScreen> {
     );
   }
 
-  /// Diálogo honesto: el usuario introduce su cuenta real (0–999).
+  /// Diálogo honesto: el usuario introduce su cuenta real (≥ 1). El 0 no es
+  /// una cuenta real (error o "no pude") → se muestra el aviso motivador y el
+  /// diálogo NO se cierra.
   Future<int?> _dialogoReps(BuildContext context, AppStrings strings) {
     final control = ValueNotifier<int>(0);
+    final aviso = ValueNotifier<String?>(null);
     final definidas = _ejercicio.repeticiones;
     return showDialog<int>(
       context: context,
@@ -142,31 +146,69 @@ class _WorkoutPlayerScreenState extends State<WorkoutPlayerScreen> {
             const SizedBox(height: 16),
             ValueListenableBuilder<int>(
               valueListenable: control,
-              builder: (_, valor, _) => Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  _RepsStepBtn(
-                    icon: Icons.remove_circle_outline,
-                    onTap: () => control.value = math.max(0, valor - 5),
-                  ),
-                  _RepsStepBtn(
-                    icon: Icons.remove,
-                    onTap: () => control.value = math.max(0, valor - 1),
-                  ),
-                  Text(
-                    '$valor',
-                    style: AppType.metricVal.copyWith(color: AppColors.onSurface),
-                  ),
-                  _RepsStepBtn(
-                    icon: Icons.add,
-                    onTap: () => control.value = math.min(999, valor + 1),
-                  ),
-                  _RepsStepBtn(
-                    icon: Icons.add_circle_outline,
-                    onTap: () => control.value = math.min(999, valor + 5),
-                  ),
-                ],
-              ),
+              builder: (_, valor, _) {
+                void setValor(int v) {
+                  control.value = v;
+                  aviso.value = null;
+                }
+
+                return Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    _RepsStepBtn(
+                      icon: Icons.remove_circle_outline,
+                      onTap: () => setValor(math.max(0, valor - 5)),
+                    ),
+                    _RepsStepBtn(
+                      icon: Icons.remove,
+                      onTap: () => setValor(math.max(0, valor - 1)),
+                    ),
+                    Text(
+                      '$valor',
+                      style: AppType.metricVal.copyWith(color: AppColors.onSurface),
+                    ),
+                    _RepsStepBtn(
+                      icon: Icons.add,
+                      onTap: () => setValor(math.min(999, valor + 1)),
+                    ),
+                    _RepsStepBtn(
+                      icon: Icons.add_circle_outline,
+                      onTap: () => setValor(math.min(999, valor + 5)),
+                    ),
+                  ],
+                );
+              },
+            ),
+            ValueListenableBuilder<String?>(
+              valueListenable: aviso,
+              builder: (_, texto, _) => texto == null
+                  ? const SizedBox.shrink()
+                  : Padding(
+                      padding: const EdgeInsets.only(top: 12),
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: AppColors.errorContainer.withValues(alpha: 0.35),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.emoji_events_outlined,
+                                size: 18, color: AppColors.error),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                texto,
+                                style: AppType.bodySm.copyWith(
+                                  color: AppColors.onErrorContainer,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
             ),
           ],
         ),
@@ -183,7 +225,17 @@ class _WorkoutPlayerScreenState extends State<WorkoutPlayerScreen> {
               backgroundColor: AppColors.primary,
               foregroundColor: AppColors.onPrimary,
             ),
-            onPressed: () => Navigator.of(dialogContext).pop(control.value),
+            onPressed: () {
+              // P19: 0 repeticiones no es una cuenta real. Ni error ni "no
+              // pude": se motiva a conseguir al menos 1 y no se cierra.
+              final error = Validators.validarReps(
+                  control.value, strings.wpRepsEsfuerzate);
+              if (error != null) {
+                aviso.value = error;
+                return;
+              }
+              Navigator.of(dialogContext).pop(control.value);
+            },
             child: Text(
               strings.prGuardar,
               style: const TextStyle(fontWeight: FontWeight.w700),

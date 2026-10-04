@@ -8,6 +8,7 @@ import '../services/locale_service.dart';
 import '../state/app_state.dart';
 import '../state/workout.dart';
 import '../theme.dart';
+import '../utils/validators.dart';
 import '../widgets/common.dart';
 import '../widgets/racha_chip.dart';
 import 'workout_player_screen.dart';
@@ -15,27 +16,61 @@ import 'workout_player_screen.dart';
 /// Abre el diálogo para registrar MANUALMENTE el agua consumida hoy (P14):
 /// botones rápidos (+250 ml, +500 ml, +1 L) y una cantidad libre aproximada.
 /// Cada acción suma al total diario persistido y confirma con un snackbar.
-Future<void> _mostrarDialogoRegistrarAgua(BuildContext context) async {
-  final state = context.read<AppState>();
-  final strings = context.read<LocaleService>().strings;
-  final messenger = ScaffoldMessenger.of(context);
-  final controller = TextEditingController();
-
-  void confirmar(String mensaje) {
-    messenger
-      ..clearSnackBars()
-      ..showSnackBar(SnackBar(content: Text(mensaje)));
-  }
-
-  Future<void> registrar(double litros) async {
-    await state.registrarAgua(litros);
-    confirmar(strings.homeAguaRegistrada(litros));
-    if (context.mounted) Navigator.of(context).pop();
-  }
-
-  await showDialog<void>(
+Future<void> _mostrarDialogoRegistrarAgua(BuildContext context) {
+  return showDialog<void>(
     context: context,
-    builder: (dialogCtx) => AlertDialog(
+    builder: (_) => const _DialogoRegistrarAgua(),
+  );
+}
+
+/// Diálogo de agua como StatefulWidget: posee su propio [TextEditingController]
+/// y lo libera al salir del árbol (evita usarlo durante la animación de cierre).
+class _DialogoRegistrarAgua extends StatefulWidget {
+  const _DialogoRegistrarAgua();
+
+  @override
+  State<_DialogoRegistrarAgua> createState() => _DialogoRegistrarAguaState();
+}
+
+class _DialogoRegistrarAguaState extends State<_DialogoRegistrarAgua> {
+  final TextEditingController _controller = TextEditingController();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _confirmar(String mensaje,
+      {Duration duracion = const Duration(seconds: 4)}) {
+    ScaffoldMessenger.of(context)
+      ..clearSnackBars()
+      ..showSnackBar(SnackBar(content: Text(mensaje), duration: duracion));
+  }
+
+  Future<void> _registrar(double litros) async {
+    final state = context.read<AppState>();
+    final strings = context.read<LocaleService>().strings;
+    // P19: honestidad sobre los datos. Ningún humano declara más de 5 L de
+    // agua al día; si el total (declarado + nuevo) se pasa, no se registra y
+    // se avisa con un toast de 5 segundos SIN cerrar el diálogo.
+    final total = (state.aguaHoy ?? 0) + litros;
+    final aviso =
+        Validators.validarAguaDiaria(total, strings.homeAguaSinceridad);
+    if (aviso != null) {
+      _confirmar(aviso, duracion: const Duration(seconds: 5));
+      return;
+    }
+    await state.registrarAgua(litros);
+    _confirmar(strings.homeAguaRegistrada(litros));
+    if (mounted) Navigator.of(context).pop();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final state = context.read<AppState>();
+    final strings = context.read<LocaleService>().strings;
+    return AlertDialog(
       backgroundColor: AppColors.surface,
       title: Text(strings.homeTituloRegistrarAgua),
       content: SingleChildScrollView(
@@ -55,21 +90,21 @@ Future<void> _mostrarDialogoRegistrarAgua(BuildContext context) async {
               children: [
                 ActionChip(
                   label: const Text('+0,25 L'),
-                  onPressed: () => registrar(0.25),
+                  onPressed: () => _registrar(0.25),
                 ),
                 ActionChip(
                   label: const Text('+0,50 L'),
-                  onPressed: () => registrar(0.5),
+                  onPressed: () => _registrar(0.5),
                 ),
                 ActionChip(
                   label: const Text('+1 L'),
-                  onPressed: () => registrar(1.0),
+                  onPressed: () => _registrar(1.0),
                 ),
               ],
             ),
             const SizedBox(height: 12),
             TextField(
-              controller: controller,
+              controller: _controller,
               keyboardType:
                   const TextInputType.numberWithOptions(decimal: true),
               inputFormatters: [
@@ -85,22 +120,21 @@ Future<void> _mostrarDialogoRegistrarAgua(BuildContext context) async {
       ),
       actions: [
         TextButton(
-          onPressed: () => Navigator.of(dialogCtx).pop(),
+          onPressed: () => Navigator.of(context).pop(),
           child: Text(strings.homeCerrar),
         ),
         FilledButton(
           onPressed: () {
-            final texto = controller.text.trim().replaceAll(',', '.');
+            final texto = _controller.text.trim().replaceAll(',', '.');
             final litros = double.tryParse(texto);
             if (litros == null || litros <= 0) return;
-            registrar(litros);
+            _registrar(litros);
           },
           child: Text(strings.homeAguaAnadir),
         ),
       ],
-    ),
-  );
-  controller.dispose();
+    );
+  }
 }
 
 class HomeScreen extends StatefulWidget {
