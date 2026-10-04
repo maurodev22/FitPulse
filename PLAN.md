@@ -443,6 +443,27 @@ pasos de verificación en `docs/GUIA_TESTEO_COMPLETA.md` §21 (P11–P13) y §22
   Continuar guarda toggles y "Ahora no" no toca el perfil), 0 issues en `flutter analyze`.
   Verificación física de la pantalla pendiente en el dispositivo.
 
+### P18 — Recompensa visual del Día ideal (+25 XP, una vez por día) ✅ código
+
+Feedback del usuario: *"que al completar el reto de Día ideal, le dé una recompensa
+visual que estimule permanecer en la apk"*. Implementa la **Fase B4** de la gamificación
+(`docs/DISENO_GAMIFICACION.md`): premiar el día completo con una celebración sutil.
+
+- ✅ **Condición única y coherente**: `AppState.diaIdealCompletadoHoy` (entrenar hoy +
+  meta calórica ≥ 100 % + agua ≥ 2,5 L sobre datos reales, nunca inventados) es la
+  fuente única de verdad; la tarjeta de Home usa la misma constante `metaAguaDiaria`.
+- ✅ **+25 XP honesto y único**: `AppState.aplicarRecompensaDiaIdeal()` otorga
+  `ptsDiaIdeal` (+25) SOLO si el día está completo y **una sola vez por día**
+  (persistido por fecha, mismo patrón que el anuncio recompensado). Un día a medias
+  nunca premia y no se repite.
+- ✅ **Celebración visual suave no bloqueante**: al llegar a 3/3 la tarjeta muestra
+  confeti (CustomPainter, colores de la paleta) + check animado + "¡Día ideal
+  completado! +25 XP · ¡Sigue así!" que se desvanece sola (~2,8 s). Sin sonido, sin
+  modal, con `IgnorePointer` (no bloquea toques). No vuelve a aparecer en el día.
+- ✅ 130/130 tests (nuevo `test/dia_ideal_recompensa_test.dart`: no premia 2/3,
+  premia 3/3 solo una vez, celebración aparece y desaparece sin reaparecer hoy),
+  0 issues en `flutter analyze`. Verificación física pendiente en el dispositivo.
+
 ---
 
 ## 12. Principios que se mantienen

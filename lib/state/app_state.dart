@@ -46,6 +46,14 @@ class AppState extends ChangeNotifier {
   static const _recompensaAnuncioKey = 'fitpulse_recompensa_anuncio_v1';
   static const int ptsRecompensaAnuncio = 25;
 
+  // P18: recompensa visual por completar el Día ideal (una vez por día).
+  static const _recompensaDiaIdealKey = 'fitpulse_recompensa_dia_ideal_v1';
+  static const int ptsDiaIdeal = 25;
+
+  /// Meta diaria de agua del Día ideal (litros). Fuente única: la tarjeta de
+  /// Home y la recompensa P18 usan este mismo valor para no divergir.
+  static const double metaAguaDiaria = 2.5;
+
   // Fase 9: registros reales de peso (semanal) y repeticiones por ejercicio.
   static const _pesoKey = 'fitpulse_peso_v1';
   static const _repsKey = 'fitpulse_reps_v1';
@@ -518,6 +526,41 @@ class AppState extends ChangeNotifier {
     notifyListeners();
     await _persistXp();
     _trace('recompensa', 'anuncio', detail: '+$ptsRecompensaAnuncio XP');
+    return true;
+  }
+
+  // =====================================================================
+  //  P18: recompensa visual del Día ideal (una vez por día)
+  // =====================================================================
+
+  /// `true` si hoy se completaron los 3 objetivos del Día ideal de Home
+  /// (entrenar, alcanzar la meta calórica y cumplir la meta de agua).
+  /// Fuente única de verdad: la tarjeta de Home y el premio usan los mismos
+  /// datos reales (historial, balance, agua), nunca valores inventados.
+  bool get diaIdealCompletadoHoy {
+    final aguaOk = (aguaHoy ?? 0) >= metaAguaDiaria;
+    return entrenadoHoy && progresoCalorias >= 1.0 && aguaOk;
+  }
+
+  /// `true` si hoy ya se otorgó la recompensa del Día ideal.
+  bool get recompensaDiaIdealOtorgadaHoy {
+    final hoy = _dayKey(DateTime.now());
+    return (_prefs?.getString(_recompensaDiaIdealKey)) == hoy;
+  }
+
+  /// Aplica la recompensa del Día ideal: +[ptsDiaIdeal] XP, una sola vez por
+  /// día y SOLO si los 3 objetivos están completos. Devuelve `false` si el día
+  /// aún no está completo o si la recompensa ya se otorgó hoy (la celebración
+  /// visual es honesta: nunca premia un día a medias ni se repite).
+  Future<bool> aplicarRecompensaDiaIdeal() async {
+    if (!diaIdealCompletadoHoy) return false;
+    final hoy = _dayKey(DateTime.now());
+    if ((_prefs?.getString(_recompensaDiaIdealKey)) == hoy) return false;
+    await _prefs?.setString(_recompensaDiaIdealKey, hoy);
+    _xp += ptsDiaIdeal;
+    notifyListeners();
+    await _persistXp();
+    _trace('recompensa', 'dia_ideal', detail: '+$ptsDiaIdeal XP');
     return true;
   }
 

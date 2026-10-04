@@ -747,6 +747,51 @@ Nuevo lote derivado del pedido directo del usuario:
 
 ---
 
+## 24. P18 — Recompensa visual del Día ideal (+25 XP, una vez por día)
+
+Feedback del usuario: *"que al completar el reto de Día ideal, le dé una recompensa
+visual que estimule permanecer en la apk"*. Implementa la **Fase B4** del diseño de
+gamificación (`docs/DISENO_GAMIFICACION.md`): el día completo se premia con una
+celebración sutil, sin ruido y sin modales.
+
+### Comportamiento esperado (código ✅, 130/130 tests, 0 issues)
+
+| Ítem | Qué debe verse/hacerse |
+|---|---|
+| **3/3 dispara la celebración** | Cuando los 3 objetivos del Día ideal están completos (entrenar hoy + meta calórica ≥ 100 % + agua ≥ 2,5 L), la tarjeta de Home muestra **confeti + check animado + "¡Día ideal completado! +25 XP · ¡Sigue así!"** que se desvanece sola (~2,8 s). No bloquea toques (IgnorePointer), sin sonido, sin modal. |
+| **+25 XP una sola vez por día** | La recompensa se otorga SOLO con el día completo y se persiste por fecha (mismo patrón que el anuncio recompensado). Un día a medias (2/3) **nunca** premia; ya premiado hoy, **no** vuelve a aparecer. |
+| **Fuente única y honesta** | `AppState.diaIdealCompletadoHoy` es la única condición; la tarjeta y el premio usan los mismos datos reales (historial, balance, agua) y la misma constante de meta de agua (2,5 L). Nunca se inventa un logro. |
+
+### Pasos de verificación manual (P18)
+
+1. **Día incompleto**: con el Día ideal en 1/3 o 2/3, verificar que **no** aparece
+   confeti ni "+25 XP" (p. ej. solo registrar agua).
+2. **Completar el día**: entrenar (o marcar sesión), alcanzar la meta calórica y
+   registrar 2,5 L de agua.
+   - Al completarse el **tercer** objetivo debe verse en la tarjeta la celebración:
+     confeti cayendo, check verde animado y el texto "¡Día ideal completado!" +
+     "+25 XP · ¡Sigue así!".
+   - La celebración **se desvanece sola** (~3 s). No interrumpe: la tarjeta sigue
+     pulsable durante la animación.
+   - El contador pasa a **3/3 completados**.
+3. **Una vez por día**: recargar/reentrar en Home hoy → la celebración **no** vuelve a
+   aparecer (la recompensa ya está otorgada hoy).
+4. **Reinicio honesto**: al día siguiente (o con otro perfil), repetir 1–3: la
+   celebración vuelve a dispararse solo al completar de nuevo los 3 objetivos.
+5. **Puntos**: en Progreso, el XP del día debe reflejar el +25 del Día ideal además de
+   los +50 de la sesión (y no repetirse al mirar varias veces).
+
+### Estado (2026-10-03)
+
+- **P18 ✅ código verificado** (130/130 tests, `flutter analyze` 0 issues; nuevo
+  `test/dia_ideal_recompensa_test.dart`: no premia 2/3, premia 3/3 una sola vez por
+  día, la celebración aparece y se desvanece sin reaparecer hoy).
+- **P18 ⏳ física pendiente**: instalar el APK nuevo en el Pixel 6a y seguir los pasos
+  1–5 de esta sección (la verificación física del tema P17 §23 también sigue pendiente,
+  se pueden hacer juntas).
+
+---
+
 ## 23. P17 — Configuración inicial ligera (tema con vista previa + avisos opt-in)
 
 Pantalla nueva (**SetupScreen**) que aparece **una sola vez**, justo después del Registro, pensada

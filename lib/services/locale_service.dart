@@ -306,6 +306,10 @@ class AppStrings {
   String get homeAguaMetaCumplida =>
       _t('Meta de 2,5 L cumplida', '2.5 L goal reached');
   String get homePendiente => _t('Pendiente', 'Pending');
+  String get homeDiaIdealCelebracion =>
+      _t('¡Día ideal completado!', 'Ideal day completed!');
+  String homeDiaIdealRecompensa(int pts) =>
+      _t('+$pts XP · ¡Sigue así!', '+$pts XP · Keep it up!');
 
   // ---- Recetas ----
   String get recHeader => _t('Recetas', 'Recipes');

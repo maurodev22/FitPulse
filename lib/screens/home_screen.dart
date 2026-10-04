@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -771,8 +773,36 @@ class _HeroInfoChip extends StatelessWidget {
   }
 }
 
-class _DiaIdealCard extends StatelessWidget {
+class _DiaIdealCard extends StatefulWidget {
   const _DiaIdealCard();
+
+  @override
+  State<_DiaIdealCard> createState() => _DiaIdealCardState();
+}
+
+class _DiaIdealCardState extends State<_DiaIdealCard> {
+  /// P18: la recompensa del Día ideal se dispara UNA vez por día, en el
+  /// momento exacto en que el tercer objetivo se completa (3/3).
+  bool _premioDisparado = false;
+  bool _celebrando = false;
+
+  /// Detección del 3/3: si hoy ya están los 3 objetivos y aún no se premió,
+  /// agenda (tras el frame, para no mutar durante el build) la concesión del
+  /// +25 XP y la celebración visual suave.
+  void _vigilarPremioDiaIdeal(AppState state) {
+    if (_premioDisparado || _celebrando) return;
+    if (state.recompensaDiaIdealOtorgadaHoy) return;
+    if (!state.diaIdealCompletadoHoy) return;
+    _premioDisparado = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final otorgada = await state.aplicarRecompensaDiaIdeal();
+      if (!mounted || !otorgada) return;
+      setState(() => _celebrando = true);
+      Future<void>.delayed(const Duration(milliseconds: 2800), () {
+        if (mounted) setState(() => _celebrando = false);
+      });
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -780,16 +810,13 @@ class _DiaIdealCard extends StatelessWidget {
     final strings = context.watch<LocaleService>().strings;
     final entrenado = state.entrenadoHoy;
     final metaOk = state.progresoCalorias >= 1.0;
-    final aguaActual = state.aguaHoy;
-    final aguaObjetivo = 2.5;
-    // P14: la meta de agua se puede cumplir con el registro manual (no hace
-    // falta permiso de Health Connect); nunca se inventa, solo cuenta lo que
-    // el usuario declara o lo que HC lee realmente.
-    final aguaOk = (aguaActual ?? 0) >= aguaObjetivo;
+    final aguaOk = (state.aguaHoy ?? 0) >= AppState.metaAguaDiaria;
     final completados = [entrenado, metaOk, aguaOk].where((v) => v).length;
     final recomendado = state.entrenamientoRecomendado;
 
-    return Container(
+    _vigilarPremioDiaIdeal(state);
+
+    final tarjeta = Container(
       padding: const EdgeInsets.all(16),
       decoration: _cardDecoration(radius: 24),
       child: Column(
@@ -859,16 +886,179 @@ class _DiaIdealCard extends StatelessWidget {
           _DiaIdealItem(
             icon: Icons.water_drop_outlined,
             title: strings.homeAgua,
-            subtitle: aguaActual != null
-                ? '${aguaActual.toStringAsFixed(1)} / $aguaObjetivo L'
-                : strings.homeObjetivoAgua(aguaObjetivo.toString()),
+            subtitle: state.aguaHoy != null
+                ? '${state.aguaHoy!.toStringAsFixed(1)} / ${AppState.metaAguaDiaria} L'
+                : strings.homeObjetivoAgua(AppState.metaAguaDiaria.toString()),
             done: aguaOk,
             onTap: () => _mostrarDialogoRegistrarAgua(context),
           ),
         ],
       ),
     );
+
+    if (!_celebrando) return tarjeta;
+    // P18: celebración NO bloqueante (no intercepta toques) sobre la tarjeta:
+    // confeti + check + "+25 XP · ¡Día ideal completado!", se desvanece sola.
+    return Stack(
+      children: [
+        tarjeta,
+        Positioned.fill(
+          child: IgnorePointer(
+            child: _CelebracionDiaIdeal(strings: strings),
+          ),
+        ),
+      ],
+    );
   }
+}
+
+/// Celebración visual del Día ideal (P18): animación breve y sin sonido de
+/// confeti + check + texto, que se desvanece sola. No bloquea la interacción.
+class _CelebracionDiaIdeal extends StatefulWidget {
+  const _CelebracionDiaIdeal({required this.strings});
+
+  final AppStrings strings;
+
+  @override
+  State<_CelebracionDiaIdeal> createState() => _CelebracionDiaIdealState();
+}
+
+class _CelebracionDiaIdealState extends State<_CelebracionDiaIdeal>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2400),
+    )..forward();
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _ctrl,
+      builder: (context, _) {
+        final t = _ctrl.value;
+        final fade = t < 0.8 ? 1.0 : (1.0 - (t - 0.8) / 0.2).clamp(0.0, 1.0);
+        final checkScale = Curves.easeOutBack.transform((t * 1.5).clamp(0.0, 1.0));
+        return Opacity(
+          opacity: fade,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              CustomPaint(painter: _ConfettiPainter(t)),
+              Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Transform.scale(
+                      scale: checkScale,
+                      child: Container(
+                        width: 56,
+                        height: 56,
+                        decoration: BoxDecoration(
+                          color: AppColors.primary,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.check_rounded,
+                          color: AppColors.onPrimary,
+                          size: 34,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: AppColors.surface.withValues(alpha: 0.88),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Column(
+                        children: [
+                          Text(
+                            widget.strings.homeDiaIdealCelebracion,
+                            style: AppType.labelLg.copyWith(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            widget.strings
+                                .homeDiaIdealRecompensa(AppState.ptsDiaIdeal),
+                            style: AppType.bodyMd.copyWith(
+                              color: AppColors.onSurface,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// Partículas de confeti deterministas (semilla fija) que caen y rotan con el
+/// progreso de la animación. Solo colores de la paleta; sin assets externos.
+class _ConfettiPainter extends CustomPainter {
+  _ConfettiPainter(this.t);
+
+  final double t;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rng = Random(42);
+    final colores = <Color>[
+      AppColors.primary,
+      AppColors.secondaryFixed,
+      AppColors.tertiaryContainer,
+      AppColors.gradienteIntermedio,
+      AppColors.primaryContainer,
+    ];
+    const n = 26;
+    for (var i = 0; i < n; i++) {
+      final baseX = rng.nextDouble() * size.width;
+      final velocidad = 0.5 + rng.nextDouble() * 0.6;
+      final y = t * size.height * velocidad;
+      if (y < -6 || y > size.height + 6) continue;
+      final x = baseX + sin(t * 6 + i) * 14;
+      final angle = t * 8 + i;
+      final ancho = 6.0 + rng.nextDouble() * 5;
+      final alto = 3.0 + rng.nextDouble() * 3;
+      final paint = Paint()..color = colores[i % colores.length];
+      canvas.save();
+      canvas.translate(x, y);
+      canvas.rotate(angle);
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromCenter(center: Offset.zero, width: ancho, height: alto),
+          const Radius.circular(2),
+        ),
+        paint,
+      );
+      canvas.restore();
+    }
+  }
+
+  @override
+  bool shouldRepaint(_ConfettiPainter oldDelegate) => oldDelegate.t != t;
 }
 
 class _DiaIdealItem extends StatelessWidget {
