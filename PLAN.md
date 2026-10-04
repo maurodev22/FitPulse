@@ -529,6 +529,26 @@ permitía 500.
   2 reglas más en `validaciones_test.dart`), 0 issues en `flutter analyze`.
   Verificación física pendiente en el dispositivo.
 
+#### Resumen final entregado al usuario (2026-10-03)
+
+**Investigación (con fuentes):**
+
+| Dato | Valor recomendado | Fuente |
+|---|---|---|
+| Actividad semanal | 150–300 min/sem moderada | OMS (fact sheet), CDC, NHS |
+| Pasos óptimos diarios | <60 años: 8.000–10.000 · ≥60 años: 6.000–8.000 (meseta de beneficio) | Paluch et al., *Lancet Public Health* 2022 |
+| Categorías IMC | <18,5 bajo · 18,5–24,9 sano · 25–29,9 sobrepeso · ≥30 obesidad | NIH/NHLBI (OMS) |
+| Mínimo calórico diario | 1.200 kcal/día (suelo seguro; la app permitía 500) | Guías de nutrición médica (Academia de Nutrición, Harvard, Mayo) |
+
+**Lo implementado (confirmado con el usuario: excelente = azul, en Home y Perfil, kcal mín 1200):**
+
+1. **Metas mínimas honestas (Perfil)**: pasos mínimo de 1 → **1000**; kcal mínimo de 500 → **1200** (valor investigado). Mensajes localizados y diálogo que no se cierra con valores fuera de rango.
+2. **Estado de salud honesto** en **Home** (con desglose por métrica ●●●) y **Perfil** (compacta): puntúa 0–3 IMC, pasos por edad, gasto activo, sueño y agua — **solo datos reales**, nunca inventados. Con **menos de 2 métricas con dato → "Sin datos suficientes"**. El pulso queda **fuera** (solo hay promedio del día, no reposo).
+3. **Colores**: malo **rojo** · regular **amarillo** · bueno **verde** · excelente **azul** (contraste WCAG AA en claro y oscuro). Nota en la tarjeta: "Orientativo: no sustituye un diagnóstico profesional".
+4. **Calidad**: `flutter analyze` 0 issues · **159/159 tests** · docs: PLAN.md (P20 + inventario) y GUIA_TESTEO_COMPLETA.md (§26 con pasos manuales). Commit local `4f376dc` (sin push).
+
+**⏳ Pendiente**: instalar el APK en el Pixel 6a con `install -r` y verificar físicamente juntos **P17 (§23) + P18 (§24) + P19 (§25) + P20 (§26)** de la guía. Nota aparte sin tocar: alineación del peso semanal (clamp 20–300 vs registro 45–300) quedó solo señalada en el inventario.
+
 #### Inventario completo de validaciones (2026-10-03)
 
 | Campo | Pantalla | Estado |
