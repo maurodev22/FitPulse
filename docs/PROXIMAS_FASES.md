@@ -16,39 +16,48 @@
 | L1 — Correcciones UI (recetas / período / "Ver todo") | ✅ `fb8cdec` + verificado en Pixel (2026-09-30) | Bugs de la lista del cliente corregidos |
 | Hotfix UI P1–P10 (aprobado 30/09) | ✅ `0bf3f15` (P1–P7) + `b9b91d1` (P8–P10, sesión) | Detalle del día, ventana visible, insignias a Perfil, Consejos funcionales, racha ≥7, editar metas, Configuración, peso Progreso→Perfil, sin duplicados en Perfil, mínimo 2 días |
 | Verificación física del hotfix en Pixel 6a | ⏳ **en curso** | `docs/HOTFIX_UI.md` + `docs/GUIA_TESTEO_INTEGRAL.md §12-13` |
-| L2 — Agua (registro manual + meta diaria) | ⏳ **siguiente** | Marcar vasos de 250 ml y ajustar meta (def. 3 L) |
-| L3 — Constructor de entrenamientos | ⏳ | Crear rutinas propias con descanso de 60 s |
-| L4 — Recetas originales por metas | ⏳ | Catálogo ~35-40 recetas propias (sin plagio) por meta |
-| L5 — Gamificación Fase A + B | ⏳ | XP/nivel/insignias con feedback sutil (sin modales/sonidos) |
+| L2 — Agua (registro manual + meta diaria) | ✅ **completa** — registro manual P14, honestidad P19, meta editable P21 | Meta de agua real y persistida por el usuario |
+| L3 — Constructor de entrenamientos | ⏳ **pendiente** | Crear rutinas propias con descanso de 60 s |
+| L4 — Recetas originales por metas | ⏳ **pendiente** | Catálogo ~35-40 recetas propias (sin plagio) por meta |
+| L5 — Gamificación Fase A + B | ✅ **completa** | XP/nivel/insignias con feedback sutil (sin modales/sonidos) |
 | Verificación física L1 | ✅ Pixel 6a (30/09, píxeles+dump) · ⏳ Xiaomi (dump MIUI) | Guía: `docs/GUIA_TESTEO_INTEGRAL.md §12` |
 
 ---
 
-## L2 — Agua: registro manual de vasos + meta diaria
+## L2 — Agua: registro manual de vasos + meta diaria — ✅ COMPLETA
 
-**Contexto del código:** hoy el objetivo está hardcodeado
-(`aguaObjetivo = 2.5;` en `home_screen.dart:598`), la fila "Agua" del Día ideal tiene
-`onTap` vacío (`home_screen.dart:597-599`) y el agua solo se lee de Health Connect
-(`state.aguaHoy`). No existe registro manual ni ajuste de meta.
+**Cómo quedó resuelto (tres lotes, no uno):**
 
-- [ ] Meta diaria editable: rueda paso 0,5 L entre 0,5 y 10 L en Perfil, **default 3,0 L**
-  (recomendación ~35 ml/kg de OMS/AESAN); persistida en `ConfigService`
-  (clave `fitpulse_objetivo_agua_v1`); reemplaza la constante `2.5` del Home.
-- [ ] Registro manual: botones "+1 vaso" (vaso = 250 ml) y "−1" en la tarjeta Agua del
-  Home y en Perfil; acumulado por fecha (`fitpulse_agua_YYYY-MM-DD_v1`) integrado en el
-  reinicio diario existente (`app_state.dart`).
-- [ ] Total honesto del día = **registro manual + lectura de Health Connect (si hay
-  permiso)**, con el origen etiquetado en la UI ("marcado por ti" / "Health Connect")
-  para no duplicar ni inventar.
-- [ ] UI: barra/chips de progreso real contra la meta; subtítulo honesto cuando no hay dato.
-- [ ] El toggle "Recordatorios de hidratación" (avisos locales 20:00) se mantiene tal cual.
-- [ ] Tests: persistencia por fecha, reinicio a medianoche, suma manual + HC, export/import
-  de la meta; `flutter analyze` 0 issues.
-- [ ] Verificación física (cuando haya ventana): muestreo de píxeles + dump de la tarjeta
-  Agua y de la fila del Perfil.
+- **P14 — registro manual:** la fila "Agua" del Día ideal abre un diálogo donde el
+  usuario declara los litros del día; se suman a lo leído de Health Connect y se
+  reinician con el resto del balance al cambiar de día (`app_state.dart`).
+- **P19 — honestidad del dato:** declarar más de 5 L/día muestra un SnackBar de 5 s y
+  **no** registra ni cierra el diálogo (`Validators.maxAguaDiariaLitros`).
+- **P21 (este lote) — meta diaria editable:** `AppState.metaAguaDiaria` pasó de
+  `static const 2.5` a un valor persistido (`fitpulse_meta_agua_v1`), con
+  rueda de 0,5–10 L en paso 0,5 en Perfil, default **2,5 L**, ajustado por
+  `Validators.ajustarMetaAgua`, incluido en export/import y reiniciado a 2,5 L tras
+  un borrado total.
 
-**Archivos previstos:** `home_screen.dart`, `profile_screen.dart`, `app_state.dart`,
-`config_service.dart`, `locale_service.dart`, tests.
+**Diferencias con el plan original de esta tabla (y por qué):**
+
+| Plan original | Realizado | Motivo |
+|---|---|---|
+| Default 3,0 L | **2,5 L** | 3,0 L subiría el listón del Día ideal sin que el usuario lo elija (≈35 ml/kg para ~70 kg ya da 2,5 L). Quien quiera más, lo sube con la rueda. |
+| Persistir en `ConfigService` | En `AppState` | La meta es del usuario y va con su balance; `ConfigService` es para interruptores/EULA/tema. Así no se crea acoplamiento entre servicios. |
+| Botones "+1/−1 vaso" | Diálogo con litros | El diálogo acepta cualquier cantidad (250 ml, 500 ml, 1 L); forzar un botón obligaría a sumarMany clicks. |
+
+**Añadido por coherencia (no estaba en el plan):** `AppState.origenAguaHoy` etiqueta el
+origen real del dato ("marcado por ti" / "Health Connect" / ambos) en el diálogo de agua,
+y el estado de salud (P20) puntúa el agua **contra la meta del usuario**, no contra un
+2,5 fijo: si subes la meta a 3 L, la tarjeta deja de dar el punto máximo por 2,5 L.
+
+- [x] Meta diaria editable y persistida, con rango honesto 0,5–10 L
+- [x] Total honesto del día = registro manual + Health Connect, con origen etiquetado
+- [x] Export/import de la meta y reinicio a 2,5 L tras borrado total
+- [x] Tests: 14 nuevos en `test/meta_agua_test.dart`; suite completa 173/173
+- [ ] Verificación física (cuando haya ventana): muestreo de píxeles + dump de la fila
+      "Meta diaria de agua" en Perfil y del diálogo con la rueda.
 
 ---
 
@@ -146,5 +155,8 @@ insignias. Plan completo por fases en `docs/DISENO_GAMIFICACION.md`.
 
 - `GUIA_TESTEO_MANUAL.md` (guía manual de testeo de la fase de bandas) sigue **sin
   commitear** a la espera de la aprobación del usuario.
-- Orden sugerido: L2 → L3 → L4 → L5. Cada lote cierra con `flutter analyze` 0 + `flutter
-  test` verde y commit local **sin push**.
+- **Orden vigente (aprobado por el usuario):** L2 (✅ hecho) → L4 recetas → L3
+  constructor. 8.5 (release firmado) queda bloqueado: necesita keystore propio y una
+  cuenta de Play con entidad fuera de Cuba.
+- Cada lote cierra con `flutter analyze` 0 + `flutter test` verde y commit local
+  **sin push**.

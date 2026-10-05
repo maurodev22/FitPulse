@@ -15,7 +15,9 @@
 ///   ≥300 → 3, ≥150 → 2, ≥50 → 1, resto → 0.
 /// - Sueño (adultos 7–9 h): 7–9 → 3; 6–7 o 9–10 → 2; 5–6 o 10–12 → 1;
 ///   <5 o >12 → 0.
-/// - Agua (meta del día): ≥2,5 L → 3; ≥1,5 → 2; ≥0,5 → 1; resto → 0.
+/// - Agua: se puntúa **respecto a la meta diaria del usuario** (L2): ≥100 % de
+///   la meta → 3 · ≥60 % → 2 · ≥30 % → 1 · menos → 0. Así el estado de salud
+///   no miente si el usuario cambia su meta de agua en Perfil.
 ///
 /// Estado final por promedio de las métricas con dato:
 /// ≥2,5 → excelente · 1,75–2,49 → bueno · 1,0–1,74 → regular · <1,0 → malo.
@@ -78,6 +80,7 @@ ResultadoEstadoSalud clasificarEstadoSalud({
   double? gastoActivoKcal,
   Duration? suenio,
   double? aguaLitros,
+  double metaAguaLitros = 2.5,
 }) {
   final metricas = <PuntuacionMetrica>[
     if (imc != null && imc > 0)
@@ -107,7 +110,7 @@ ResultadoEstadoSalud clasificarEstadoSalud({
     if (aguaLitros != null && aguaLitros >= 0)
       PuntuacionMetrica(
         metrica: MetricaEstado.agua,
-        puntos: _puntosAgua(aguaLitros),
+        puntos: _puntosAgua(aguaLitros, metaAguaLitros),
         detalle: '${aguaLitros.toStringAsFixed(1)} L',
       ),
   ];
@@ -168,10 +171,14 @@ int _puntosSuenio(Duration duracion) {
   return 0;
 }
 
-int _puntosAgua(double litros) {
-  if (litros >= 2.5) return 3;
-  if (litros >= 1.5) return 2;
-  if (litros >= 0.5) return 1;
+/// Agua medida contra la meta del usuario (no contra un número fijo): 100 %
+/// de la meta = 3 puntos; 60 % = 2; 30 % = 1; por debajo = 0.
+int _puntosAgua(double litros, double metaLitros) {
+  if (litros <= 0 || metaLitros <= 0) return 0;
+  final r = litros / metaLitros;
+  if (r >= 1.0) return 3;
+  if (r >= 0.6) return 2;
+  if (r >= 0.3) return 1;
   return 0;
 }
 

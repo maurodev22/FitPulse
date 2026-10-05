@@ -960,6 +960,70 @@ hay sesión iniciada. Así el permiso de notificaciones **nunca** se pide en fr�
 
 ---
 
+## 27. P21 — Meta diaria de agua editable (cierre de L2)
+
+La meta de agua dejó de ser el número fijo `2.5`: ahora es un valor **del usuario**,
+persistido en el dispositivo, con rango honesto de 0,5 a 10 L. Además, el estado de salud
+de la §26 puntúa el agua **contra esta meta** (antes contra 2,5 L fijos), y el diálogo de
+registro de agua dice de dónde sale el total.
+
+### Comportamiento esperado (código ✅, 173/173 tests, 0 issues)
+
+| Ítem | Qué debe verse/hacerse |
+|---|---|
+| **Fila en Perfil** | En "Metas de Actividad" aparece una fila **"Meta diaria de agua"** con el valor (`2.5 L` por defecto) y un botón de editar (lápiz). |
+| **Rueda de edición** | El botón abre un diálogo **"Meta de agua"** con una rueda que gira en pasos de **0,5 L** entre **0,5 y 10 L**, el texto explicando el rango y botones **Cancelar** / **Guardar**. |
+| **Guardado** | Al guardar: Snackbar "¡Ajustes guardados en tu dispositivo!", la fila muestra el valor nuevo y **Home** lo respeta en la fila Agua del Día ideal (`X / Y L`) y en el "Objetivo" cuando no hay dato. |
+| **Persistencia** | Matar la app y relanzarla → la meta sigue igual (no vuelve a 2,5 L). |
+| **Rango honesto** | No se puede dejar fuera de 0,5–10 L: la meta se ajusta sola a ese rango, incluso al importar un backup manipulado. |
+| **Origen del agua** | Al abrir el diálogo de registro de agua, bajo "Total de hoy" aparece **"Meta: X L"** y, si hay dato, su origen: **"marcado por ti"**, **"Health Connect"** o **"marcado por ti + Health Connect"**. Si no hay dato, no se inventa ninguna etiqueta. |
+| **Día ideal coherente** | La recompensa P18 (+25 XP) y el estado de salud usan **la misma** meta: si la subes a 3 L, con 2,5 L el día ya **no** cuenta como agua cumplida. |
+| **Borrado total** | Configuración → borrar todos los datos → la meta vuelve a **2,5 L**. |
+
+### Pasos de verificación manual (P21)
+
+**Meta de agua:**
+1. Perfil → **Metas de Actividad** → ✅ la fila "Meta diaria de agua" muestra **2.5 L**.
+2. Pulsar el lápiz → ✅ se abre "Meta de agua" con la rueda centrada en 2.5 L y el texto
+   "Elige tu objetivo diario de agua… Rango honesto: 0,5 – 10 L".
+3. Girar la rueda a **3.0 L** → **Guardar** → ✅ Snackbar de ajustes guardados y la fila
+   muestra **3.0 L**.
+4. Ir a Home → ✅ la fila Agua del Día ideal muestra "Objetivo: 3.0 L" (si no hay agua de
+   hoy) o "X / 3.0 L" (si hay).
+5. **Matar la app y relazarla** → ✅ la meta sigue en **3.0 L** (persistencia real).
+6. Volver a editarla y llevarla al mínimo (**0.5 L**) y al máximo (**10.0 L**) → ✅ la rueda
+   no pasa de esos topes.
+
+**Origen del agua:**
+7. Sin agua registrada → abrir el diálogo de la fila Agua → ✅ sale "Total de hoy: 0.00 L",
+   **"Meta: 3.0 L"** y **ninguna** etiqueta de origen (no hay dato, no se inventa).
+8. Registrar **0,5 L** → reabrir el diálogo → ✅ ahora la etiqueta dice
+   **"marcado por ti"**.
+9. Con Health Connect concedido y lectura de agua → ✅ la etiqueta pasa a
+   **"Health Connect"** o a **"marcado por ti + Health Connect"** si también registraste
+   agua a mano (el total es la suma de ambas).
+
+**Coherencia con el estado de salud (§26) y el Día ideal (§24):**
+10. Con la meta en **3.0 L** y solo **2,5 L** de agua → ✅ la fila Agua del desglose del
+    estado de salud **baja a 2 puntos** (ya no está cumplida) y el Día ideal sigue 2/3.
+11. Registrar agua hasta llegar a 3,0 L → ✅ el agua vuelve a 3 puntos y el Día ideal pasa a
+    **3/3** (y si aún no se reclamó, el +25 XP de la §24 sigue disponible).
+
+**Borrado total (§16):**
+12. Configuración → borrar todos los datos → ✅ la meta de agua vuelve a **2,5 L**.
+
+### Estado (2026-10-05)
+
+- **P21 ✅ código verificado**: 173/173 tests, `flutter analyze` 0 issues. Nuevo
+  `test/meta_agua_test.dart` (14 tests: default 2,5 L, persistencia entre arranques, clamp
+  0,5–10 L, ida y vuelta en el backup, backup antiguo sin la clave, borrado total, los
+  cuatro orígenes del agua, el puntaje contra una meta ajena y el widget de Perfil con la
+  rueda).
+- **P21 ⏳ física pendiente**: instalar el APK nuevo en el Pixel 6a con `install -r` y
+  seguir los pasos 1–12 de esta sección.
+
+---
+
 *Documento de trabajo consolidado. Se actualiza con cada verificación física marcada en §17/§19.
 Verificación automática siempre sin lectura visual (muestreo de píxeles + dump); el testeo
 manual del usuario es complementario.*

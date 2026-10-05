@@ -16,6 +16,7 @@ import '../widgets/common.dart';
 import '../widgets/estado_salud_card.dart';
 import '../widgets/racha_chip.dart';
 import '../widgets/settings_widgets.dart';
+import '../widgets/wheel_number_picker.dart';
 import 'configuracion_screen.dart';
 
 /// Perfil y Ajustes: muestra y edita los datos del atleta de la sesión.
@@ -157,6 +158,43 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               const SizedBox(height: 10),
               const _PasosProgresoHoy(),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: AppColors.surfaceContainerLow,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.water_drop_outlined, size: 16, color: AppColors.primary),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  strings.pfMetaAguaDiaria,
+                  style: AppType.labelMd.copyWith(color: AppColors.onSurfaceVariant),
+                ),
+              ),
+              Builder(builder: (context) {
+                final litros = context.watch<AppState>().metaAguaDiaria;
+                return Text(
+                  '${litros.toStringAsFixed(1)} L',
+                  style: AppType.headlineSm.copyWith(
+                    color: AppColors.onSurface,
+                    fontWeight: FontWeight.w700,
+                  ),
+                );
+              }),
+              IconButton(
+                onPressed: _editarMetaAgua,
+                icon: const Icon(Icons.edit, size: 18),
+                color: AppColors.primary,
+                visualDensity: VisualDensity.compact,
+                tooltip: strings.pfMetaAguaTitulo,
+              ),
             ],
           ),
         ),
@@ -474,6 +512,61 @@ class _ProfileScreenState extends State<ProfileScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(context.read<LocaleService>().strings.pfAjustesGuardados)),
     );
+  }
+
+  /// L2: edita la meta diaria de agua con la rueda (0,5–10 L, paso 0,5 L).
+  /// La meta es del usuario, pero `Validators` impide que sea imposible.
+  Future<void> _editarMetaAgua() async {
+    final strings = context.read<LocaleService>().strings;
+    final state = context.read<AppState>();
+    var valor = state.metaAguaDiaria;
+    final guardado = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogo) => AlertDialog(
+          backgroundColor: AppColors.surface,
+          title: Text(strings.pfMetaAguaTitulo),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                strings.pfMetaAguaDesc,
+                style:
+                    AppType.bodySm.copyWith(color: AppColors.onSurfaceVariant),
+              ),
+              const SizedBox(height: 12),
+              WheelNumberPicker(
+                min: Validators.minMetaAguaLitros,
+                max: Validators.maxMetaAguaLitros,
+                step: 0.5,
+                decimals: 1,
+                semanticsUnit: 'L',
+                initialValue: valor,
+                onChanged: (v) => setDialogo(() => valor = v),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(false),
+              child: Text(strings.pfCancelar),
+            ),
+            FilledButton(
+              onPressed: () {
+                state.setMetaAguaLitros(valor);
+                Navigator.of(ctx).pop(true);
+              },
+              child: Text(strings.prGuardar),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (guardado == true && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(strings.pfAjustesGuardados)),
+      );
+    }
   }
 
   /// P6: edita las metas de actividad (pasos diarios y calorías diarias).

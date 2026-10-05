@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../services/health_service.dart';
 import '../services/usage_log_service.dart';
+import '../utils/validators.dart';
 import 'athlete_profile.dart';
 import 'estado_salud.dart';
 import 'registros.dart';
@@ -38,6 +39,9 @@ class AppState extends ChangeNotifier {
   static const _aguaManualKey = 'fitpulse_agua_manual_v1';
   static const _aguaManualDateKey = 'fitpulse_agua_manual_date_v1';
 
+  // L2: meta diaria de agua editable por el usuario (litros).
+  static const _metaAguaKey = 'fitpulse_meta_agua_v1';
+
   // Fase 2: historial de sesiones, puntos y retos.
   static const _historyKey = 'fitpulse_workout_history_v1';
   static const _xpKey = 'fitpulse_xp_v1';
@@ -51,9 +55,24 @@ class AppState extends ChangeNotifier {
   static const _recompensaDiaIdealKey = 'fitpulse_recompensa_dia_ideal_v1';
   static const int ptsDiaIdeal = 25;
 
-  /// Meta diaria de agua del Día ideal (litros). Fuente única: la tarjeta de
-  /// Home y la recompensa P18 usan este mismo valor para no divergir.
-  static const double metaAguaDiaria = 2.5;
+  /// Meta diaria de agua (litros) del Día ideal. Fuente única: la tarjeta de
+  /// Home, la recompensa P18 y el estado de salud (P20) leen este mismo valor
+  /// para no divergir.
+  static const double metaAguaInicial = 2.5;
+  double _metaAguaLitros = metaAguaInicial;
+  double get metaAguaDiaria => _metaAguaLitros;
+
+  /// Fija la meta diaria de agua (L2) y la persiste. El valor se ajusta al
+  /// rango plausible de `Validators` (0,5–10 L): la meta es del usuario, pero
+  /// no puede ser una cifra imposible.
+  Future<void> setMetaAguaLitros(double litros) async {
+    final v = Validators.ajustarMetaAgua(litros);
+    if (v == _metaAguaLitros) return;
+    _metaAguaLitros = v;
+    notifyListeners();
+    _trace('perfil', 'meta_agua');
+    await _prefs?.setDouble(_metaAguaKey, v);
+  }
 
   // Fase 9: registros reales de peso (semanal) y repeticiones por ejercicio.
   static const _pesoKey = 'fitpulse_peso_v1';
@@ -185,6 +204,11 @@ class AppState extends ChangeNotifier {
       ..clear()
       ..addAll(_prefs!.getStringList(_favRecetasKey) ?? const []);
 
+    // L2: meta diaria de agua editable (2,5 L si el usuario nunca la cambió).
+    _metaAguaLitros = Validators.ajustarMetaAgua(
+      _prefs!.getDouble(_metaAguaKey) ?? metaAguaInicial,
+    );
+
     // Fase 2: historial de sesiones, puntos y reto actual.
     _cargarHistorial();
 
@@ -268,6 +292,18 @@ class AppState extends ChangeNotifier {
     if (aguaManualHoy > 0) return aguaManualHoy;
     return hc;
   }
+
+  /// Origen real del agua de hoy: 'manual', 'health', 'ambos' o `null` si no
+  /// hay dato. La UI lo etiqueta para que el usuario sepa qué cuenta, así no
+  /// se cuenta dos veces el mismo vaso.
+  String? get origenAguaHoy {
+    final hc = _healthToday.aguaLitros;
+    final hayManual = aguaManualHoy > 0;
+    if (hayManual && hc != null) return 'ambos';
+    if (hayManual) return 'manual';
+    if (hc != null) return 'health';
+    return null;
+  }
   double? get gastoActivoHoy => _healthToday.gastoActivoKcal;
   int? get tiempoActivoMin => _healthToday.tiempoActivoMin;
 
@@ -282,6 +318,7 @@ class AppState extends ChangeNotifier {
         gastoActivoKcal: gastoActivoConPermiso ? gastoActivoHoy : null,
         suenio: suenioConPermiso ? suenioHoy : null,
         aguaLitros: aguaHoy,
+        metaAguaLitros: _metaAguaLitros,
       );
 
   // --- Permisos concedidos por métrica (para textos honestos) ---
@@ -774,6 +811,7 @@ class AppState extends ChangeNotifier {
       'xp': _xp,
       'reto_objetivo': _retoObjetivo,
       'favoritas': favoritas.toList(),
+      'meta_agua': _metaAguaLitros,
       'pasos_base_fecha': _prefs?.getString(_pasosBaseDateKey),
     };
   }
@@ -833,6 +871,14 @@ class AppState extends ChangeNotifier {
         ..addAll(rawFavoritas.whereType<String>());
       await _prefs?.setStringList(_favRecetasKey, favoritas.toList());
     }
+
+    // L2: meta diaria de agua del backup (si el backup es anterior, se
+    // conserva la meta vigente del dispositivo: nunca se inventa un valor).
+    final rawMetaAgua = snapshot['meta_agua'];
+    if (rawMetaAgua is num) {
+      _metaAguaLitros = Validators.ajustarMetaAgua(rawMetaAgua.toDouble());
+      await _prefs?.setDouble(_metaAguaKey, _metaAguaLitros);
+    }
     notifyListeners();
   }
 
@@ -848,6 +894,7 @@ class AppState extends ChangeNotifier {
     historial = <WorkoutSession>[];
     _xp = 0;
     _retoObjetivo = 3;
+    _metaAguaLitros = metaAguaInicial;
     _pasosBase = null;
     pasosHoy = 0;
     _healthToday = HealthToday.vacio;

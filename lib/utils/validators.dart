@@ -24,6 +24,12 @@ abstract final class Validators {
   static const double minKcalMeta = 1200.0;
   static const double maxKcalMeta = 10000.0;
 
+  /// Meta diaria de agua (L2): rango editable por el usuario. Por debajo de
+  /// 0,5 L no es una meta de hidratación y por encima de 10 L ningún día
+  /// normal lo justifica; el valor inicial es 2,5 L (≈35 ml/kg).
+  static const double minMetaAguaLitros = 0.5;
+  static const double maxMetaAguaLitros = 10.0;
+
   static final RegExp _nombreRe = RegExp(r"^[A-Za-zÁÉÍÓÚáéíóúÑñÜü' ]+$");
 
   /// Valida el nombre completo (3-60, solo letras/espacios/apóstrofes).
@@ -94,4 +100,9 @@ abstract final class Validators {
     }
     return null;
   }
+
+  /// Ajusta la meta diaria de agua al rango plausible (0,5–10 L). Devuelve el
+  /// valor corregido, para que la UI nunca pueda quedar fuera de rango.
+  static double ajustarMetaAgua(double litros) =>
+      litros.clamp(minMetaAguaLitros, maxMetaAguaLitros);
 }

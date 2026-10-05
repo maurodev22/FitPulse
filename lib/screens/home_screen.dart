@@ -84,6 +84,14 @@ class _DialogoRegistrarAguaState extends State<_DialogoRegistrarAgua> {
               '${(state.aguaHoy ?? 0).toStringAsFixed(2)} L',
               style: AppType.bodyMd.copyWith(color: AppColors.onSurface),
             ),
+            // L2: meta editable + origen real del dato (nunca se cuenta dos
+            // veces el mismo vaso ni se inventa lo que no hay).
+            const SizedBox(height: 4),
+            Text(
+              '${strings.homeAguaMeta(state.metaAguaDiaria.toStringAsFixed(1))}'
+              '${state.origenAguaHoy != null ? ' · ${strings.homeAguaOrigen(state.origenAguaHoy!)}' : ''}',
+              style: AppType.labelSm.copyWith(color: AppColors.outline),
+            ),
             const SizedBox(height: 12),
             Wrap(
               spacing: 8,
@@ -847,7 +855,7 @@ class _DiaIdealCardState extends State<_DiaIdealCard> {
     final strings = context.watch<LocaleService>().strings;
     final entrenado = state.entrenadoHoy;
     final metaOk = state.progresoCalorias >= 1.0;
-    final aguaOk = (state.aguaHoy ?? 0) >= AppState.metaAguaDiaria;
+    final aguaOk = (state.aguaHoy ?? 0) >= state.metaAguaDiaria;
     final completados = [entrenado, metaOk, aguaOk].where((v) => v).length;
     final recomendado = state.entrenamientoRecomendado;
 
@@ -924,8 +932,8 @@ class _DiaIdealCardState extends State<_DiaIdealCard> {
             icon: Icons.water_drop_outlined,
             title: strings.homeAgua,
             subtitle: state.aguaHoy != null
-                ? '${state.aguaHoy!.toStringAsFixed(1)} / ${AppState.metaAguaDiaria} L'
-                : strings.homeObjetivoAgua(AppState.metaAguaDiaria.toString()),
+                ? '${state.aguaHoy!.toStringAsFixed(1)} / ${state.metaAguaDiaria.toStringAsFixed(1)} L'
+                : strings.homeObjetivoAgua(state.metaAguaDiaria.toStringAsFixed(1)),
             done: aguaOk,
             onTap: () => _mostrarDialogoRegistrarAgua(context),
           ),

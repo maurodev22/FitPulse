@@ -317,6 +317,14 @@ class AppStrings {
   String get homeMacros => _t('Macros', 'Macros');
   String get homeAgua => _t('Agua', 'Water');
   String homeObjetivoAgua(String litros) => _t('Objetivo: $litros L', 'Goal: $litros L');
+  String homeAguaMeta(String litros) =>
+      _t('Meta: $litros L', 'Goal: $litros L');
+  String homeAguaOrigen(String origen) => switch (origen) {
+        'manual' => _t('marcado por ti', 'entered by you'),
+        'health' => _t('Health Connect', 'Health Connect'),
+        'ambos' => _t('marcado por ti + Health Connect', 'you + Health Connect'),
+        _ => '',
+      };
   String get homeRegistrarAgua => _t('Registrar agua', 'Log water');
   String get homeTituloRegistrarAgua =>
       _t('Registra tu agua de hoy', 'Log today\'s water');
@@ -606,6 +614,14 @@ class AppStrings {
       'Introduce valores válidos (pasos ≥ 1000, kcal 1200–10000)',
       'Enter valid values (steps ≥ 1000, kcal 1200–10000)');
   String get pfPasosDiarios => _t('Pasos diarios', 'Daily steps');
+  String get pfMetaAguaDiaria =>
+      _t('Meta diaria de agua', 'Daily water goal');
+  String get pfMetaAguaTitulo => _t('Meta de agua', 'Water goal');
+  String get pfMetaAguaDesc => _t(
+      'Elige tu objetivo diario de agua. Se usa en el Día ideal y en tu estado '
+      'de salud. Rango honesto: 0,5 – 10 L.',
+      'Choose your daily water goal. It is used in the Ideal Day and in your '
+      'health status. Honest range: 0.5 – 10 L.');
   String get pfCaloriasActivas => _t('Calorías activas', 'Active calories');
   String get pfCardioSemanal => _t('Cardio semanal', 'Weekly cardio');
   String get pfDiasEntrenamiento => _t('Días de entrenamiento', 'Training days');

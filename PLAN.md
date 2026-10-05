@@ -560,6 +560,47 @@ permitía 500.
 | Registro inicial: nombre 3–60, edad 16–85, peso 45–300, altura 1,20–2,10 | Registro | ✅ `Validators` |
 | Búsquedas (recetas / consejos) | Recetas / Consejos | ✅ texto libre sin validación numérica necesaria |
 | Registrar consumo de receta | Recetas | ✅ usa datos del catálogo, sin entrada libre |
+| Meta diaria de agua (0,5–10 L) | Perfil | ✅ P21: rueda 0,5 L, persistida, con origen del dato etiquetado |
+
+---
+
+### P21 — Meta diaria de agua editable + cierre de L2 ✅ código
+
+Orden aprobado por el usuario (2026-10-05): **L2 → L4 → L3**, y **nada de iOS**
+("no hagas nada para iphone"). Este es el cierre de L2; lo que faltaba era la meta
+editable (el registro manual ya era P14 y su honestidad P19).
+
+- ✅ **La meta dejó de ser constante**: `AppState.metaAguaDiaria` era
+  `static const double 2.5`; ahora es un valor **persistido**
+  (`fitpulse_meta_agua_v1`) con `setMetaAguaLitros()`, cargado en `init()`,
+  incluido en `snapshotParaBackup()`/`aplicarBackup()` y devuelto a 2,5 L en
+  `resetTrasBorrado()`.
+- ✅ **Rango honesto**: `Validators.minMetaAguaLitros = 0.5`,
+  `maxMetaAguaLitros = 10.0` y `Validators.ajustarMetaAgua()` — la meta es del
+  usuario, pero no puede ser una cifra imposible (también protege un import de
+  backup manipulado).
+- ✅ **UI**: en Perfil, fila "Meta diaria de agua" con el valor y botón de edición;
+  el diálogo usa el `WheelNumberPicker` existente con paso 0,5 L entre 0,5 y 10 L,
+  explica el rango y confirma con SnackBar.
+- ✅ **Origen del dato**: `AppState.origenAguaHoy` devuelve
+  `manual` / `health` / `ambos` / `null`, y el diálogo de agua lo etiqueta
+  ("marcado por ti" · "Health Connect" · "marcado por ti + Health Connect") junto
+  a la meta. Así el usuario sabe qué cuenta y no suma dos veces el mismo vaso.
+- ✅ **Coherencia con P20 (no estaba en el plan, pero era un fallo latente)**:
+  `_puntosAgua` puntuaba contra 2,5 L fijos. Si subías la meta a 3 L, la tarjeta de
+  estado de salud seguía diciendo "cumplido" con 2,5 L. Ahora puntúa **contra la meta
+  del usuario**: ≥100 % → 3 · ≥60 % → 2 · ≥30 % → 1 · menos → 0. Con el default de
+  2,5 L los cortes ya verificados no cambian (3,0→3 · 1,5→2 · 1,0→1 · 0,2→0).
+- ✅ **Default 2,5 L, no 3,0 L como decía `PROXIMAS_FASES.md`**: subir el listón a
+  3 L sin que el usuario lo elija endurecería el Día ideal ya verificado en el
+  dispositivo. 2,5 L ≈ 35 ml/kg para ~70 kg. Quien quiera más, lo sube con la rueda.
+- ✅ **En `AppState`, no en `ConfigService`** (el roadmap pedía `ConfigService`): la
+  meta es dato del usuario y va con su balance; `ConfigService` es para
+  interruptores, EULA y tema. Así no se crea acoplamiento entre servicios.
+- ✅ **173/173 tests** (14 nuevos en `test/meta_agua_test.dart`: default, persistencia
+  entre arranques, clamp, backup/restauración, backup antiguo, borrado total, los 4
+  orígenes del agua, puntaje contra meta ajena y widget de Perfil), 0 issues en
+  `flutter analyze`. Verificación física pendiente.
 
 ---
 
@@ -572,13 +613,29 @@ permitía 500.
 
 ## 13. Próximos pasos recomendados
 
-1. **Cerrar Fase 8 (código)**: 8.3 UMP (necesita `google_ump` y red a Google) y
-   8.5 firma propia (keystore fuera del repo + `app-release.aab`). Verificar
-   `flutter analyze` 0 y la suite ampliada (~64 tests).
-2. **Prueba PASA/FALLA de Fases 1-8 en los móviles** siguiendo `GUIA_TESTEO_FASE1.md`
-   (tabla de registro por dispositivo: Health Connect, entrenamientos, anuncios,
-   Premium, comidas, entrenador con cámara, widget/avisos, modo oscuro, tamaño de
-   texto 2.0×, idioma en vivo y — Fase 8 — exportar/importar/borrar datos más
-   política de privacidad es/en).
-3. Con la aprobación manual de las Fases 1-8, decidir publicación (requiere entidad
-   fuera de Cuba para la cuenta de desarrollador de Play).
+> Actualizado 2026-10-05 (orden aprobado por el usuario: **L2 → L4 → L3**; iOS
+> descartado). El estado real del código es **173/173 tests y `flutter analyze` limpio**.
+
+1. **L4 — Recetas por metas** (siguiente): dimensión `metas` en `Recipe`
+   (bajar / mantener / ganar músculo), filtro por meta + sección "Para tu meta"
+   usando la meta del perfil, y catálogo ampliado a ~35-40 recetas **originales**
+   (nada copiado de medios) con criterios OMS/AESAN. Reglas y contexto legal en
+   `docs/PROXIMAS_FASES.md §L4`.
+2. **L3 — Constructor de rutinas** (el más grande, en 3 sub-lotes): catálogo único de
+   ejercicios → pantalla "Mis rutinas" (crear/reordenar/descanso 60 s) → entrada
+   desde Home reutilizando el reproductor sin cambios. Detalle en
+   `docs/PROXIMAS_FASES.md §L3`.
+3. **Verificación física acumulada en el Pixel 6a** (`install -r`, nunca desinstalar):
+   P17 (§23) · P18 (§24) · P19 (§25) · P20 (§26) · **P21 (§27)**. Los reportes
+   P11–P13 del usuario siguen sin llegar.
+4. **8.3 UMP**: el código está listo pero no verificable sin red a Google y una cuenta
+   AdMob real.
+5. **8.5 Release firmado** (bloqueado): requiere keystore propio + `app-release.aab` +
+   Data Safety, y la cuenta de Play exige entidad fuera de Cuba. Lo que sí puede
+   quedar preparado desde aquí: firma por variables de entorno con el keystore
+   **fuera del repo**, más el comando de build.
+6. **Prueba PASA/FALLA de Fases 1-8 en los móviles** siguiendo `GUIA_TESTEO_FASE1.md`
+   (Health Connect, entrenamientos, anuncios, Premium, comidas, entrenador con
+   cámara, widget/avisos, modo oscuro, texto 2.0×, idioma en vivo y exportar/
+   importar/borrar datos más política de privacidad es/en).
+7. Con la aprobación manual, decidir publicación.
