@@ -733,16 +733,18 @@ editado a mano. Ahora comprueba el tipo antes de usar el dato.
    y texto) y entrada desde Home. Detalle en
    `docs/PROXIMAS_FASES.md §L3`.
 3. **Verificación física acumulada en el Pixel 6a** (`install -r`, nunca desinstalar):
-   P17 (§23) · P18 (§24) · P19 (§25) · P20 (§26) · P21 (§27) · **L4 (§28)** ·
-   **L3 (§29)**. Los reportes P11–P13 del usuario siguen sin llegar.
+   seguir **`docs/GUIA_TESTEO_UNIFICADA.md`** (fases A–M, 56 pasos, 61 líneas de
+   checklist PASA/FALLA). Cubre, entre otros, P17 · P18 · P19 · P20 · P21 · **L4** ·
+   **L3**; el detalle técnico por requisito sigue en `GUIA_TESTEO_COMPLETA.md`
+   §23–§29. Los reportes P11–P13 del usuario siguen sin llegar.
 4. **8.3 UMP**: el código está listo pero no verificable sin red a Google y una cuenta
    AdMob real.
 5. **8.5 Release firmado** (bloqueado): requiere keystore propio + `app-release.aab` +
    Data Safety, y la cuenta de Play exige entidad fuera de Cuba. Lo que sí puede
    quedar preparado desde aquí: firma por variables de entorno con el keystore
    **fuera del repo**, más el comando de build.
-6. **Prueba PASA/FALLA de Fases 1-8 en los móviles** siguiendo `GUIA_TESTEO_FASE1.md`
-   (Health Connect, entrenamientos, anuncios, Premium, comidas, entrenador con
-   cámara, widget/avisos, modo oscuro, texto 2.0×, idioma en vivo y exportar/
-   importar/borrar datos más política de privacidad es/en).
+6. **Prueba PASA/FALLA de Fases 1-8 en los móviles** siguiendo
+   `docs/GUIA_TESTEO_UNIFICADA.md` (Health Connect, entrenamientos, anuncios, Premium,
+   comidas, entrenador con cámara, widget/avisos, modo oscuro, texto 2.0×, idioma en
+   vivo y exportar/importar/borrar datos más política de privacidad es/en).
 7. Con la aprobación manual, decidir publicación.

@@ -10,6 +10,11 @@ Hotfix UI **P1–P10** y los ajustes de sesión P8–P10.
 > Cada tabla tiene un paso y lo que se debe ver. Al final, el §14 resume todo en una sola
 > tabla y el §15 es el registro histórico de resultados.
 
+> **Nota (2026-10-05):** el recorrido de testeo **manual** recomendado es ahora
+> `docs/GUIA_TESTEO_UNIFICADA.md`, organizado por fases A–M en el orden real de navegación
+> de la app. Este documento conserva el detalle técnico por requisito (P1…P21, L2–L4) y las
+> notas de pixel-dumping usadas en la verificación automática.
+
 ---
 
 ## 0. Estado de la app y del repositorio (referencia)

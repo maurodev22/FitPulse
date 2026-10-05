@@ -142,7 +142,9 @@ tool/
 
 - [`PLAN.md`](PLAN.md) — plan de evolución por fases con estado auditado (fuente de verdad).
 - [`FUNCIONALIDADES.md`](FUNCIONALIDADES.md) — control de funcionalidades presentes vs. pendientes.
-- [`GUIA_TESTEO_FASE1.md`](GUIA_TESTEO_FASE1.md) — guía de prueba manual en dispositivo.
+- [`docs/GUIA_TESTEO_UNIFICADA.md`](docs/GUIA_TESTEO_UNIFICADA.md) — **recorrido de testeo manual recomendado**: 13 fases (A–M), 52 pasos de verificación y 61 líneas de checklist PASA/FALLA.
+- [`docs/GUIA_TESTEO_COMPLETA.md`](docs/GUIA_TESTEO_COMPLETA.md) — detalle técnico por requisito (P1…P21, L2–L4) y notas de pixel-dumping.
+- [`GUIA_TESTEO_FASE1.md`](GUIA_TESTEO_FASE1.md) — guía de prueba manual en dispositivo (fases 1–9b, histórica).
 - `assets/docs/manual_es.md` / `manual_en.md` — manual de usuario que se muestra dentro de la pestaña Ayuda.
 
 ## Scripts

@@ -96,7 +96,8 @@ y el estado de salud (P20) puntúa el agua **contra la meta del usuario**, no co
 | "Reutiliza el reproductor sin cambios" | Igual | `aPrograma()` convierte la rutina a `WorkoutProgram`; `WorkoutPlayerScreen` no se tocó. |
 
 **Verificación:** 260/260 tests, `flutter analyze` 0 issues. Test manual en
-`GUIA_TESTEO_COMPLETA.md` §29 (23 pasos), físico pendiente.
+`docs/GUIA_TESTEO_UNIFICADA.md` fase D (§D4–§D6) y detalle técnico en
+`GUIA_TESTEO_COMPLETA.md` §29 (23 pasos); físico pendiente.
 
 **Archivos:** `workout_exercise_catalog.dart` (nuevo), `rutinas.dart` (nuevo),
 `workout_builder_screen.dart` (nuevo), `app_state.dart`, `validators.dart`,
