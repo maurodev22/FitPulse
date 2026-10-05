@@ -105,4 +105,55 @@ abstract final class Validators {
   /// valor corregido, para que la UI nunca pueda quedar fuera de rango.
   static double ajustarMetaAgua(double litros) =>
       litros.clamp(minMetaAguaLitros, maxMetaAguaLitros);
+
+  // ---- L3: rutinas propias ----
+  //
+  // Topes pensados para que una rutina sea ejecutable de verdad en casa y sin
+  // material: ni una rutina de 1 ejercicio (no es una rutina) ni una de 30
+  // (no se sostiene en una sesión de móvil).
+
+  /// Mínimo de ejercicios para que una rutina tenga sentido (3).
+  static const int minEjerciciosRutina = 3;
+
+  /// Máximo de ejercicios por rutina (12).
+  static const int maxEjerciciosRutina = 12;
+
+  /// Longitud mínima del nombre de la rutina.
+  static const int minNombreRutina = 3;
+
+  /// Longitud máxima del nombre de la rutina.
+  static const int maxNombreRutina = 40;
+
+  /// Descanso por defecto entre ejercicios (60 s), el valor del roadmap.
+  static const int descansoRutinaPorDefecto = 60;
+
+  /// Descanso mínimo entre ejercicios (15 s).
+  static const int minDescansoRutina = 15;
+
+  /// Descanso máximo entre ejercicios (120 s).
+  static const int maxDescansoRutina = 120;
+
+  /// Tiempo de trabajo mínimo por ejercicio (10 s).
+  static const int minSegundosEjercicio = 10;
+
+  /// Tiempo de trabajo máximo por ejercicio (180 s).
+  static const int maxSegundosEjercicio = 180;
+
+  /// Duración máxima de la rutina completa en minutos (60).
+  static const int maxMinutosRutina = 60;
+
+  /// Ajusta el descanso de una rutina al rango honesto (15–120 s).
+  static int ajustarDescansoRutina(int segundos) =>
+      segundos.clamp(minDescansoRutina, maxDescansoRutina);
+
+  /// Ajusta el tiempo de un ejercicio al rango honesto (10–180 s).
+  static int ajustarSegundosEjercicio(int segundos) =>
+      segundos.clamp(minSegundosEjercicio, maxSegundosEjercicio);
+
+  /// Valida la duración total de la rutina. Devuelve `mensaje` si supera los
+  /// [maxMinutosRutina] minutos: más allá la sesión deja de ser realista.
+  static String? validarDuracionRutina(int minutos, String mensaje) {
+    if (minutos > maxMinutosRutina) return mensaje;
+    return null;
+  }
 }

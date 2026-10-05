@@ -11,6 +11,7 @@ import '../utils/validators.dart';
 import 'athlete_profile.dart';
 import 'estado_salud.dart';
 import 'registros.dart';
+import 'rutinas.dart';
 import 'workout.dart';
 import 'workout_catalog.dart';
 
@@ -77,6 +78,107 @@ class AppState extends ChangeNotifier {
   // Fase 9: registros reales de peso (semanal) y repeticiones por ejercicio.
   static const _pesoKey = 'fitpulse_peso_v1';
   static const _repsKey = 'fitpulse_reps_v1';
+
+  // L3: rutinas propias creadas por el usuario.
+  static const _rutinasKey = 'fitpulse_rutinas_v1';
+
+  // ---------- L3: rutinas propias ----------
+
+  /// Rutinas creadas por el usuario, en orden de creación (la más nueva al
+  /// final). Lista vacía = el usuario todavía no construyó ninguna; la app no
+  /// ofrece rutinas de ejemplo "de mentira".
+  List<Rutina> rutinas = [];
+
+  /// Guarda (crea o actualiza) una rutina y la persiste.
+  ///
+  /// El descanso y los tiempos se ajustan al rango de `Validators`, para que un
+  /// backup editado a mano no pueda dejar la rutina en un estado imposible. Si
+  /// la rutina no tiene ejercicios, no se guarda.
+  Future<void> guardarRutina(Rutina rutina) async {
+    final limpia = Rutina.fromJson({
+      'id': rutina.id,
+      'n': rutina.nombre.trim(),
+      'd': Validators.ajustarDescansoRutina(rutina.descansoPorDefecto.inSeconds),
+      'c': rutina.creada == 0
+          ? DateTime.now().millisecondsSinceEpoch
+          : rutina.creada,
+      'e': rutina.ejercicios
+          .map((e) => {
+                'n': e.nombre,
+                's': Validators.ajustarSegundosEjercicio(e.duracion.inSeconds),
+                'r': e.repeticiones,
+                'x': 0,
+              })
+          .toList(),
+    });
+    if (limpia.vacia) return;
+    final i = rutinas.indexWhere((r) => r.id == limpia.id);
+    if (i >= 0) {
+      rutinas[i] = limpia;
+    } else {
+      rutinas.add(limpia);
+    }
+    notifyListeners();
+    _trace('perfil', 'rutina_guardada');
+    await _persistRutinas();
+  }
+
+  /// Borra una rutina por id. Devuelve `true` si algo se borró.
+  Future<bool> borrarRutina(String id) async {
+    final antes = rutinas.length;
+    rutinas.removeWhere((r) => r.id == id);
+    if (rutinas.length == antes) return false;
+    notifyListeners();
+    _trace('perfil', 'rutina_borrada');
+    await _persistRutinas();
+    return true;
+  }
+
+  /// Renombra una rutina. Devuelve `false` si el id no existe o el nombre queda
+  /// vacío tras recortar.
+  Future<bool> renombrarRutina(String id, String nombre) async {
+    final i = rutinas.indexWhere((r) => r.id == id);
+    if (i < 0) return false;
+    final limpio = nombre.trim();
+    if (limpio.isEmpty) return false;
+    rutinas[i] = rutinas[i].copyWith(nombre: limpio);
+    notifyListeners();
+    await _persistRutinas();
+    return true;
+  }
+
+  /// Rutina por id, o `null` si no existe.
+  Rutina? rutinaPorId(String id) {
+    for (final r in rutinas) {
+      if (r.id == id) return r;
+    }
+    return null;
+  }
+
+  void _cargarRutinas() {
+    final raw = _prefs?.getString(_rutinasKey);
+    if (raw == null || raw.isEmpty) {
+      rutinas = <Rutina>[];
+      return;
+    }
+    try {
+      rutinas = (jsonDecode(raw) as List)
+          .whereType<Map>()
+          .map((m) => Rutina.fromJson(Map<String, dynamic>.from(m)))
+          .where((r) => !r.vacia)
+          .toList();
+    } catch (_) {
+      // Rutinas corruptas no pueden impedir abrir la app: se descartan.
+      rutinas = <Rutina>[];
+    }
+  }
+
+  Future<void> _persistRutinas() async {
+    await _prefs?.setString(
+      _rutinasKey,
+      jsonEncode(rutinas.map((r) => r.toJson()).toList()),
+    );
+  }
 
   // Health Connect: flag de "permisos ya solicitados al arrancar".
   static const _hcRequestedKey = 'fitpulse_hc_requested_v1';
@@ -211,6 +313,7 @@ class AppState extends ChangeNotifier {
 
     // Fase 2: historial de sesiones, puntos y reto actual.
     _cargarHistorial();
+  _cargarRutinas();
 
     // Fase 9: registros de peso semanal y repeticiones por ejercicio.
     _cargarRegistros();
@@ -812,6 +915,7 @@ class AppState extends ChangeNotifier {
       'reto_objetivo': _retoObjetivo,
       'favoritas': favoritas.toList(),
       'meta_agua': _metaAguaLitros,
+      'rutinas': rutinas.map((r) => r.toJson()).toList(),
       'pasos_base_fecha': _prefs?.getString(_pasosBaseDateKey),
     };
   }
@@ -879,6 +983,18 @@ class AppState extends ChangeNotifier {
       _metaAguaLitros = Validators.ajustarMetaAgua(rawMetaAgua.toDouble());
       await _prefs?.setDouble(_metaAguaKey, _metaAguaLitros);
     }
+
+    // L3: rutinas propias del backup. Si el backup es anterior (sin la clave), se
+    // conservan las rutinas que ya hubiera en el dispositivo en vez de borrarlas.
+    final rawRutinas = snapshot['rutinas'];
+    if (rawRutinas is List) {
+      rutinas = rawRutinas
+          .whereType<Map>()
+          .map((m) => Rutina.fromJson(Map<String, dynamic>.from(m)))
+          .where((r) => !r.vacia)
+          .toList();
+      await _persistRutinas();
+    }
     notifyListeners();
   }
 
@@ -895,6 +1011,7 @@ class AppState extends ChangeNotifier {
     _xp = 0;
     _retoObjetivo = 3;
     _metaAguaLitros = metaAguaInicial;
+    rutinas = <Rutina>[];
     _pasosBase = null;
     pasosHoy = 0;
     _healthToday = HealthToday.vacio;
