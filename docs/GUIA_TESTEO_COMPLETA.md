@@ -1085,6 +1085,93 @@ catálogo pasó de 6 a **41 recetas** (35 nuevas, todas de texto original de la 
 
 ---
 
-*Documento de trabajo consolidado. Se actualiza con cada verificación física marcada en §17/§19.
+## 29. L3 — Constructor de rutinas propias ("Mis rutinas")
+
+El usuario puede montar su propia rutina eligiendo ejercicios de un catálogo de
+**34 ejercicios** en 6 grupos (Piernas, Empuje, Tirón, Core, Cardio, Movilidad),
+ordenarlos y decidir el descanso. Al empezar, la rutina se juega en el
+**reproductor que ya existía**, sin pantalla nueva ni copia de su código.
+
+### Comportamiento esperado (código ✅, 260/260 tests, 0 issues)
+
+| Ítem | Qué debe verse/hacerse |
+|---|---|
+| **Entrada en Home** | Debajo de la tarjeta del entrenamiento de hoy hay una fila **"Mis rutinas"**. Dice cuántas hay: "Todavía no has creado ninguna rutina." si no hay ninguna, "1 rutina guardada" / "2 rutinas guardadas" si las hay. |
+| **Estado vacío** | Al entrar sin rutinas: el texto de arriba + "Construye la tuya con los 34 ejercicios del catálogo: eliges cuáles, en qué orden y cuánto descansas entre ellos." + botón **Nueva rutina**. No hay rutinas de ejemplo inventadas. |
+| **Editor** | Campos reales: nombre, **Descanso entre ejercicios** (15–120 s, 60 s por defecto), y la lista de ejercicios con su número de orden, tiempo y repeticiones. |
+| **Añadir ejercicio** | Botón **Añadir ejercicio** → hoja con buscador y fila de chips de grupo (**Todos** + los 6). Al tocar un ejercicio se añade con el tiempo y repeticiones **sugeridos del catálogo**, que son los mismos que usan los programas fijos. |
+| **Filtro combinado** | Grupo + texto se combinan: elegir **Core** hides las de Piernas, y añadir "trote" con ese grupo activo da "Ningún ejercicio coincide con tu búsqueda" (el trote es cardio). |
+| **Reordenar / quitar** | Cada fila tiene ↑ ↓ ✕. La primera no puede subir más y la última no puede bajar más (los botones se ven apagados). |
+| **Contador** | Arriba de la lista: "3 / 12" — el máximo son 12 ejercicios. Al intentar añadir el 13.º, avisa "Máximo 12 ejercicios por rutina". |
+| **Reglas al guardar** | No guarda una rutina inválida: avisa "Añade al menos 3 ejercicios para poder guardar la rutina", "El nombre necesita al menos 3 caracteres", "Máximo 40 caracteres" o "La rutina supera los 60 min: quita ejercicios o baja los tiempos". Nunca corrige en silencio lo que el usuario escribió. |
+| **Resumen en vivo** | Mientras se monta, la línea de arriba se actualiza con datos reales: "3 ejercicios · 7 min · Media". |
+| **Kcal estimadas** | Siempre con el prefijo **"Estimación: …"** ("Estimación: 190 kcal según los ejercicios que elegiste"). En la tarjeta de la lista sale "≈190 kcal". Nunca se presenta como medición. |
+| **Intensidad** | "Baja", "Media" o "Alta", **derivadas** del contenido de la rutina, no escritas a mano. |
+| **Empezar** | Abre el reproductor normal con el nombre de la rutina. |
+| **Editar / eliminar** | El pencil abre el editor con todo precargado y el ⋮ da a Renombrar o Eliminar. Eliminar pide confirmación con el nombre real ("¿Eliminar la rutina "Pecho fuerte"?") y avisa "Rutina eliminada". |
+| **Persistencia** | Reiniciar la app mantiene las rutinas. Entrar en **Ajustes → Datos → Exportar** y volver a importar mantiene las rutinas (se exportan en el backup). Borrar todos los datos las elimina. |
+| **Sin overflow 2.0×** | Con texto al 200 % en 360 dp, nada se corta en la lista, el editor ni la fila de Home. |
+
+### Pasos de verificación manual (L3)
+
+1. **Home** → ✅ aparece la fila "Mis rutinas" debajo de la tarjeta del
+   entrenamiento, con "Todavía no has creado ninguna rutina."
+2. Tocarla → ✅ se abre "Mis rutinas" con el estado vacío y el texto de los 34
+   ejercicios. **Comprobar el número**: debe decir 34.
+3. **Nueva rutina** → ✅ se abre el editor con el nombre vacío y "Descanso entre
+   ejercicios: 60 s".
+4. Escribir un nombre (p. ej. "Pecho y espalda") y pulsar **Añadir ejercicio**
+   → ✅ se abre la hoja con el buscador, los chips de grupo y el catálogo.
+5. Buscar "flex" → ✅ solo salen las coincidencias.
+6. Elegir el chip **Core** con "flex" escrito → ✅ "Ningún ejercicio coincide con
+   tu búsqueda" (el core no lleva flexiones).
+7. Volver a **Todos** y buscar "" → ✅ el catálogo completo.
+8. Añadir **Sentadillas**, **Flexiones** y **Plancha** (una cada vez, en ese
+   orden) → ✅ la lista muestra 1, 2, 3 con su número, y el contador "3 / 12".
+9. Comprobar que el resumen de arriba cuadra con lo elegido: "3 ejercicios", los
+   minutos de trabajo **más** el descanso (3 × 40 s + 2 × 60 s = 5 min de
+   trabajo; ≈7 min en total) y una intensidad coherente con los grupos.
+10. Tocar ↓ en la primera fila → ✅ "Flexiones" pasa a ser el 1 y "Sentadillas"
+    el 2; ↑ en la primera queda apagado, ↓ en la última también.
+11. Pulsar **Guardar rutina** con solo 2 ejercicios (quitar uno primero) → ✅
+    avisa "Añade al menos 3 ejercicios…" y **no** guarda nada.
+12. Escribir un nombre de 2 letras y guardar con 3 ejercicios → ✅ avisa "El
+    nombre necesita al menos 3 caracteres" y no guarda.
+13. Restaurar el nombre y guardar → ✅ vuelve a la lista con la rutina, y debajo
+    el texto "Estimación: … kcal según los ejercicios que elegiste".
+14. Tocar **Empezar** → ✅ se abre el reproductor con "Pecho y espalda" y la
+    cuenta atrás; el ejercicio 1 es el primero de la lista.
+15. Bajar el descanso a 15 s (el botón − se apaga en el tope) y guardarla otra
+    vez → ✅ el descanso baja de verdad; el resumen de minutos baja también.
+16. Con el editor abierto, subir el descanso hasta 120 s (el + se apaga) → ✅
+    el tope se respeta y se explica abajo "15-120 s".
+17. ⋮ → **Renombrar** → ✅ se abre el editor con todo precargado; cambiar el
+    nombre y guardar **actualiza** la rutina (no crea una segunda).
+18. ⋮ → **Eliminar** → **Cancelar** → ✅ no se borra nada. Repetir y confirmar
+    → ✅ se borra y avisa "Rutina eliminada".
+19. Crear una segunda rutina y reiniciar la app → ✅ siguen las dos, con sus
+    nombres y su orden de ejercicios.
+20. **Ajustes → Datos → Exportar**, luego importar el archivo → ✅ las rutinas
+    vuelven intactas.
+21. Añadir 12 ejercicios (el máximo) → ✅ el contador marca "12 / 12"; intentar
+    añadir uno más → ✅ avisa "Máximo 12 ejercicios por rutina".
+22. **Texto al 200 %** (Ajustes → Accesibilidad) en un móvil estrecho → ✅ nada
+    se corta ni se sale en la lista, el editor ni la fila de Home.
+23. Con la cámara activada en el reproductor y una rutina propia → ✅ la
+    corrección de postura funciona: los nombres del catálogo son los mismos que
+    usan los programas fijos, así que las rutinas propias también se corrigen.
+
+### Estado (2026-10-05)
+
+- **L3 ✅ código verificado**: 260/260 tests, `flutter analyze` 0 issues. Nuevo
+  `test/workout_builder_ui_test.dart` (18 tests: estado vacío, lista con datos
+  calculados, crear de verdad, las tres reglas de guardado, reordenar/quitar,
+  topes del descanso, filtro combinado del catálogo, editar, "Empezar", eliminar
+  con confirmación y la entrada desde Home) más los 42 de
+  `test/rutinas_test.dart` del sub-lote 3a.
+- **L3 ⏳ física pendiente**: instalar el APK nuevo en el Pixel 6a con
+  `install -r` y seguir los pasos 1–23 de esta sección.
+
+---
 Verificación automática siempre sin lectura visual (muestreo de píxeles + dump); el testeo
 manual del usuario es complementario.*

@@ -399,6 +399,67 @@ class AppStrings {
       'You have not chosen a goal in Profile. Choose one and the recipes made for it will '
       'appear here; meanwhile you can see them all.');
 
+  // ---- L3: constructor de rutinas ----
+
+  String get rutTitulo => _t('Mis rutinas', 'My routines');
+  String get rutNueva => _t('Nueva rutina', 'New routine');
+  String get rutEditar => _t('Editar rutina', 'Edit routine');
+  String get rutNombre => _t('Nombre de la rutina', 'Routine name');
+  String get rutNombreHint => _t('Ej: Pecho y espalda', 'e.g. Chest and back');
+  String rutNombreCorto(int n) => _t(
+      'El nombre necesita al menos $n caracteres',
+      'The name needs at least $n characters');
+  String rutNombreLargo(int n) =>
+      _t('Máximo $n caracteres', 'Maximum $n characters');
+  String get rutEjercicios => _t('Ejercicios', 'Exercises');
+  String get rutAnadir => _t('Añadir ejercicio', 'Add exercise');
+  String get rutBuscar => _t('Buscar ejercicio...', 'Search exercise...');
+  String get rutTodosGrupos => _t('Todos', 'All');
+  String rutDescanso(int s) => _t('Descanso: $s s', 'Rest: $s s');
+  String get rutDescansoTitulo =>
+      _t('Descanso entre ejercicios', 'Rest between exercises');
+  String get rutGuardar => _t('Guardar rutina', 'Save routine');
+  String get rutCancelar => _t('Cancelar', 'Cancel');
+  String get rutEliminar => _t('Eliminar', 'Delete');
+  String get rutRenombrar => _t('Renombrar', 'Rename');
+  String get rutEmpezar => _t('Empezar', 'Start');
+  String get rutQuitar => _t('Quitar de la rutina', 'Remove from routine');
+  String get rutSubir => _t('Subir en la lista', 'Move up');
+  String get rutBajar => _t('Bajar en la lista', 'Move down');
+  String rutMinEjercicios(int n) => _t(
+      'Añade al menos $n ejercicios para poder guardar la rutina',
+      'Add at least $n exercises to save the routine');
+  String rutMaxEjercicios(int n) =>
+      _t('Máximo $n ejercicios por rutina', 'Maximum $n exercises per routine');
+  String rutDemasiadoLarga(int min) => _t(
+      'La rutina supera los $min min: quita ejercicios o baja los tiempos',
+      'The routine exceeds $min min: remove exercises or shorten the times');
+  String get rutVacio =>
+      _t('Todavía no has creado ninguna rutina.',
+          'You have not created any routine yet.');
+  String rutVacioDesc(int total) => _t(
+      'Construye la tuya con los $total ejercicios del catálogo: eliges cuáles, '
+      'en qué orden y cuánto descansas entre ellos.',
+      'Build your own from the $total exercises in the catalog: choose which ones, '
+      'the order and how long you rest between them.');
+  String get rutEditorVacio => _t('Añade ejercicios del catálogo para empezar.',
+      'Add exercises from the catalog to start.');
+  String get rutSinNombre => _t('Rutina sin nombre', 'Untitled routine');
+  String rutKcalEstimadas(int kcal) => _t(
+      'Estimación: $kcal kcal según los ejercicios que elegiste',
+      'Estimate: $kcal kcal based on the exercises you chose');
+  String rutConfirmarEliminar(String nombre) =>
+      _t('¿Eliminar la rutina "$nombre"?', 'Delete the routine "$nombre"?');
+  String get rutEliminada => _t('Rutina eliminada', 'Routine deleted');
+  String get rutGuardada =>
+      _t('Rutina guardada en tu dispositivo', 'Routine saved on your device');
+  String rutTiempo(int s) => _t('$s s', '$s s');
+  String rutNEjercicios(int n) => _t('$n ejercicios', '$n exercises');
+  String get rutSinResultados =>
+      _t('Ningún ejercicio coincide con tu búsqueda', 'No exercise matches your search');
+  String get rutNRutinas => _t('1 rutina guardada', '1 saved routine');
+  String rutNRutinasN(int n) => _t('$n rutinas guardadas', '$n saved routines');
+
   // ---- Plan de comidas ----
   String get mpTabPlan => _t('Plan semanal', 'Weekly plan');
   String get mpTabLista => _t('Lista de la compra', 'Shopping list');

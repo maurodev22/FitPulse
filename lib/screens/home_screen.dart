@@ -12,6 +12,7 @@ import '../utils/validators.dart';
 import '../widgets/common.dart';
 import '../widgets/estado_salud_card.dart';
 import '../widgets/racha_chip.dart';
+import 'workout_builder_screen.dart';
 import 'workout_player_screen.dart';
 
 /// Abre el diálogo para registrar MANUALMENTE el agua consumida hoy (P14):
@@ -411,7 +412,70 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         const SizedBox(height: 12),
         _WorkoutHeroCard(program: context.watch<AppState>().entrenamientoRecomendado),
+        const SizedBox(height: 12),
+        const _EntradaMisRutinas(),
       ],
+    );
+  }
+}
+
+/// Entrada a "Mis rutinas" (L3).
+///
+/// Muestra un dato real (cuantas rutinas tiene el usuario) y no inventa
+/// contenido: si no hay ninguna, lleva a crear la primera.
+class _EntradaMisRutinas extends StatelessWidget {
+  const _EntradaMisRutinas();
+
+  @override
+  Widget build(BuildContext context) {
+    final strings = context.watch<LocaleService>().strings;
+    final total = context.watch<AppState>().rutinas.length;
+
+    return Material(
+      color: AppColors.surfaceContainerLow,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute<void>(builder: (_) => const MisRutinasScreen()),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          child: Row(
+            children: [
+              Icon(Icons.edit_note, color: AppColors.primary),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      strings.rutTitulo,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppType.labelLg.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.onSurface,
+                      ),
+                    ),
+                    Text(
+                      total == 0
+                          ? strings.rutVacio
+                          : (total == 1
+                              ? strings.rutNRutinas
+                              : strings.rutNRutinasN(total)),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppType.labelSm.copyWith(color: AppColors.outline),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(Icons.chevron_right, color: AppColors.outline),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

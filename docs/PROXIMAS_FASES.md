@@ -17,7 +17,7 @@
 | Hotfix UI P1–P10 (aprobado 30/09) | ✅ `0bf3f15` (P1–P7) + `b9b91d1` (P8–P10, sesión) | Detalle del día, ventana visible, insignias a Perfil, Consejos funcionales, racha ≥7, editar metas, Configuración, peso Progreso→Perfil, sin duplicados en Perfil, mínimo 2 días |
 | Verificación física del hotfix en Pixel 6a | ⏳ **en curso** | `docs/HOTFIX_UI.md` + `docs/GUIA_TESTEO_INTEGRAL.md §12-13` |
 | L2 — Agua (registro manual + meta diaria) | ✅ **completa** — registro manual P14, honestidad P19, meta editable P21 | Meta de agua real y persistida por el usuario |
-| L3 — Constructor de entrenamientos | ⏳ **pendiente** | Crear rutinas propias con descanso de 60 s |
+| L3 — Constructor de entrenamientos | ✅ **completa** — catálogo único de 34 ejercicios, "Mis rutinas" con editor y entrada desde Home | Crear rutinas propias con descanso de 60 s |
 | L4 — Recetas originales por metas | ✅ **completa** — 41 recetas (35 nuevas originales), filtro por meta y sección "Para tu meta" | Catálogo agrupado por meta, sin plagio |
 | L5 — Gamificación Fase A + B | ✅ **completa** | XP/nivel/insignias con feedback sutil (sin modales/sonidos) |
 | Verificación física L1 | ✅ Pixel 6a (30/09, píxeles+dump) · ⏳ Xiaomi (dump MIUI) | Guía: `docs/GUIA_TESTEO_INTEGRAL.md §12` |
@@ -61,28 +61,47 @@ y el estado de salud (P20) puntúa el agua **contra la meta del usuario**, no co
 
 ---
 
-## L3 — Constructor de entrenamientos (rutinas propias, descanso 60 s)
+## L3 — Constructor de entrenamientos (rutinas propias, descanso 60 s) — ✅ COMPLETA
 
-**Contexto:** el reproductor ya consume `WorkoutProgram`/`WorkoutExercise` con
-`duracion`, `descanso` (default 15 s) y `repeticiones`, y tiene estado `_enDescanso`.
-El catálogo es fijo (`workout_catalog.dart`, 4 programas). Falta la capa de creación.
+**Cómo quedó resuelto:**
 
-- [ ] Catálogo único de ejercicios disponibles en `lib/state/workout_exercise_catalog.dart`
-  (~25: los ya usados por los 4 programas + extensión propia), referenciado también por
-  `workout_catalog.dart` para no duplicar.
-- [ ] Pantalla "Mis rutinas" (acceso desde Home) con lista de rutinas guardadas + "Crear
-  rutina": elegir ejercicios → reordenar → **descanso entre ejercicios default 60 s
-  editable por rutina** → guardar.
-- [ ] Persistencia de rutinas propias (`fitpulse_rutinas_v1`) en `AppState` +
-  export/import incluido.
-- [ ] Validación: mínimo 3 y máximo 12 ejercicios; duración total honesta.
-- [ ] El reproductor se reutiliza **sin cambios** con la rutina guardada (cuenta sesiones
-  reales como cualquier programa; no toca el plan adaptativo).
-- [ ] Tests: crear/editar/borrar rutina, reproductor con descanso 60 s, export incluye
-  rutinas; `flutter analyze` 0 issues.
+- `workout_exercise_catalog.dart`: **34 ejercicios** en 6 grupos (Piernas,
+  Empuje, Tirón, Core, Cardio, Movilidad) con tiempo y repeticiones sugeridos.
+  Es el **catálogo único**: los 4 programas fijos usan exactamente estos nombres,
+  porque `pose_coach.dart` decide la corrección de postura por el nombre (si el
+  constructor usara otros, el entrenador con cámara dejaría de reconocerlos). Un
+  test lo comprueba.
+- `rutinas.dart`: modelo `Rutina` (id, nombre, ejercicios, `descansoPorDefecto`)
+  con `aPrograma()` → `WorkoutProgram`. **El reproductor se reutiliza sin
+  cambios**: `WorkoutPlayerScreen` no distingue rutinas propias de programas del
+  catálogo, así que no se duplicó ese código.
+- `workout_builder_screen.dart`: "Mis rutinas" (lista con estado vacío honesto,
+  sin rutinas de ejemplo) + editor (nombre, descanso 15–120 s con 60 s por
+  defecto, añadir del catálogo filtrable por grupo y texto, reordenar ↑↓,
+  quitar, resumen en vivo). Entrada desde Home que dice cuántas rutinas hay.
+- Persistencia `fitpulse_rutinas_v1` en `AppState`, incluida en el backup
+  (export/import) y borrada en `resetTrasBorrado`.
+- Validación en `Validators`: 3–12 ejercicios, nombre 3–40, descanso 15–120 s,
+  ejercicio 10–180 s, rutina ≤ 60 min. `guardarRutina` pasa la rutina por
+  `Rutina.fromJson` para aplicar los topes, así que un backup editado a mano no
+  puede dejar una rutina imposible.
 
-**Archivos previstos:** `workout_exercise_catalog.dart` (nuevo), `app_state.dart`,
-`workout_builder_screen.dart` (nuevo), `home_screen.dart`, `locale_service.dart`, tests.
+**Diferencias con el plan original de esta lista (y por qué):**
+
+| Plan original | Realizado | Motivo |
+|---|---|---|
+| Catálogo de ~25 ejercicios | 34 | Tiene que cubrir los 38 nombres que usan los 4 programas fijos (hay nombres repetidos entre programas) más los nuevos. |
+| "Duración total honesta" | Intensidad y kcal **derivadas** del contenido, siempre etiquetadas como "Estimación: …" | No hay medición real de gasto; el propio `WorkoutSession.calorias` ya lo advertía. Un número sin etiqueta habría sido inventar un dato de salud. |
+| Descanso editable "por rutina" | 15–120 s, paso de 15 s | Con menos de 15 s la sesión no es un entrenamiento; con más de 120 s no se sostiene en un móvil. El tope se **explica** en pantalla, no se impone en silencio. |
+| "Reutiliza el reproductor sin cambios" | Igual | `aPrograma()` convierte la rutina a `WorkoutProgram`; `WorkoutPlayerScreen` no se tocó. |
+
+**Verificación:** 260/260 tests, `flutter analyze` 0 issues. Test manual en
+`GUIA_TESTEO_COMPLETA.md` §29 (23 pasos), físico pendiente.
+
+**Archivos:** `workout_exercise_catalog.dart` (nuevo), `rutinas.dart` (nuevo),
+`workout_builder_screen.dart` (nuevo), `app_state.dart`, `validators.dart`,
+`home_screen.dart`, `locale_service.dart`, `test/rutinas_test.dart`,
+`test/workout_builder_ui_test.dart`.
 
 ---
 
@@ -170,7 +189,8 @@ insignias. Plan completo por fases en `docs/DISENO_GAMIFICACION.md`.
 - `GUIA_TESTEO_MANUAL.md` (guía manual de testeo de la fase de bandas) sigue **sin
   commitear** a la espera de la aprobación del usuario.
 - **Orden vigente (aprobado por el usuario):** L2 (✅ hecho) → L4 recetas (✅
-  hecho) → L3 constructor (siguiente). 8.5 (release firmado) queda bloqueado:
-  necesita keystore propio y una cuenta de Play con entidad fuera de Cuba.
+  hecho) → L3 constructor (✅ hecho). Con esto queda **cerrado el roadmap de
+  lotes L2–L5**. 8.5 (release firmado) queda bloqueado: necesita keystore propio
+  y una cuenta de Play con entidad fuera de Cuba.
 - Cada lote cierra con `flutter analyze` 0 + `flutter test` verde y commit local
   **sin push**.

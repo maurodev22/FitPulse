@@ -654,6 +654,59 @@ está en cada chip, que además es donde el usuario decide.
 
 ---
 
+### L3 — Constructor de rutinas propias ✅ código
+
+Tercera y última parte del orden aprobado (2026-10-05). Era el lote más grande,
+así que se hizo en tres sub-lotes: **3a** modelo y persistencia, **3b** la
+pantalla, **3c** la entrada desde Home.
+
+- ✅ **Catálogo único de 34 ejercicios** (`workout_exercise_catalog.dart`) en 6
+  grupos (Piernas, Empuje, Tirón, Core, Cardio, Movilidad) con tiempo y
+  repeticiones sugeridos. Es **el mismo** para el constructor y para los
+  programas fijos, y sus nombres coinciden **exactamente** con los que ya usan
+  los 4 programas: `pose_coach.dart` decide el tipo de corrección de postura por
+  el nombre, así que con otros nombres el entrenador con cámara dejaría de
+  reconocer la mitad de las rutinas propias. Un test exige esa cobertura.
+- ✅ **Modelo `Rutina`** (`rutinas.dart`): id, nombre, ejercicios y
+  `descansoPorDefecto`, con `toJson`/`fromJson` tolerante a datos malos y
+  `aPrograma()` → `WorkoutProgram`.
+- ✅ **El reproductor se reutiliza sin cambios**: `WorkoutPlayerScreen` no
+  distingue una rutina propia de un programa del catálogo, así que no se
+  duplicó esa pantalla ni se tocó su código.
+- ✅ **"Mis rutinas"** (`workout_builder_screen.dart`): lista con estado vacío
+  honesto (sin rutinas de ejemplo), tarjeta con datos reales, y editor con
+  nombre, descanso 15–120 s (60 s por defecto, paso de 15 s), elección del
+  catálogo filtrable por grupo y texto, reordenar ↑↓, quitar y resumen en vivo.
+- ✅ **Entrada desde Home** que dice cuántas rutinas hay (0 → "Todavía no has
+  creado ninguna rutina", 1 → "1 rutina guardada").
+- ✅ **Persistencia** `fitpulse_rutinas_v1` en `AppState` con CRUD + export/import
+  + borrado en `resetTrasBorrado`.
+- ✅ **Validación** en `Validators`: 3–12 ejercicios, nombre 3–40, descanso
+  15–120 s, ejercicio 10–180 s, rutina ≤ 60 min. `guardarRutina` pasa la rutina
+  por `Rutina.fromJson`, de modo que un backup editado a mano no puede dejar una
+  rutina con descanso de 2 s ni un ejercicio de 2 horas.
+- ✅ **260/260 tests** (`test/rutinas_test.dart` con 42 + `test/workout_builder_ui_test.dart`
+  con 18), 0 issues en `flutter analyze`.
+
+**Validaciones que hacen de este lote "honesto" y no solo grande:**
+
+| Regla | Por qué importa |
+|---|---|
+| Un **solo** catálogo de ejercicios | Dos catálogos divergen y el entrenador con cámara deja de funcionar en silencio |
+| Los nombres del catálogo cubren los de los 4 programas | Si no, las rutinas propias se jugarían sin corrección de postura |
+| kcal siempre con el prefijo **"Estimación: …"** | No hay medición real de gasto; un número sin etiqueta sería un dato de salud inventado |
+| La **intensidad se deriva** del contenido, no se escribe | Si el usuario pudiera editarla a mano, la etiqueta mentiría |
+| Un nombre **desconocido cae en el valor más bajo** | Si no reconocemos el ejercicio, subestimamos en vez de exagerar |
+| Rutina vacía → **0** en todo | Un número inventado es peor que un 0 honesto |
+| Los estiramientos **no cuentan descanso** | Son el final de la sesión; contarles descanso falsea la duración |
+| Ningún filtro de grupo queda vacío | Un chip que no devuelve nada parece roto |
+
+**Bug real que encontró un test:** `Rutina.fromJson` hacía `(json['e'] as List?)`
+y **lanza** si el valor no es una lista — justo lo que pasa con un backup
+editado a mano. Ahora comprueba el tipo antes de usar el dato.
+
+---
+
 ## 12. Principios que se mantienen
 
 - Todo funciona en el propio móvil: sin cuentas ni servidores.
@@ -664,20 +717,24 @@ está en cada chip, que además es donde el usuario decide.
 ## 13. Próximos pasos recomendados
 
 > Actualizado 2026-10-05 (orden aprobado por el usuario: **L2 → L4 → L3**; iOS
-> descartado). El estado real del código es **173/173 tests y `flutter analyze` limpio**.
+> descartado). **Los tres lotes están hechos**, así que con esto queda cerrado el
+> roadmap L2–L5. El estado real del código es **260/260 tests y `flutter analyze`
+> limpio**.
 
-1. **L4 — Recetas por metas** (siguiente): dimensión `metas` en `Recipe`
-   (bajar / mantener / ganar músculo), filtro por meta + sección "Para tu meta"
-   usando la meta del perfil, y catálogo ampliado a ~35-40 recetas **originales**
-   (nada copiado de medios) con criterios OMS/AESAN. Reglas y contexto legal en
-   `docs/PROXIMAS_FASES.md §L4`.
-2. **L3 — Constructor de rutinas** (el más grande, en 3 sub-lotes): catálogo único de
-   ejercicios → pantalla "Mis rutinas" (crear/reordenar/descanso 60 s) → entrada
-   desde Home reutilizando el reproductor sin cambios. Detalle en
+1. **~~L4 — Recetas por metas~~ ✅ hecho**: dimensión `metas` en `Recipe` con las
+   4 etiquetas reales del perfil, filtro por meta + sección "Para tu meta" y
+   catálogo ampliado a 41 recetas **originales** (35 nuevas). Reglas y contexto
+   legal en `docs/PROXIMAS_FASES.md §L4`.
+2. **~~L3 — Constructor de rutinas~~ ✅ hecho**: catálogo único de 34 ejercicios
+   (los mismos nombres que los 4 programas fijos, para que el entrenador con
+   cámara los reconozca), modelo `Rutina` que se convierte a `WorkoutProgram`
+   para **reutilizar el reproductor sin cambios**, pantalla "Mis rutinas" con
+   editor (orden, descanso 60 s por defecto con tope 15–120 s, filtro por grupo
+   y texto) y entrada desde Home. Detalle en
    `docs/PROXIMAS_FASES.md §L3`.
 3. **Verificación física acumulada en el Pixel 6a** (`install -r`, nunca desinstalar):
-   P17 (§23) · P18 (§24) · P19 (§25) · P20 (§26) · **P21 (§27)**. Los reportes
-   P11–P13 del usuario siguen sin llegar.
+   P17 (§23) · P18 (§24) · P19 (§25) · P20 (§26) · P21 (§27) · **L4 (§28)** ·
+   **L3 (§29)**. Los reportes P11–P13 del usuario siguen sin llegar.
 4. **8.3 UMP**: el código está listo pero no verificable sin red a Google y una cuenta
    AdMob real.
 5. **8.5 Release firmado** (bloqueado): requiere keystore propio + `app-release.aab` +
