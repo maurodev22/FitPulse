@@ -1024,6 +1024,67 @@ registro de agua dice de dónde sale el total.
 
 ---
 
+## 28. L4 — Recetas por metas (catálogo ampliado)
+
+Las recetas ahora declaran **para qué meta** sirven, usando las mismas etiquetas
+que el Registro: 'Bajar de peso', 'Definir', 'Aumentar de peso' y 'Mantener'. El
+catálogo pasó de 6 a **41 recetas** (35 nuevas, todas de texto original de la app).
+
+### Comportamiento esperado (código ✅, 200/200 tests, 0 issues)
+
+| Ítem | Qué debe verse/hacerse |
+|---|---|
+| **Sección "Para tu meta"** | En la pestaña **Recetas**, debajo de la receta destacada, aparece "PARA TU META" con las **3 primeras recetas** de la meta elegida en el Registro, y el texto "Mostrando recetas marcadas para tu meta …". Debajo, el aviso: "Contenido orientativo: los valores son estimaciones por ración…". |
+| **Sin meta elegida** | Si el perfil no tiene meta, la sección **no** esconde el catálogo: avisa "No has elegido meta en el Perfil…" y ofrece **Ver todas**. |
+| **Chips por meta** | En el catálogo ("Ver todas") hay una fila de chips: **Todas las metas** + las cuatro metas, cada una con su **recuento real** (p. ej. "Bajar de peso (19)"). El número debe coincidir con cuántas recetas hay de verdad. |
+| **Filtro combinado** | Categoría + meta + búsqueda se combinan: elegir "Low Carb" **y** "Bajar de peso" muestra solo recetas que cumplen las dos cosas. |
+| **Título del catálogo** | Al filtrar por meta, el título pasa a `Recetas para "Bajar de peso"`. Con "Todas las metas" vuelve a "Todos los platos". |
+| **Cocina como antes** | Las 6 recetas originales siguen en su sitio y la destacada sigue siendo el **Bowl de Salmón**; los favoritos guardados siguen encontrándose. |
+| **Sin overflow 2.0×** | Con texto al 200 % en 360 dp, ningún texto se corta (la acción del encabezado es "Ver todas", sin contador, precisamente por esto). |
+
+### Pasos de verificación manual (L4)
+
+1. **Recetas → "PARA TU META"**: con perfil que tenga meta "Bajar de peso" → ✅ salen 3
+   recetas y el texto "Mostrando recetas marcadas para tu meta "Bajar de peso"".
+2. Verificar que las 3 recetas mostradas **sí** llevan esa etiqueta: el plan de
+   la sección debe cuadrar con el chip de "Bajar de peso" del catálogo.
+3. Cambiar en el **Perfil** la meta a "Aumentar de peso" y volver a Recetas → ✅ la
+   sección cambia de recetas (no se queda la anterior).
+4. **Perfil sin meta** (registro nuevo sin elegir meta, o perfil vacío) → ✅ la
+   sección avisa que no hay meta y **no** deja la pantalla vacía.
+5. Tocar **Ver todas** → ✅ se abre el catálogo con los chips de meta y cada uno
+   con su recuento; comprobar que un par de recuentos son correctos.
+6. Tocar el chip **Bajar de peso** → ✅ el título dice `Recetas para "Bajar de
+   peso"` y todas las recetas listadas llevan esa meta.
+7. Combinar con **Low Carb** → ✅ solo quedan recetas Low Carb **y** de esa meta.
+8. Escribir algo en la búsqueda con el filtro de meta activo → ✅ se combinan los
+   tres filtros (meta, categoría y texto).
+9. Tocar **Todas las metas** → ✅ vuelve el catálogo completo y el título "Todos
+   los platos".
+10. **Scroll** por varias recetas nuevas → ✅ todas cargan imagen (nada en gris) y
+    sus macros (kcal · proteína · carbos · grasas) son coherentes entre sí.
+11. Registrar el consumo de una receta nueva → ✅ se suma a tu balance del día con
+    sus valores reales.
+12. Abrir el **Plan semanal** → ✅ sigue funcionando igual (las 6 recetas base
+    no cambiaron) y la lista de la compra sale con ingredientes y cantidades.
+13. **Texto al 200 %** (Ajustes → Accesibilidad) en un móvil estrecho → ✅ nada se
+    corta ni se sale de la pantalla en la sección "Para tu meta" ni en los chips.
+14. Marcar una receta nueva como favorita, reiniciar la app → ✅ sigue con la
+    estrella (los favoritos se guardan por nombre).
+
+### Estado (2026-10-05)
+
+- **L4 ✅ código verificado**: 200/200 tests, `flutter analyze` 0 issues. Nuevos
+  `test/recetas_por_meta_test.dart` (19 tests: cobertura por meta, coincidencia de
+  etiquetas con el perfil, coherencia kcal↔macros, ingredientes por ración, sin
+  duplicados ni texto extranjero, y no-regresión de las 6 recetas base) y
+  `test/recetas_ui_test.dart` (8 tests: sección "Para tu meta", aviso sin meta,
+  chips con recuento, filtro combinado y el aviso de orientación).
+- **L4 ⏳ física pendiente**: instalar el APK nuevo en el Pixel 6a con `install -r`
+  y seguir los pasos 1–14 de esta sección.
+
+---
+
 *Documento de trabajo consolidado. Se actualiza con cada verificación física marcada en §17/§19.
 Verificación automática siempre sin lectura visual (muestreo de píxeles + dump); el testeo
 manual del usuario es complementario.*

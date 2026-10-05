@@ -604,6 +604,56 @@ editable (el registro manual ya era P14 y su honestidad P19).
 
 ---
 
+### L4 — Recetas originales por metas ✅ código
+
+Segunda parte del orden aprobado (2026-10-05). El objetivo era que las recetas
+dejaran de estar "sueltas" y pasaran a estar **clasificadas por la meta que el
+usuario eligió en el registro**, sin copiar contenido de ningún medio.
+
+- ✅ **Dimensión `metas` en `Recipe`** (`lib/state/recipe_model.dart`): admite
+  **varias** metas por receta y usa **exactamente** las etiquetas que guarda
+  `AthleteProfile.metas` ('Bajar de peso', 'Definir', 'Aumentar de peso',
+  'Mantener'). Si el registro guardara otra etiqueta, el filtro no encontraría
+  nada: por eso el test obliga a que las dos listas coincidan.
+- ✅ **Catálogo ampliado de 6 a 41 recetas** (`recetas_por_meta.dart`): 35
+  recetas nuevas originales —7 desayunos, 9 almuerzos, 9 cenas, 6 pre-entreno y
+  4 de recuperación— y las 6 anteriores etiquetadas con criterio nutricional
+  (bajo hidrato → Bajar/Definir · alta proteína → Definir/Aumentar · con
+  hidratos → Mantener/Aumentar). Reparto: Bajar de peso 13 · Definir 14 ·
+  Aumentar de peso 15 · Mantener 16.
+- ✅ **Filtro por meta** (`recetasParaMeta`, `conteoPorMeta`) integrado en
+  `filtrarRecetas` con parámetro opcional: las llamadas existentes siguen igual.
+  Una meta vacía **no** esconde recetas; una meta desconocida devuelve vacío en
+  vez de inventar.
+- ✅ **UI**: sección "Para tu meta" en Recetas (las 3 primeras recetas de tu
+  meta, o el aviso de que elijas una en el Perfil) y fila de chips por meta en
+  el catálogo, cada uno **con su recuento real** ("Bajar de peso (19)").
+- ✅ **Aviso de orientación** visible en ambas pantallas: los macros son
+  estimaciones por ración y no sustituyen consejo profesional.
+- ✅ **Modelo separado** en `recipe_model.dart` (reexportado por
+  `recetas_catalog.dart`) para que el catálogo base y el ampliado no se
+  importen entre sí.
+- ✅ **200/200 tests** (`test/recetas_por_meta_test.dart` con 19 + 
+  `test/recetas_ui_test.dart` con 8), 0 issues en `flutter analyze`.
+
+**Validaciones que hacen de este lote "honesto" y no solo grande:**
+
+| Regla | Por qué importa |
+|---|---|
+| kcal ≈ 4·proteína + 4·carbo + 9·grasa (±12 %) en **todas** | Una receta con macros que no cuadran es un dato falso |
+| ≥8 recetas por meta | Un filtro que devuelve 2 resultados no sirve |
+| Todo receta tiene ingredientes con cantidad por ración | El plan semanal arma la lista de la compra con eso |
+| Sin nombres duplicados ni categorías fuera de las 4 de los filtros | Si no, filtros y favoritos se rompen |
+| Ningún texto en inglés/francés (salvo "bowl" y "smoothie") | Delata contenido copiado de un medio |
+| Las 6 recetas base conservan orden y destacada | `featuredRecipe` y el plan semanal (que busca por nombre) no cambian |
+
+**Corrección durante el lote:** el primer diseño ponía `'Ver todas (19)'` como
+acción del encabezado y **desbordaba 35 px a 2.0× de texto en 360 dp** (lo
+detectó `accessibilidad_test.dart`). Se quitó el contador: el número exacto ya
+está en cada chip, que además es donde el usuario decide.
+
+---
+
 ## 12. Principios que se mantienen
 
 - Todo funciona en el propio móvil: sin cuentas ni servidores.

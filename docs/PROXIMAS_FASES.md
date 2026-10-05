@@ -18,7 +18,7 @@
 | Verificación física del hotfix en Pixel 6a | ⏳ **en curso** | `docs/HOTFIX_UI.md` + `docs/GUIA_TESTEO_INTEGRAL.md §12-13` |
 | L2 — Agua (registro manual + meta diaria) | ✅ **completa** — registro manual P14, honestidad P19, meta editable P21 | Meta de agua real y persistida por el usuario |
 | L3 — Constructor de entrenamientos | ⏳ **pendiente** | Crear rutinas propias con descanso de 60 s |
-| L4 — Recetas originales por metas | ⏳ **pendiente** | Catálogo ~35-40 recetas propias (sin plagio) por meta |
+| L4 — Recetas originales por metas | ✅ **completa** — 41 recetas (35 nuevas originales), filtro por meta y sección "Para tu meta" | Catálogo agrupado por meta, sin plagio |
 | L5 — Gamificación Fase A + B | ✅ **completa** | XP/nivel/insignias con feedback sutil (sin modales/sonidos) |
 | Verificación física L1 | ✅ Pixel 6a (30/09, píxeles+dump) · ⏳ Xiaomi (dump MIUI) | Guía: `docs/GUIA_TESTEO_INTEGRAL.md §12` |
 
@@ -86,27 +86,41 @@ El catálogo es fijo (`workout_catalog.dart`, 4 programas). Falta la capa de cre
 
 ---
 
-## L4 — Recetas: catálogo original ampliado agrupado por metas
+## L4 — Recetas: catálogo original ampliado agrupado por metas — ✅ COMPLETA
 
-**Contexto/regla legal:** las recetas del catálogo ya existente (~10 en
-`recetas_catalog.dart`) no tienen dimensión "meta". **No se replica contenido de
-medios** (copyright): todo el catálogo ampliado es texto original de la app con
-criterios nutricionales de guías oficiales (OMS/AESAN) y aviso de contenido orientativo.
+**Cómo quedó resuelto:**
 
-- [ ] Nueva dimensión `metas` en `Recipe`: **Bajar de peso / Mantener / Ganar músculo**
-  (más de una meta por receta), mapeada honestamente a categoría y macros
-  (Low Carb raciones → perder; Alta Proteína → ganar músculo; balanceadas → mantener).
-- [ ] `filtrarRecetas` (`recetas_catalog.dart:168-181`) gana el filtro por meta.
-- [ ] Catálogo ampliado a ~35-40 recetas, todas con ingredientes por ración (requisito del
-  plan semanal de comidas existente).
-- [ ] Sección nueva "Para tu meta" en `RecipesScreen` usando la meta del perfil como filtro
-  destacado.
-- [ ] Aviso en pantalla: contenido orientativo, no sustituye consejo profesional.
-- [ ] Tests: cobertura por meta (≥8 recetas por cada una), las recetas nuevas pasan el
-  generador del plan semanal (`meal_plan.dart`) sin regresiones; analyze 0.
+- Dimensión `metas` en `Recipe` (`recipe_model.dart`), con **varias metas por
+  receta** y usando las etiquetas exactas del perfil ('Bajar de peso', 'Definir',
+  'Aumentar de peso', 'Mantener').
+- Catálogo de **41 recetas**: las 6 anteriores (mismo orden, misma destacada)
+  más **35 nuevas originales** en `recetas_por_meta.dart` — 7 desayunos, 9
+  almuerzos, 9 cenas, 6 pre-entreno y 4 de recuperación.
+- `recetasParaMeta()` / `conteoPorMeta()` y filtro por meta opcional en
+  `filtrarRecetas` (las llamadas antiguas siguen behaving igual).
+- Sección "Para tu meta" en Recetas + fila de chips por meta con recuento real
+  en el catálogo, y aviso de orientación en ambas pantallas.
 
-**Archivos previstos:** `recetas_catalog.dart`, `recipes_screen.dart`, `locale_service.dart`,
-`meal_plan.dart` (solo verificación), tests.
+**Diferencias con el plan original de esta tabla (y por qué):**
+
+| Plan original | Realizado | Motivo |
+|---|---|---|
+| Metas: "Bajar de peso / Mantener / Ganar músculo" | Las 4 etiquetas reales del perfil: 'Bajar de peso', 'Definir', 'Aumentar de peso', 'Mantener' | Son los valores que el registro guarda. Inventar un "Ganar músculo" habría dejado el filtro siempre vacío. |
+| Ampliar el mismo `recetas_catalog.dart` | Modelo en `recipe_model.dart` + catálogo ampliado en `recetas_por_meta.dart` | Evita una importación circular entre el catálogo base y el ampliado, y mantiene cada archivo revisable. |
+| ~35-40 recetas | 41 | La diferencia son las 6 recetas base, que también hubo que etiquetar. |
+| "Contenido original con criterios OMS/AESAN" | Igual, más un test que verifica coherencia kcal↔macros (±12 %) | Un test que exige que los números cuadren vale más que una cita a una guía: si una receta queda mal, falla el build. |
+
+**Regla legal mantenida:** ninguna receta procede de un medio, cookbook o web. Un
+test rejecta palabras en inglés/francés en los textos del catálogo (salvo "bowl"
+y "smoothie", que el catálogo original ya usaba y son de uso normal en español).
+
+- [x] Dimensión `metas` + filtro por meta
+- [x] Catálogo ampliado con ingredientes por ración
+- [x] Sección "Para tu meta" y chips con recuento
+- [x] Aviso de contenido orientativo
+- [x] Tests: 27 nuevos, suite 200/200, analyze 0
+- [ ] Verificación física: abrir Recetas, comprobar los chips y que la receta
+      cargue imagen y macros sin fallos
 
 ---
 
@@ -155,8 +169,8 @@ insignias. Plan completo por fases en `docs/DISENO_GAMIFICACION.md`.
 
 - `GUIA_TESTEO_MANUAL.md` (guía manual de testeo de la fase de bandas) sigue **sin
   commitear** a la espera de la aprobación del usuario.
-- **Orden vigente (aprobado por el usuario):** L2 (✅ hecho) → L4 recetas → L3
-  constructor. 8.5 (release firmado) queda bloqueado: necesita keystore propio y una
-  cuenta de Play con entidad fuera de Cuba.
+- **Orden vigente (aprobado por el usuario):** L2 (✅ hecho) → L4 recetas (✅
+  hecho) → L3 constructor (siguiente). 8.5 (release firmado) queda bloqueado:
+  necesita keystore propio y una cuenta de Play con entidad fuera de Cuba.
 - Cada lote cierra con `flutter analyze` 0 + `flutter test` verde y commit local
   **sin push**.

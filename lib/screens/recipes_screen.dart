@@ -65,6 +65,8 @@ class _RecipesScreenState extends State<RecipesScreen> {
                   const SizedBox(height: 24),
                   const _FeaturedRecipeSection(),
                   const SizedBox(height: 24),
+                  const _ParaTuMetaSection(),
+                  const SizedBox(height: 24),
                   _QuickOptionsSection(
                     onVerTodas: () => _openCatalog(
                       categoria: 'Todas',
@@ -125,13 +127,137 @@ class _RecipesScreenState extends State<RecipesScreen> {
     );
   }
 
-  /// Abre el catálogo completo filtrado según la categoría activa y la búsqueda.
-  void _openCatalog({required String categoria, required List<Recipe> recetas}) {
+  /// Abre el catálogo completo filtrado según la categoría activa, la meta y
+  /// la búsqueda. La meta se propaga para que el título del catálogo la diga.
+  void _openCatalog({
+    required String categoria,
+    required List<Recipe> recetas,
+    String meta = '',
+  }) {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => RecetasCatalogScreen(
           categoriaInicial: categoria,
           recetasIniciales: recetas,
+          metaInicial: meta,
+        ),
+      ),
+    );
+  }
+}
+
+/// L4 — Sección "Para tu meta": las recetas marcadas para la meta del perfil.
+///
+/// Si el usuario no ha elegido meta, NO se esconde el catálogo: se explica que
+/// elija una en el Perfil y se ofrece el botón de ver todas.
+class _ParaTuMetaSection extends StatelessWidget {
+  const _ParaTuMetaSection();
+
+  static const _maximo = 3;
+
+  @override
+  Widget build(BuildContext context) {
+    final strings = context.watch<LocaleService>().strings;
+    final state = context.watch<AppState>();
+    final meta = state.profile.metas.isEmpty ? '' : state.profile.meta;
+    final recetas = recetasParaMeta(catalog, meta);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SectionHeader(
+          title: strings.recParaTuMeta,
+          // Sin contador en la acción: a 2.0× de texto en 360 dp un
+          // "Ver todas (19)" desborda la fila (comprobado en
+          // accessibilidad_test.dart). El recuento exacto está en los chips.
+          actionLabel: strings.recVerTodas,
+          uppercase: true,
+          onAction: meta.isEmpty
+              ? () => _abrirTodas(context)
+              : () => _abrirPorMeta(context, meta),
+        ),
+        const SizedBox(height: 12),
+        if (meta.isEmpty)
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: _avisoDecoration(),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(Icons.flag_outlined, size: 18, color: AppColors.primary),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    strings.recSinMeta,
+                    style: AppType.bodySm.copyWith(
+                      color: AppColors.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          )
+        else if (recetas.isEmpty)
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: _avisoDecoration(),
+            child: Text(
+              strings.recSinResultados,
+              style: AppType.bodySm.copyWith(color: AppColors.onSurfaceVariant),
+            ),
+          )
+        else ...[
+          Text(
+            strings.recParaTuMetaAviso(strings.metaName(meta)),
+            style: AppType.labelSm.copyWith(color: AppColors.onSurfaceVariant),
+          ),
+          const SizedBox(height: 12),
+          for (final receta in recetas.take(_maximo)) ...[
+            _RecipeCard(recipe: receta),
+            const SizedBox(height: 16),
+          ],
+          // Aviso de orientación: los macros son estimaciones, no consejo médico.
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(Icons.info_outline, size: 14, color: AppColors.outline),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  strings.recOrientativo,
+                  style: AppType.labelSm.copyWith(color: AppColors.outline),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ],
+    );
+  }
+
+  BoxDecoration _avisoDecoration() => BoxDecoration(
+        color: AppColors.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(16),
+      );
+
+  void _abrirPorMeta(BuildContext context, String meta) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => RecetasCatalogScreen(
+          categoriaInicial: 'Todas',
+          recetasIniciales: catalog,
+          metaInicial: meta,
+        ),
+      ),
+    );
+  }
+
+  void _abrirTodas(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => RecetasCatalogScreen(
+          categoriaInicial: 'Todas',
+          recetasIniciales: catalog,
         ),
       ),
     );
@@ -841,10 +967,14 @@ class RecetasCatalogScreen extends StatefulWidget {
     super.key,
     required this.categoriaInicial,
     required this.recetasIniciales,
+    this.metaInicial = '',
   });
 
   final String categoriaInicial;
   final List<Recipe> recetasIniciales;
+
+  /// Meta con la que se abre el catálogo (L4). Vacía = sin filtro de meta.
+  final String metaInicial;
 
   @override
   State<RecetasCatalogScreen> createState() => _RecetasCatalogScreenState();
@@ -852,22 +982,44 @@ class RecetasCatalogScreen extends StatefulWidget {
 
 class _RecetasCatalogScreenState extends State<RecetasCatalogScreen> {
   late String _categoria;
+  late String _meta;
   String _query = '';
+
+  /// Categorías ofrecidas por los filtros. Solo estas cuatro: cualquier otra
+  /// no sería alcanzable desde un chip.
+  static const _categorias = [
+    'Todas',
+    'Alta Proteína',
+    'Low Carb',
+    'Pre-entreno',
+    'Smoothies',
+  ];
 
   @override
   void initState() {
     super.initState();
     _categoria = widget.categoriaInicial;
+    _meta = widget.metaInicial;
   }
 
   @override
   Widget build(BuildContext context) {
     final strings = context.watch<LocaleService>().strings;
-    final recetas = filtrarRecetas(widget.recetasIniciales, _query, _categoria);
+    final recetas = filtrarRecetas(
+      widget.recetasIniciales,
+      _query,
+      _categoria,
+      meta: _meta,
+    );
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: Text(strings.recTodosLosPlatos, style: AppType.headlineSm.copyWith(fontWeight: FontWeight.w800)),
+        title: Text(
+          _meta.isEmpty
+              ? strings.recTodosLosPlatos
+              : strings.recMetaSeleccionada(strings.metaName(_meta)),
+          style: AppType.headlineSm.copyWith(fontWeight: FontWeight.w800),
+        ),
       ),
       body: SafeArea(
         child: Column(
@@ -894,7 +1046,7 @@ class _RecetasCatalogScreenState extends State<RecetasCatalogScreen> {
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 children: [
-                  for (final c in const ['Todas', 'Alta Proteína', 'Low Carb', 'Pre-entreno', 'Smoothies'])
+                  for (final c in _categorias)
                     Padding(
                       padding: const EdgeInsets.only(right: 8),
                       child: _Chip(
@@ -906,13 +1058,59 @@ class _RecetasCatalogScreenState extends State<RecetasCatalogScreen> {
                 ],
               ),
             ),
+            // L4: filtro por meta. "Todas las metas" devuelve el catálogo
+            // completo en vez de esconder recetas sin clasificar.
+            SizedBox(
+              height: 32,
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: _Chip(
+                      label: strings.recMetaTodas,
+                      selected: _meta.isEmpty,
+                      onTap: () => setState(() => _meta = ''),
+                    ),
+                  ),
+                  for (final m in metasCatalogo)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: _Chip(
+                        label: '${strings.metaName(m)} '
+                            '(${conteoPorMeta(widget.recetasIniciales)[m] ?? 0})',
+                        selected: m == _meta,
+                        onTap: () => setState(() => _meta = m),
+                      ),
+                    ),
+                ],
+              ),
+            ),
             const SizedBox(height: 8),
             Expanded(
               child: recetas.isEmpty
                   ? Center(
-                      child: Text(
-                        strings.recSinResultados,
-                        style: TextStyle(color: AppColors.outline),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 32),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              strings.recSinResultados,
+                              textAlign: TextAlign.center,
+                              style: TextStyle(color: AppColors.outline),
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              strings.recOrientativo,
+                              textAlign: TextAlign.center,
+                              style: AppType.labelSm.copyWith(
+                                color: AppColors.outline,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     )
                   : ListView.separated(

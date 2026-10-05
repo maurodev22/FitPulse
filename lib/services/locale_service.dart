@@ -379,6 +379,26 @@ class AppStrings {
   String get recBuscarCatalogo => _t('Buscar en el catálogo...', 'Search the catalog...');
   String get recSinResultados => _t('Sin resultados para tu búsqueda', 'No results for your search');
 
+  // ---- L4: recetas por meta ----
+  String get recParaTuMeta => _t('Para tu meta', 'For your goal');
+  String get recPorMeta => _t('Por meta', 'By goal');
+  String get recMetaTodas => _t('Todas las metas', 'All goals');
+  String recMetaSeleccionada(String meta) =>
+      _t('Recetas para "$meta"', 'Recipes for "$meta"');
+  String get recOrientativo => _t(
+      'Contenido orientativo: los valores son estimaciones por ración y no sustituyen '
+      'el consejo de un profesional de la alimentación.',
+      'Guidance only: values are per-serving estimates and do not replace advice from a '
+      'nutrition professional.');
+  String recParaTuMetaAviso(String meta) => _t(
+      'Mostrando recetas marcadas para tu meta "$meta".',
+      'Showing recipes tagged for your goal "$meta".');
+  String get recSinMeta => _t(
+      'No has elegido meta en el Perfil. Elige una y aquí verás las recetas pensadas '
+      'para ella; mientras tanto puedes ver todas.',
+      'You have not chosen a goal in Profile. Choose one and the recipes made for it will '
+      'appear here; meanwhile you can see them all.');
+
   // ---- Plan de comidas ----
   String get mpTabPlan => _t('Plan semanal', 'Weekly plan');
   String get mpTabLista => _t('Lista de la compra', 'Shopping list');
