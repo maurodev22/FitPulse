@@ -52,6 +52,9 @@ class AppState extends ChangeNotifier {
   // Fase 2: historial de sesiones, puntos y retos.
   static const _historyKey = 'fitpulse_workout_history_v1';
   static const _xpKey = 'fitpulse_xp_v1';
+  // Fase D: XP real otorgado por día natural (para el resumen honesto
+  // "Tu semana" — solo cuenta XP que de verdad se concedió).
+  static const _xpDiasKey = 'fitpulse_xp_dias_v1';
   static const _retoKey = 'fitpulse_reto_v1';
 
   // Fase 3: recompensa del anuncio (una vez por día, guardada por fecha).
@@ -587,6 +590,10 @@ class AppState extends ChangeNotifier {
   int get xp => _xp;
   int _xp = 0;
 
+  /// Fase D: XP REAL otorgado por día (clave `YYYY-MM-DD` → puntos). No es
+  /// una estimación: cada punto aquí se concedió de verdad en ese día.
+  Map<String, int> xpPorDia = {};
+
   /// Nivel actual: sube cada 300 puntos.
   int get nivel => 1 + _xp ~/ 300;
 
@@ -655,6 +662,62 @@ class AppState extends ChangeNotifier {
       if (!s.fecha.isBefore(inicio)) dias.add(_dayKey(s.fecha));
     }
     return dias.length;
+  }
+
+  // =====================================================================
+  //  Fase D — resumen honesto "Tu semana" (datos reales de la semana
+  //  pasada: lunes a domingo anterior). Nada se estima ni se inventa.
+  // =====================================================================
+
+  /// Lunes (medianoche) de la semana que contiene [d].
+  DateTime _lunesDe(DateTime d) {
+    final dia = DateTime(d.year, d.month, d.day);
+    return dia.subtract(Duration(days: dia.weekday - 1));
+  }
+
+  /// Rango [lunes de la semana pasada, lunes de esta semana) medio abierto.
+  ({DateTime inicio, DateTime fin}) get _rangoSemanaAnterior {
+    final inicioActual = _lunesDe(DateTime.now());
+    return (
+      inicio: inicioActual.subtract(const Duration(days: 7)),
+      fin: inicioActual,
+    );
+  }
+
+  /// Días distintos con al menos una sesión la semana pasada (D1).
+  int get diasActivosSemanaPasada {
+    final r = _rangoSemanaAnterior;
+    final dias = <DateTime>{};
+    for (final s in historial) {
+      final d = DateTime(s.fecha.year, s.fecha.month, s.fecha.day);
+      if (!d.isBefore(r.inicio) && d.isBefore(r.fin)) dias.add(d);
+    }
+    return dias.length;
+  }
+
+  /// Nº real de sesiones completadas la semana pasada (D1).
+  int get sesionesSemanaPasada {
+    final r = _rangoSemanaAnterior;
+    var total = 0;
+    for (final s in historial) {
+      final d = DateTime(s.fecha.year, s.fecha.month, s.fecha.day);
+      if (!d.isBefore(r.inicio) && d.isBefore(r.fin)) total++;
+    }
+    return total;
+  }
+
+  /// XP REAL otorgado durante la semana pasada, según `xpPorDia`. Es 0 si el
+  /// registro diario aún no cubría esa semana (lejos de inventar un número).
+  int get xpSemanaPasada {
+    final r = _rangoSemanaAnterior;
+    var total = 0;
+    for (final e in xpPorDia.entries) {
+      final d = DateTime.tryParse(e.key);
+      if (d != null && !d.isBefore(r.inicio) && d.isBefore(r.fin)) {
+        total += e.value;
+      }
+    }
+    return total;
   }
 
   /// Días (L..D) de la semana actual con al menos una sesión, para la UI.
@@ -756,7 +819,7 @@ class AppState extends ChangeNotifier {
       calorias: calorias,
     ));
     historial.sort((a, b) => b.fecha.compareTo(a.fecha));
-    _xp += 50;
+    _otorgarXp(50);
     _trace('entrenamiento', 'sesion', detail: nombre);
     notifyListeners();
     await _persistHistorial();
@@ -765,7 +828,7 @@ class AppState extends ChangeNotifier {
     // Reto completado → premio y avance al siguiente objetivo (hasta 7).
     if (_retoObjetivo < 7 && _rachaActual() >= _retoObjetivo) {
       _retoObjetivo = _retoObjetivo == 3 ? 5 : 7;
-      _xp += 100;
+      _otorgarXp(100);
       _trace('entrenamiento', 'reto', detail: '$_retoObjetivo días');
       notifyListeners();
       await _prefs?.setInt(_retoKey, _retoObjetivo);
@@ -785,7 +848,7 @@ class AppState extends ChangeNotifier {
     final hoy = _dayKey(DateTime.now());
     if ((_prefs?.getString(_recompensaAnuncioKey)) == hoy) return false;
     await _prefs?.setString(_recompensaAnuncioKey, hoy);
-    _xp += ptsRecompensaAnuncio;
+    _otorgarXp(ptsRecompensaAnuncio);
     notifyListeners();
     await _persistXp();
     _trace('recompensa', 'anuncio', detail: '+$ptsRecompensaAnuncio XP');
@@ -820,7 +883,7 @@ class AppState extends ChangeNotifier {
     final hoy = _dayKey(DateTime.now());
     if ((_prefs?.getString(_recompensaDiaIdealKey)) == hoy) return false;
     await _prefs?.setString(_recompensaDiaIdealKey, hoy);
-    _xp += ptsDiaIdeal;
+    _otorgarXp(ptsDiaIdeal);
     notifyListeners();
     await _persistXp();
     _trace('recompensa', 'dia_ideal', detail: '+$ptsDiaIdeal XP');
@@ -840,6 +903,18 @@ class AppState extends ChangeNotifier {
       }
     }
     _xp = _prefs?.getInt(_xpKey) ?? 0;
+    try {
+      final rawDias = _prefs?.getString(_xpDiasKey);
+      if (rawDias != null && rawDias.isNotEmpty) {
+        final decoded = jsonDecode(rawDias) as Map<String, dynamic>;
+        xpPorDia = {
+          for (final e in decoded.entries)
+            if (e.value is int) e.key: e.value as int,
+        };
+      }
+    } catch (_) {
+      xpPorDia = {};
+    }
     _retoObjetivo = _prefs?.getInt(_retoKey) ?? 3;
   }
 
@@ -852,6 +927,23 @@ class AppState extends ChangeNotifier {
 
   Future<void> _persistXp() async {
     await _prefs?.setInt(_xpKey, _xp);
+    await _prefs?.setString(_xpDiasKey, jsonEncode(xpPorDia));
+  }
+
+  /// Suma [puntos] al XP total y al registro por día (Fase D). Antes cada
+  /// sitio hacía `_xp +=` directamente y el día perdía la traza; ahora el
+  /// resumen "Tu semana" puede mostrar XP real de la semana pasada.
+  void _otorgarXp(int puntos) {
+    _xp += puntos;
+    final dia = _dayKey(DateTime.now());
+    xpPorDia[dia] = (xpPorDia[dia] ?? 0) + puntos;
+    // Tope de 90 días: el resumen semanal solo mira la semana pasada.
+    if (xpPorDia.length > 90) {
+      final claves = xpPorDia.keys.toList()..sort();
+      for (var i = 0; i < claves.length - 90; i++) {
+        xpPorDia.remove(claves[i]);
+      }
+    }
   }
 
   // =====================================================================
@@ -1025,6 +1117,7 @@ class AppState extends ChangeNotifier {
       'favoritas': favoritas.toList(),
       'meta_agua': _metaAguaLitros,
       'dias_agua': diasAguaCumplida.map((d) => d.toIso8601String()).toList(),
+      'xp_por_dia': Map.of(xpPorDia),
       'rutinas': rutinas.map((r) => r.toJson()).toList(),
       'pasos_base_fecha': _prefs?.getString(_pasosBaseDateKey),
     };
@@ -1111,6 +1204,17 @@ class AppState extends ChangeNotifier {
       );
     }
 
+    // Fase D: XP otorgado por día del backup (resumen "Tu semana").
+    final rawXpDias = snapshot['xp_por_dia'];
+    if (rawXpDias is Map) {
+      final mapa = <String, int>{};
+      for (final e in rawXpDias.entries) {
+        if (e.value is int) mapa['${e.key}'] = e.value as int;
+      }
+      xpPorDia = mapa;
+      await _prefs?.setString(_xpDiasKey, jsonEncode(xpPorDia));
+    }
+
     // L3: rutinas propias del backup. Si el backup es anterior (sin la clave), se
     // conservan las rutinas que ya hubiera en el dispositivo en vez de borrarlas.
     final rawRutinas = snapshot['rutinas'];
@@ -1136,6 +1240,7 @@ class AppState extends ChangeNotifier {
     favoritas.clear();
     historial = <WorkoutSession>[];
     _xp = 0;
+    xpPorDia = {};
     _retoObjetivo = 3;
     _metaAguaLitros = metaAguaInicial;
     diasAguaCumplida = [];

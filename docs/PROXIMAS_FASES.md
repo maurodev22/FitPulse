@@ -3,8 +3,8 @@
 > Documento de trabajo del roadmap aprobado (`docs/PLAN_AGREGAR_CORREGIR.md` y
 > `docs/DISENO_GAMIFICACION.md`). **L1 (las 3 correcciones de UI) está completada**
 > (commit `fb8cdec`: filtro de recetas, pestañas de período y "Ver todo").
-> **L2, L4, L3 y L5 están completas** (A+B+C: la Fase C de insignias está resuelta la
-> sección de abajo), y el cierre UI/UX de los 8 puntos pedidos
+> **L2, L4, L3 y L5 están completas** (A+B+C+D: las Fases C de insignias y D "Tu
+> semana" están resueltas en las secciones de abajo), y el cierre UI/UX de los 8 puntos pedidos
 > está en la sección de abajo (2026-10-06). Este archivo lista qué sigue, con
 > tareas accionables y su estado.
 > Reglas del proyecto que se mantienen: 100 % local/offline, datos de salud nunca
@@ -22,7 +22,7 @@
 | L2 — Agua (registro manual + meta diaria) | ✅ **completa** — registro manual P14, honestidad P19, meta editable P21 | Meta de agua real y persistida por el usuario |
 | L3 — Constructor de entrenamientos | ✅ **completa** — catálogo único de 34 ejercicios, "Mis rutinas" con editor y entrada desde Home | Crear rutinas propias con descanso de 60 s |
 | L4 — Recetas originales por metas | ✅ **completa** — 41 recetas (35 nuevas originales), filtro por meta y sección "Para tu meta" | Catálogo agrupado por meta, sin plagio |
-| L5 — Gamificación Fase A + B + C | ✅ **completa** | XP/nivel/insignias con feedback sutil y **catálogo completo de 9 insignias** (siluetas bloqueadas + fecha real de desbloqueo) |
+| L5 — Gamificación Fase A + B + C + D | ✅ **completa** | XP/nivel/insignias con feedback sutil, **catálogo completo de 9 insignias** (siluetas bloqueadas + fecha real) y **tarjeta "Tu semana"** con datos reales de la semana pasada |
 | Verificación física L1 | ✅ Pixel 6a (30/09, píxeles+dump) · ⏳ Xiaomi (dump MIUI) | Guía: `docs/GUIA_TESTEO_INTEGRAL.md §12` |
 
 ---
@@ -165,8 +165,9 @@ insignias. Plan completo por fases en `docs/DISENO_GAMIFICACION.md`.
   sin vibración, niveles nunca bloquean funcionalidad, logros solo con datos reales.
 - [x] Tests: economía de XP (premios, nivel, persistencia, export/import); analyze 0.
 - [x] **Fase C — insignias (2026-10-06):** detalle en la sección de abajo.
-- [ ] Fases D (ritual semanal), E (toques de contexto) y F (opcional) solo tras aprobar la
-  Fase C (sujeto al visto bueno del usuario).
+- [x] **Fase D — ritual semanal (2026-10-06):** detalle en la sección de abajo.
+- [ ] Fases E (toques de contexto) y F (opcional) solo tras aprobar la Fase D
+  (sujeto al visto bueno del usuario).
 
 **Archivos previstos:** `app_state.dart`, `progress_screen.dart`, `home_screen.dart`,
 `workout_player_screen.dart`, `locale_service.dart`, tests.
@@ -203,9 +204,36 @@ bloqueada (silueta gris con candado + condición escrita, sin contadores de prog
 
 ---
 
+## Fase D — Ritual semanal sin presión (2026-10-06) ✅ código
+
+> Objetivo (`docs/DISENO_GAMIFICACION.md`, FASE D): una vista "a vuelo de
+> pájaro" de la semana pasada que motive sin meter prisa. Ninguna notificación
+> nueva: solo el toggle local de avisos ya existente.
+
+- [x] **Nuevo dato honesto persistido: XP por día** (`xpPorDia`,
+  `fitpulse_xp_dias_v1`, tope 90 días). Antes cada premio hacía `_xp +=`
+  directo y el día perdía la traza; ahora `_otorgarXp(puntos)` (centraliza los
+  4 puntos: sesión 50, reto 100, anuncio, día ideal 25) también anota el día.
+  Viaja en export/import y se limpia con `resetTrasBorrado`.
+- [x] **D1 — Tarjeta "Tu semana" en Home** (informativa, no push): aparece solo
+  si hubo actividad la semana pasada y muestra datos REALES
+  (`diasActivosSemanaPasada` · `sesionesSemanaPasada` · `xpSemanaPasada`,
+  lunes→domingo anterior): "6 días · 4 sesiones · 350 XP". Sin botones de
+  compartir. Si no hay actividad, no aparece (nada de "0 días").
+- [x] **D2 — Reto semanal opcional:** línea discreta dentro de la tarjeta
+  "Vas 3 de 5 días" (racha viva vs objetivo 3→5→7 de la mecánica existente),
+  solo si hay racha viva. Sin penalización al fallar.
+- [x] **D3 — Cero lenguaje negativo:** barrido en `lib/`: no existe copy de
+  "racha perdida"/"te quedan X horas"; el único "penaliza" está en Copy: "el
+  día libre NO penaliza tu racha" (afirmativo, se mantiene).
+- [x] Tests: `test/tu_semana_test.dart` (8) → suite **288/288** verdes y
+  `flutter analyze` 0 issues.
+
+---
+
 ## Cierre UI/UX — 8 puntos pedidos (2026-10-06) ✅ código
 
-Detalle de `PLAN.md §11.7`. Estado: **280/280 tests**, `flutter analyze` 0 issues.
+Detalle de `PLAN.md §11.7`. Estado: **288/288 tests**, `flutter analyze` 0 issues.
 
 - [x] **Avatar** siempre cuadrado (`lib/utils/foto_avatar.dart`): recorte del lado más
   corto centrado + respiro 2 % hacia **dentro**; `null` si no hay recorte fiable.

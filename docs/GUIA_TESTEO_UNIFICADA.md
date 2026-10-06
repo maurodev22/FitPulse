@@ -5,15 +5,16 @@ Una sola guía para probar la app completa, de principio a fin, sin tener que co
 - **App:** FitPulse 1.0.0+1 (`com.fitpulse.app`)
 - **Plataforma:** Android (Pixel 6a como referencia)
 - **Idiomas:** español e inglés
-- **Estado del código en esta revisión:** `flutter analyze` 0 issues, `flutter test` 280/280 verdes
-- **Último lote:** cierre UI/UX de los 8 puntos pedidos (avatar cuadrado, toast de
+- **Estado del código en esta revisión:** `flutter analyze` 0 issues, `flutter test` 288/288 verdes
+- **Último lote:** Fase C de insignias (9, con fecha real) + Fase D "Tu semana"; el
+  cierre UI/UX de los 8 puntos previos (avatar cuadrado, toast de
   registro, "Guardar" fuera del AppBar, imágenes propias de las 41 recetas,
   estadísticas al pulsar la racha, sin campanas muertas, meta de pasos y sin
   Premium de prueba)
 
 Esta guía es el recorrido principal. `GUIA_TESTEO_COMPLETA.md` conserva el detalle técnico por fases (P1…P21, L2–L4); `GUIA_TESTEO_INTEGRAL.md`, `GUIA_TESTEO_MANUAL.md` y `GUIA_TESTEO_FASE1.md` quedan como material histórico.
 
-**Alcance:** 14 fases (A–N), 61 pasos de verificación (A1–N9) más 7 escenarios de datos límite, y 70 líneas de checklist PASA/FALLA. Cada paso dice **qué hacer**, **qué debes ver** y **qué cuenta como FALLA**.
+**Alcance:** 14 fases (A–N), 62 pasos de verificación (A1–N9) más 7 escenarios de datos límite, y 71 líneas de checklist PASA/FALLA. Cada paso dice **qué hacer**, **qué debes ver** y **qué cuenta como FALLA**.
 
 ---
 
@@ -148,6 +149,14 @@ Cubre EULA, registro y configuración inicial. Si la app ya tiene perfil, ve dir
 **Qué debes ver:** chip de racha con los días actuales, retos disponibles y el XP total.
 
 **FALLA si:** la racha se reinicia sola; el XP no cuadra con la suma de premios.
+
+### B8. Tu semana (Fase D)
+
+**Qué hacer:** con actividad la semana pasada (sesión con fecha en el lunes→domingo anterior), baja en Home hasta el final.
+
+**Qué debes ver:** la tarjeta **"Tu semana"** con datos reales de la semana pasada ("6 días · 4 sesiones · 350 XP"); con racha viva, la línea discreta **"Vas 3 de 5 días"**. Sin actividad la semana pasada, la tarjeta **no aparece**.
+
+**FALLA si:** la tarjeta aparece sin actividad previa, los números no coinciden con las sesiones/XP reales de esa semana, o muestra lenguaje negativo ("te quedan…", "racha perdida").
 
 ---
 
@@ -537,6 +546,7 @@ B4  Agua: suma, origen visible, meta editable y persistente [ ]
 B5  Entrenamiento de hoy visible con botón Comenzar ......... [ ]
 B6  Entrada "Mis rutinas" visible y sin cortes ............. [ ]
 B7  Racha, retos y XP cuadran .............................. [ ]
+B8  "Tu semana" con datos reales de la semana pasada ...... [ ]
 C1  Panel de evolución visible sin scroll obligatorio ...... [ ]
 C2  Pestañas Semanal / Mensual / Año cambian datos ......... [ ]
 C3  Historial de sesiones con datos reales .................. [ ]

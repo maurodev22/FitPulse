@@ -732,7 +732,7 @@ así que las 41 recetas se generaban bien en disco y salían con caja roja
 "Unable to load asset" al ejecutar. Arreglado con la entrada explícita en
 `pubspec.yaml` + guardián en `test/recetas_imagenes_test.dart`.
 
-- ✅ **280/280 tests**, `flutter analyze` **0 issues**.
+- ✅ **288/288 tests**, `flutter analyze` **0 issues**.
 
 ---
 
@@ -753,6 +753,22 @@ así que las 41 recetas se generaban bien en disco y salían con caja roja
 
 ---
 
+## 11.9 Fase D de gamificación — ritual semanal sin presión (2026-10-06)
+
+> Continúa el plan (`docs/DISENO_GAMIFICACION.md`, FASE D) tras la Fase C (§11.8).
+> La tarjeta semanal sale con datos reales de la semana pasada y NO añade
+> notificaciones push nuevas (solo el toggle local de avisos ya existente).
+
+| # | Registro |
+|---|---|
+| 1 | **XP por día persistido** (`xpPorDia`, `fitpulse_xp_dias_v1`, tope 90): `_otorgarXp(puntos)` centraliza los 4 premios (sesión 50, reto 100, anuncio, día ideal 25) y anota el día real del otorgamiento. Viaja en export/import; se limpia en `resetTrasBorrado`. |
+| 2 | **D1 — Tarjeta "Tu semana"** en Home (informativa): solo con actividad la semana pasada; muestra días · sesiones · XP reales (lunes→domingo anterior). Sin botones de compartir. |
+| 3 | **D2 — Reto discreto**: línea "Vas 3 de 5 días" (racha viva vs objetivo 3→5→7) solo con racha viva; sin penalización. |
+| 4 | **D3 — Cero lenguaje negativo**: barrido en `lib/`: no hay copy de "racha perdida"/"te quedan X horas"; "no penaliza" solo aparece en Copy afirmativo del plan de comidas. |
+| 5 | Tests: `test/tu_semana_test.dart` (8) → **288/288 verdes**; `flutter analyze` 0 issues; accesibilidad 2.0× cubierta (la tarjeta solo usa Column de textos que envuelven). |
+
+---
+
 ## 12. Principios que se mantienen
 
 - Todo funciona en el propio móvil: sin cuentas ni servidores.
@@ -765,7 +781,7 @@ así que las 41 recetas se generaban bien en disco y salían con caja roja
 > Actualizado 2026-10-06 (orden aprobado por el usuario: **L2 → L4 → L3**; iOS
 > descartado). **Los tres lotes están hechos** y con ellos el cierre UI/UX de los
 > 8 puntos pedidos (§11.7) y la **Fase C de insignias** (§11.8). El estado real del
-> código es **280/280 tests y `flutter analyze` limpio**.
+> código es **288/288 tests y `flutter analyze` limpio** (Fase C §11.8 y Fase D §11.9).
 
 1. **~~L4 — Recetas por metas~~ ✅ hecho**: dimensión `metas` en `Recipe` con las
    4 etiquetas reales del perfil, filtro por meta + sección "Para tu meta" y

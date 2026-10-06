@@ -282,6 +282,20 @@ class AppStrings {
   // ---- Home ----
   String get homeResumenHoy => _t('Resumen de hoy', 'Today overview');
   String get homeVerDetalles => _t('Ver detalles', 'View details');
+  // Fase D — resumen "Tu semana": semana pasada con datos reales, informativo.
+  String get hoTuSemana => _t('Tu semana', 'Your week');
+  String hoTuSemanaResumen(int dias, int sesiones, int xp) {
+    final diasTxt = dias == 1 ? _t('1 día', '1 day') : _t('$dias días', '$dias days');
+    final sesionesTxt = sesiones == 1
+        ? _t('1 sesión', '1 session')
+        : _t('$sesiones sesiones', '$sesiones sessions');
+    if (xp <= 0) return _t('$diasTxt · $sesionesTxt', '$diasTxt · $sesionesTxt');
+    return _t('$diasTxt · $sesionesTxt · $xp XP', '$diasTxt · $sesionesTxt · $xp XP');
+  }
+
+  /// D2: línea discreta del reto existente (3→5→7 días), sin presión.
+  String hoTuSemanaReto(int racha, int objetivo) =>
+      _t('Vas $racha de $objetivo días', "You're on day $racha of $objetivo");
   String get homeDetalleHoy => _t('Detalle del día de hoy', "Today's detail");
   String homePasosMeta(int n) => _t('Meta: $n pasos', 'Goal: $n steps');
   String homePasosDeHoy(int n) => _t('$n pasos de hoy', '$n steps today');

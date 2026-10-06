@@ -177,6 +177,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   _buildResumenHoy(),
                   const SizedBox(height: 24),
                   _buildEntrenamientoHoy(),
+                  const SizedBox(height: 24),
+                  _buildTuSemana(),
                   const SizedBox(height: 16),
                 ],
               ),
@@ -184,6 +186,57 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  /// Fase D (D1): tarjeta "Tu semana" — resumen informativo de la semana
+  /// pasada con datos reales ("6 días · 4 sesiones · 350 XP"). Solo aparece
+  /// si hubo actividad la semana anterior; sin botones de compartir ni
+  /// lenguaje negativo (D3): si no hay racha viva, no se menciona.
+  Widget _buildTuSemana() {
+    final state = context.watch<AppState>();
+    final strings = context.watch<LocaleService>().strings;
+    final dias = state.diasActivosSemanaPasada;
+    if (dias == 0) return const SizedBox.shrink();
+    final sesiones = state.sesionesSemanaPasada;
+    final xp = state.xpSemanaPasada;
+    final rachaViva = state.rachaDias;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SectionHeader(title: strings.hoTuSemana),
+        const SizedBox(height: 12),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: AppColors.surfaceLowest,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                strings.hoTuSemanaResumen(dias, sesiones, xp),
+                style: AppType.bodyMd.copyWith(
+                  color: AppColors.onSurface,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              // D2: la mecánica del reto (3→5→7 días) se expone de forma
+              // discreta y solo si hay racha viva; nunca con presión.
+              if (rachaViva > 0) ...[
+                const SizedBox(height: 6),
+                Text(
+                  strings.hoTuSemanaReto(rachaViva, state.retoObjetivo),
+                  style: AppType.bodySm.copyWith(color: AppColors.primary),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ],
     );
   }
 
