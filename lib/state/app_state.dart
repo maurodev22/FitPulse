@@ -79,6 +79,11 @@ class AppState extends ChangeNotifier {
   static const _pesoKey = 'fitpulse_peso_v1';
   static const _repsKey = 'fitpulse_reps_v1';
 
+  // Primera apertura de la app en este dispositivo (base de "días desde que
+  // instalaste"). Se escribe una vez y nunca se sobrescribe.
+  static const _instalacionKey = 'fitpulse_instalado_v1';
+  DateTime? _instaladoEn;
+
   // L3: rutinas propias creadas por el usuario.
   static const _rutinasKey = 'fitpulse_rutinas_v1';
 
@@ -313,7 +318,17 @@ class AppState extends ChangeNotifier {
 
     // Fase 2: historial de sesiones, puntos y reto actual.
     _cargarHistorial();
-  _cargarRutinas();
+    _cargarRutinas();
+
+    // Primera apertura: se anota para poder decir "días desde que instalaste".
+    final isoInstalacion = _prefs!.getString(_instalacionKey);
+    if (isoInstalacion == null) {
+      final ahora = DateTime.now();
+      _instaladoEn = ahora;
+      await _prefs!.setString(_instalacionKey, ahora.toIso8601String());
+    } else {
+      _instaladoEn = DateTime.tryParse(isoInstalacion) ?? DateTime.now();
+    }
 
     // Fase 9: registros de peso semanal y repeticiones por ejercicio.
     _cargarRegistros();
@@ -581,6 +596,23 @@ class AppState extends ChangeNotifier {
 
   /// Días consecutivos de entrenamiento actuales (racha viva).
   int get rachaDias => _rachaActual();
+
+  /// Días transcurridos desde la primera vez que se abrió la app en este
+  /// dispositivo. Es el único "desde que instalaste" honesto que se puede
+  /// medir sin Connectivity: la app no conoce la fecha en que Play Store la
+  /// descargó, solo cuándo se usó por primera vez. Se guarda una sola vez y no
+  /// se vuelve a mover (sobrevive a reinicios y actualizaciones).
+  int get diasDesdeInstalacion {
+    final desde = _instaladoEn;
+    if (desde == null) return 0;
+    final ahora = DateTime.now();
+    // Comparación por día natural: instalar a las 23:50 y abrir al día
+    // siguiente a las 00:05 ya son 2 días de uso, no 0.
+    final dias = DateTime(ahora.year, ahora.month, ahora.day)
+        .difference(DateTime(desde.year, desde.month, desde.day))
+        .inDays;
+    return dias < 0 ? 0 : dias;
+  }
 
   /// Intensidad del plan adaptativo según el cumplimiento de esta semana:
   /// 5+ días → Alta, 3-4 → Media, 0-2 → Baja.

@@ -6,8 +6,10 @@ import 'package:image/image.dart' as img;
 
 /// Recorte del avatar del perfil (Fase 9 — pulido de la foto).
 ///
-/// El avatar se dibuja dentro de un círculo con `BoxFit.cover`. Dos problemas
-/// comunes se corrigen aquí:
+/// El avatar se dibuja dentro de un círculo con `BoxFit.cover`. Por eso la
+/// foto presentada se devuelve **siempre cuadrada**: un recorte rectangular
+/// deja ver sus bordes rectos dentro del círculo. Dos problemas comunes se
+/// corrigen aquí:
 ///
 /// 1. Un encuadre casi uniforme alrededor de la persona (capturas, fondos
 ///    lisos) se percibe como un "borde cuadrado" dentro del círculo y se
@@ -38,15 +40,30 @@ String? recuadrarFoto(String fotoBase64) {
 
   final ancho = imagen.width;
   final alto = imagen.height;
-  // Pequeño respiro (2 %) para que la persona no quede pegada al borde del
-  // círculo tras el recorte.
-  final respiro = (ancho * 0.02).round().clamp(2, 12);
-  final x = (recorte.x - respiro).clamp(0, ancho - 1);
-  final y = (recorte.y - respiro).clamp(0, alto - 1);
-  final w = (recorte.width + respiro * 2).clamp(1, ancho - x);
-  final h = (recorte.height + respiro * 2).clamp(1, alto - y);
+  // Si el recorte detectado es la imagen entera, no hay nada que arreglar.
+  if (recorte.width >= ancho && recorte.height >= alto) return null;
 
-  if (w == ancho && h == alto) return null;
+  // El avatar se dibuja SIEMPRE dentro de un círculo, así que la foto
+  // presentada tiene que ser cuadrada. Si se devuelve un rectángulo,
+  // `BoxFit.cover` deja ver los bordes rectos de la foto dentro del círculo:
+  // es el defecto de "un cuadrado dentro de un círculo". Cuadrar aquí (el lado
+  // más corto del recorte, centrado) elimina esa clase de defecto de raíz y
+  // además garantiza que el marco detectado desaparezca por completo.
+  final ladoMax = math.min(recorte.width, recorte.height);
+  final cx = recorte.x + (recorte.width / 2).round();
+  final cy = recorte.y + (recorte.height / 2).round();
+
+  // Pequeño respiro para que la persona no quede pegada al borde del círculo.
+  // Se aplica HACIA DENTRO a propósito: hacia fuera volvería a exponer el
+  // marco que el recorte acaba de quitar.
+  final respiro = (ladoMax * 0.02).round().clamp(2, 12);
+  final lado = ladoMax - respiro * 2;
+  if (lado < 24) return null; // Recorte absurdo: mejor la foto original.
+
+  final x = (cx - (lado / 2).round()).clamp(0, ancho - 1);
+  final y = (cy - (lado / 2).round()).clamp(0, alto - 1);
+  final w = lado.clamp(1, ancho - x);
+  final h = lado.clamp(1, alto - y);
 
   final recortada = img.copyCrop(imagen, x: x, y: y, width: w, height: h);
   return base64Encode(img.encodePng(recortada));

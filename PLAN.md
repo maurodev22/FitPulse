@@ -707,6 +707,35 @@ editado a mano. Ahora comprueba el tipo antes de usar el dato.
 
 ---
 
+## 11.7 Fase 11 — Cierre UI/UX: 8 puntos del usuario (2026-10-06) ✅ código
+
+Lote de pulido sobre todo lo anterior, pedido punto por punto. Regla de oro del
+lote: **ninguna pantalla puede mentir al usuario** (un botón que no hace nada es
+peor que un botón que no existe).
+
+| # | Pedido | Qué se hizo |
+|---|---|---|
+| 1 | Avatar "cuadrado dentro del círculo" | `recuadrarFoto` devuelve **siempre** cuadrado (lado más corto, centrado) y el respiro (2 %, clamp 2–12 px) se aplica **hacia dentro**: hacia fuera volvía a exponer el marco que se estaba quitando. `null` si el recorte detectado es la imagen entera. |
+| 2 | Toast en el registro | `_validate()` muestra `SnackBar` flotante **"Falta por llenar: campo"** con el primer campo que falta. Cadena `regFaltaPorLlenar`. |
+| 3 | Quitar "Guardar" del AppBar | La `TextButton` del editor de rutinas se elimina; queda solo la del pie. |
+| 4 | Fotos genéricas en las 41 recetas | Ilustraciones planas **propias** generadas con PIL (`work/gen_recetas.py`), 41 WebP 900×520 (~0,21 MB total, 3,5–7,5 KB c/u). Recipiente + color base + toppings derivados del nombre, determinístico por semilla. `imagenDeReceta(nombre)` es el único resolvedor; `Recipe.imagen` pasa a nullable con getter `imagenTarjeta`. |
+| 5 | Diálogo al pulsar "1 día" | El chip de racha pasa a `InkWell` → `mostrarEstadisticas` con racha actual, mejor racha, días desde instalación (`fitpulse_instalado_v1`), sesiones y nivel, todo del historial real. |
+| 6 | Qué hace la campana | **Nada**: `onPressed: () {}` decorativo en Inicio/Progreso/Consejos. Las 3 campanas muertas se **eliminaron** junto con `_IconButtonWithBadge`. |
+| 7 | Etiqueta de pasos en Editar metas | `pfMetaPasos` → "1000 pasos mínimo". |
+| 8 | Quitar Premium de prueba | `_buildPremium()` es solo la tarjeta de anuncios; sin `FilledButton.tonal` ni `pfPremiumNota`. En el reproductor el botón queda tras `kDebugMode` y en release el diálogo dice `wpPremiumCoachNoDisponible`. El **toggle de anuncios** se queda: es consentimiento real del usuario, no una prueba. |
+| 9 | (hallazgo del mismo lote) Enlaces con flecha que no navegaban | Tres elementos con apariencia de botón no hacían nada: `SectionHeader` "Ver plan" en Recetas (sin `onAction`, pero con chevron y color de enlace), la tarjeta de **pasos** de Inicio y la fila de **macros** del Día ideal (`onTap: () {}`, que sí hacía ripple). Los tres abren ahora el destino real: el plan semanal y el detalle del día. Barra de sondeo: ningún `onPressed`/`onTap`/`onChanged` vacío en `lib/`. |
+
+**Trampa real encontrada (y ahora con test):** en Flutter, una declaración de
+directorio con `/` final solo copia los archivos **directos** de esa carpeta.
+`assets/images/` metía los 4 imágenes antiguas pero **no** `assets/images/recetas/`,
+así que las 41 recetas se generaban bien en disco y salían con caja roja
+"Unable to load asset" al ejecutar. Arreglado con la entrada explícita en
+`pubspec.yaml` + guardián en `test/recetas_imagenes_test.dart`.
+
+- ✅ **266/266 tests**, `flutter analyze` **0 issues**.
+
+---
+
 ## 12. Principios que se mantienen
 
 - Todo funciona en el propio móvil: sin cuentas ni servidores.
@@ -716,10 +745,10 @@ editado a mano. Ahora comprueba el tipo antes de usar el dato.
 
 ## 13. Próximos pasos recomendados
 
-> Actualizado 2026-10-05 (orden aprobado por el usuario: **L2 → L4 → L3**; iOS
-> descartado). **Los tres lotes están hechos**, así que con esto queda cerrado el
-> roadmap L2–L5. El estado real del código es **260/260 tests y `flutter analyze`
-> limpio**.
+> Actualizado 2026-10-06 (orden aprobado por el usuario: **L2 → L4 → L3**; iOS
+> descartado). **Los tres lotes están hechos** y con ellos el cierre UI/UX de los
+> 8 puntos pedidos (§11.7). El estado real del código es **266/266 tests y
+> `flutter analyze` limpio**.
 
 1. **~~L4 — Recetas por metas~~ ✅ hecho**: dimensión `metas` en `Recipe` con las
    4 etiquetas reales del perfil, filtro por meta + sección "Para tu meta" y
@@ -733,10 +762,11 @@ editado a mano. Ahora comprueba el tipo antes de usar el dato.
    y texto) y entrada desde Home. Detalle en
    `docs/PROXIMAS_FASES.md §L3`.
 3. **Verificación física acumulada en el Pixel 6a** (`install -r`, nunca desinstalar):
-   seguir **`docs/GUIA_TESTEO_UNIFICADA.md`** (fases A–M, 56 pasos, 61 líneas de
-   checklist PASA/FALLA). Cubre, entre otros, P17 · P18 · P19 · P20 · P21 · **L4** ·
-   **L3**; el detalle técnico por requisito sigue en `GUIA_TESTEO_COMPLETA.md`
-   §23–§29. Los reportes P11–P13 del usuario siguen sin llegar.
+   seguir **`docs/GUIA_TESTEO_UNIFICADA.md`** (fases A–N, 61 pasos, 70 líneas de
+   checklist PASA/FALLA). Cubre, entre otros, P17 · P18 · P19 · P20 · P21 ·
+   **L4** · **L3** y el **cierre UI/UX (N1–N8)**; el detalle técnico por requisito
+   sigue en `GUIA_TESTEO_COMPLETA.md` §23–§29. Los reportes P11–P13 del usuario
+   siguen sin llegar.
 4. **8.3 UMP**: el código está listo pero no verificable sin red a Google y una cuenta
    AdMob real.
 5. **8.5 Release firmado** (bloqueado): requiere keystore propio + `app-release.aab` +

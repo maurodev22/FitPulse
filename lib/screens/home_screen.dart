@@ -170,7 +170,7 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const _DiaIdealCard(),
+                  _DiaIdealCard(onVerDetalle: _mostrarDetalleHoy),
                   const SizedBox(height: 24),
                   const EstadoSaludCard(),
                   const SizedBox(height: 24),
@@ -210,7 +210,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 steps: pasosDisponible ? state.pasosHoy : -1,
                 goal: state.profile.pasosMeta,
                 available: pasosDisponible,
-                onTap: () {},
+                // Tenía `onTap: () {}`: la tarjeta hacía el ripple y no abría
+                // nada. Ahora abre el mismo detalle del día que el "Ver
+                // detalles" de la cabecera de esta sección.
+                onTap: _mostrarDetalleHoy,
               ),
             ),
           ],
@@ -540,49 +543,7 @@ class _HomeHeader extends StatelessWidget {
           ),
           const SizedBox(width: 8),
           RachaChip(racha: state.rachaDias, borde: true),
-          const SizedBox(width: 4),
-          _IconButtonWithBadge(
-            icon: Icons.notifications_outlined,
-            onTap: () {},
-          ),
         ],
-      ),
-    );
-  }
-}
-
-class _IconButtonWithBadge extends StatelessWidget {
-  const _IconButtonWithBadge({required this.icon, required this.onTap});
-
-  final IconData icon;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      customBorder: const CircleBorder(),
-      child: Padding(
-        padding: const EdgeInsets.all(8),
-        child: Stack(
-          clipBehavior: Clip.none,
-          children: [
-            Icon(icon, size: 22, color: AppColors.onSurfaceVariant),
-            Positioned(
-              right: 4,
-              top: 3,
-              child: Container(
-                width: 8,
-                height: 8,
-                decoration: BoxDecoration(
-                  color: AppColors.error,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: AppColors.surface, width: 1.5),
-                ),
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }
@@ -883,7 +844,13 @@ class _HeroInfoChip extends StatelessWidget {
 }
 
 class _DiaIdealCard extends StatefulWidget {
-  const _DiaIdealCard();
+  const _DiaIdealCard({required this.onVerDetalle});
+
+  /// Abre el detalle del día (pasos, kcal, agua, pulso).
+  ///
+  /// La fila de macros tenía `onTap: () {}` y no hacía nada; ahora comparte el
+  /// mismo destino que el resto de la tarjeta.
+  final Future<void> Function() onVerDetalle;
 
   @override
   State<_DiaIdealCard> createState() => _DiaIdealCardState();
@@ -989,7 +956,7 @@ class _DiaIdealCardState extends State<_DiaIdealCard> {
             title: strings.homeMacros,
             subtitle: '${state.caloriasConsumidas.round()} / ${state.caloriasMeta.round()} kcal',
             done: metaOk,
-            onTap: () {},
+            onTap: widget.onVerDetalle,
           ),
           const SizedBox(height: 8),
           _DiaIdealItem(

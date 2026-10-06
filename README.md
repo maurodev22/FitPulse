@@ -60,11 +60,12 @@ dispositivo (sin cuentas ni servidores).
 | Hotfix | ✅ | Sin "Explorar categorías" ni "Nutrición & Vitalidad"; "Evolución & Rendimiento" en 1 línea; sin coaches ni "Cerrar sesión"; `**` del manual limpiados |
 | 1 | ✅ (código) | Datos reales del cuerpo: pasos reales (pedometer) + **Health Connect solo lectura** (pulso, peso, grasa, sueño, agua, gasto activo; permiso por métrica; minSdk 26), reset diario por fecha, analytics local anónimo. "Tiempo activo" se muestra "—" en Android (el tipo EXERCISE_TIME del plugin solo existe en iOS). Falta prueba manual |
 | 2 | ✅ (código) | Catálogo de 4 entrenamientos + **reproductor con temporizador**; sesiones reales persistidas; **racha real**; **retos 3/5/7 días**; **XP/niveles**; **plan adaptativo** que recomienda el programa según tu semana. Falta prueba manual |
-| 3 | ✅ (código) | Anuncios de AdMob con **IDs de prueba** (banner todas las pestañas + recompensado +25 PTs 1/día con consentimiento local) + **Premium "Quitar anuncios"** (modo prueba; el cobro real requiere entidad fuera de Cuba) + **app ligera** (R8 en release; **medido: 55.6 MB universal / 22.5 MB arm64** vs 178 MB debug). Falta prueba manual |
+| 3 | ✅ (código) | Anuncios de AdMob con **IDs de prueba** (banner todas las pestañas + recompensado +25 PTs 1/día con consentimiento local) + **Premium "Quitar anuncios"** (sin botón de prueba en la UI: la activación de prueba solo existe en debug; el cobro real requiere entidad fuera de Cuba) + **app ligera** (R8 en release; **medido: 55.6 MB universal / 22.5 MB arm64** vs 178 MB debug). Falta prueba manual |
 | 4 | ✅ (código) | Plan semanal de comidas según el perfil (7 días Lunes→Domingo, sin datos inventados: solo recetas reales del catálogo, totales por día = suma exacta, cobertura honesta de la meta) + **lista de la compra** agrupada por ingrediente + **día libre 🍕 el domingo que no penaliza la racha**. Pendiente prueba manual |
 | 5 | ✅ (código) | Entrenador con cámara: ML Kit Pose Detection on-device (sin conexión tras descarga única del modelo) — esqueleto en vivo, feedback por ángulos reales (rodilla/codo/plancha/ritmo), contador de reps con histéresis; estados honestos (permiso/cámara/modelo no disponible); permiso `CAMERA` + `MethodChannel` propio en `MainActivity.kt`; mirrors Maven Aliyun para AndroidX Camera + ML Kit. Pendiente prueba manual |
 | 6 | ✅ (código) | Widget de home (AppWidget nativo): pasos reales + calorías (gasto activo o "—") + racha real; **avisos locales por tipo**: 💧 hidratación cada hora y 🏃 racha en riesgo 20:00 con texto de racha real, toggles independientes en Perfil, permiso único al arrancar, desugaring + mirrors en buildscripts de plugins. Pendiente prueba manual |
 | 7 | ✅ (código) | Modo oscuro (Sistema/Claro/Oscuro persistido + brillo del sistema), contraste WCAG AA (test automático), tamaño accesible (0 desbordes a 2.0×), micro-animaciones y i18n es/en completo en vivo. Pendiente PASA/FALLA manual |
+| L2 · L4 · L3 · L5 + cierre UI/UX | ✅ (código) | **Agua** con registro manual y meta editable (L2); **41 recetas originales por meta** con ilustración propia por receta (L4); **constructor de rutinas** con catálogo único de 34 ejercicios (L3); **gamificación** Fase A+B (L5); y el **cierre de 8 puntos** de UI/UX: avatar siempre cuadrado, aviso "Falta por llenar", un solo "Guardar", chip de racha con estadísticas, sin campanas decorativas ni Premium de prueba. 266/266 tests |
 | 8 | ⏳ | Privacidad GDPR (export/import cifrado + borrado total), política de privacidad es/en, consentimiento publicitario UMP, aviso de IA, release firmado + Data Safety (publicar bloqueado desde Cuba) |
 
 ## Entorno
@@ -128,11 +129,14 @@ test/
   pose_coach_test.dart         # Lógica pura del entrenador de postura (Fase 5)
   theme_test.dart              # Contraste WCAG AA de ambas paletas + activación oscura (Fase 7)
   accessibilidad_test.dart     # Sin desbordes a escala de texto 2.0× en todas las secciones (Fase 7)
+  recetas_imagenes_test.dart   # Las 41 recetas tienen su ilustración propia, sin huérfanas
+                               # ni duplicadas, y el pubspec declara la subcarpeta
 
 assets/
   docs/                        # Manual de usuario es/en (markdown local)
   fonts/                       # Plus Jakarta Sans + Inter
   images/                      # Imágenes de marca (WebP)
+  images/recetas/              # Ilustraciones propias de las 41 recetas (WebP, ~0,2 MB)
 
 tool/
   generate_assets.dart         # Script generador de assets
@@ -142,7 +146,7 @@ tool/
 
 - [`PLAN.md`](PLAN.md) — plan de evolución por fases con estado auditado (fuente de verdad).
 - [`FUNCIONALIDADES.md`](FUNCIONALIDADES.md) — control de funcionalidades presentes vs. pendientes.
-- [`docs/GUIA_TESTEO_UNIFICADA.md`](docs/GUIA_TESTEO_UNIFICADA.md) — **recorrido de testeo manual recomendado**: 13 fases (A–M), 52 pasos de verificación y 61 líneas de checklist PASA/FALLA.
+- [`docs/GUIA_TESTEO_UNIFICADA.md`](docs/GUIA_TESTEO_UNIFICADA.md) — **recorrido de testeo manual recomendado**: 14 fases (A–N), 61 pasos de verificación y 70 líneas de checklist PASA/FALLA.
 - [`docs/GUIA_REVISION_UIUX.md`](docs/GUIA_REVISION_UIUX.md) — revisión **UI/UX** en la misma sesión: tokens de diseño, 7 dimensiones, 12 pantallas y scorecard.
 - [`docs/GUIA_TESTEO_COMPLETA.md`](docs/GUIA_TESTEO_COMPLETA.md) — detalle técnico por requisito (P1…P21, L2–L4) y notas de pixel-dumping.
 - [`GUIA_TESTEO_FASE1.md`](GUIA_TESTEO_FASE1.md) — guía de prueba manual en dispositivo (fases 1–9b, histórica).

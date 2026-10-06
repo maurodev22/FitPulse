@@ -960,11 +960,6 @@ class _ProgressHeader extends StatelessWidget {
             ),
           ),
           RachaChip(racha: state.rachaDias, borde: true),
-          const SizedBox(width: 4),
-          IconButton(
-            onPressed: () {},
-            icon: Icon(Icons.notifications_outlined, size: 22, color: AppColors.onSurfaceVariant),
-          ),
         ],
       ),
     );

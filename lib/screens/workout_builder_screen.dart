@@ -453,18 +453,9 @@ class _RutinaEditorScreenState extends State<RutinaEditorScreen> {
           esNueva ? s.rutNueva : s.rutEditar,
           style: AppType.headlineSm.copyWith(fontWeight: FontWeight.w800),
         ),
-        actions: [
-          TextButton(
-            onPressed: _guardar,
-            child: Text(
-              s.rutGuardar,
-              style: AppType.labelLg.copyWith(
-                color: AppColors.primary,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
-        ],
+        // Sin acción "Guardar" arriba: el editor ya tiene su botón al pie,
+        // junto al resumen de la rutina. Dos "Guardar" idénticos en la misma
+        // pantalla obligaban a decidir cuál tocar sin diferencia real.
       ),
       body: SafeArea(
         child: ListView(

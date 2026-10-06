@@ -581,6 +581,17 @@ class _FeaturedRecipeSection extends StatelessWidget {
         SectionHeader(
           title: strings.recRecomendadaDefinir,
           actionLabel: strings.recVerPlan,
+          // Este "Ver plan" llevaba flecha y color de enlace pero no tenía
+          // `onAction`: al pulsarlo no pasaba nada. Ahora abre el plan semanal,
+          // la misma pantalla que la tarjeta de al lado.
+          onAction: () {
+            final perfil = context.read<AppState>().profile;
+            Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => MealPlanScreen(plan: generarPlanSemanal(perfil)),
+              ),
+            );
+          },
           uppercase: true,
         ),
         const SizedBox(height: 12),
@@ -613,7 +624,7 @@ class _RecipeCard extends StatelessWidget {
             child: Stack(
               fit: StackFit.expand,
               children: [
-                Image.asset(recipe.imagen, fit: BoxFit.cover),
+                Image.asset(recipe.imagenTarjeta, fit: BoxFit.cover),
                 Positioned(
                   top: 10,
                   left: 10,
@@ -862,7 +873,7 @@ class _QuickRecipeCard extends StatelessWidget {
               ClipRRect(
                 borderRadius: BorderRadius.circular(12),
                 child: Image.asset(
-                  recipe.imagen,
+                  recipe.imagenTarjeta,
                   fit: BoxFit.cover,
                   width: double.infinity,
                   height: 96,

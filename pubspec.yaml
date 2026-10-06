@@ -97,7 +97,11 @@ flutter:
           weight: 700
 
   assets:
+    # `assets/images/` solo incluye los archivos directos de esa carpeta: las
+    # subcarpetas hay que declararlas aparte (si no, "recetas/" no se copia al
+    # bundle y las tarjetas de receta salen en blanco).
     - assets/images/
+    - assets/images/recetas/
     - assets/docs/
 
   # To add assets to your application, add an assets section, like this:

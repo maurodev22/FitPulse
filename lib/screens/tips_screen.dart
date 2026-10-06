@@ -192,11 +192,6 @@ class _TipsHeader extends StatelessWidget {
             ),
           ),
           RachaChip(racha: context.watch<AppState>().rachaDias, borde: true),
-          const SizedBox(width: 4),
-          IconButton(
-            onPressed: () {},
-            icon: Icon(Icons.notifications_outlined, size: 22, color: AppColors.onSurfaceVariant),
-          ),
         ],
       ),
     );

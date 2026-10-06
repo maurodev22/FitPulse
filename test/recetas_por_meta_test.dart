@@ -107,7 +107,8 @@ void main() {
         expect(r.minutos, greaterThan(0));
         expect(r.minutos, lessThanOrEqualTo(60), reason: r.nombre);
         expect(r.descripcion.length, greaterThan(30), reason: r.nombre);
-        expect(r.imagen, startsWith('assets/images/'), reason: r.nombre);
+        expect(r.imagenTarjeta, startsWith('assets/images/recetas/'),
+            reason: r.nombre);
       }
     });
 

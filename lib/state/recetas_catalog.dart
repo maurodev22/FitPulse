@@ -34,7 +34,6 @@ const recetasBase = <Recipe>[
     minutos: 25,
     descripcion:
         'Rico en omega 3 y proteína magra. Diseñado para favorecer la recuperación muscular y mantener masa magra.',
-    imagen: 'assets/images/workout.webp',
     ingredientes: [
       Ingrediente('Salmón', '150 g'),
       Ingrediente('Quinoa cocida', '120 g'),
@@ -56,7 +55,6 @@ const recetasBase = <Recipe>[
     minutos: 15,
     descripcion:
         'Tortitas esponjosas con avena integral y proteína whey para empiezar el día con energía sostenida.',
-    imagen: 'assets/images/core.webp',
     ingredientes: [
       Ingrediente('Avena integral', '80 g'),
       Ingrediente('Proteína whey', '1 scoop (30 g)'),
@@ -77,7 +75,6 @@ const recetasBase = <Recipe>[
     minutos: 10,
     descripcion:
         'Pechuga a la plancha con tomate, pepino, aceitunas y queso feta. Fresca, ligera y muy saciante.',
-    imagen: 'assets/images/profile.webp',
     ingredientes: [
       Ingrediente('Pechuga de pollo', '150 g'),
       Ingrediente('Tomate', '1 unidad'),
@@ -98,7 +95,6 @@ const recetasBase = <Recipe>[
     minutos: 5,
     descripcion:
         'Espinaca, plátano, jengibre y proteína vegetal. Combustible listo 30 minutos antes de entrenar.',
-    imagen: 'assets/images/workout.webp',
     ingredientes: [
       Ingrediente('Espinacas', '1 puñado'),
       Ingrediente('Plátano', '1 unidad'),
@@ -118,7 +114,6 @@ const recetasBase = <Recipe>[
     minutos: 20,
     descripcion:
         'Tortilla integral con pollo, aguacate y espinacas. Ideal para cerrar la ventana anabólica post-HIIT.',
-    imagen: 'assets/images/core.webp',
     ingredientes: [
       Ingrediente('Tortilla integral', '1 unidad'),
       Ingrediente('Pechuga de pollo', '120 g'),
@@ -138,7 +133,6 @@ const recetasBase = <Recipe>[
     minutos: 8,
     descripcion:
         'Avena remojada en yogur griego con semillas de chía. Reposición muscular mientras duermes.',
-    imagen: 'assets/images/profile.webp',
     ingredientes: [
       Ingrediente('Avena integral', '60 g'),
       Ingrediente('Yogur griego', '150 g'),

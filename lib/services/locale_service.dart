@@ -489,6 +489,15 @@ class AppStrings {
 
   // ---- Progreso ----
   String get prEvolucion => _t('Evolución & Rendimiento', 'Evolution & Performance');
+  // Diálogo que se abre al pulsar el chip de racha.
+  String get prEstadisticasGenerales =>
+      _t('Estas son tus estadísticas generales', 'Here are your general statistics');
+  String get prDiasDesdeInstalacion =>
+      _t('Días desde que instalaste la aplicación', 'Days since you installed the app');
+  String get prDiasDesdeInstalacionCorto =>
+      _t('Días usando la app', 'Days using the app');
+  String get prMejorRacha => _t('Mejor racha', 'Best streak');
+  String get prRachaActual => _t('Racha actual', 'Current streak');
   String prRachaNivel(int racha, int nivel) =>
       _t('Racha actual: $racha días · Nivel $nivel',
           'Current streak: $racha days · Level $nivel');
@@ -683,7 +692,9 @@ class AppStrings {
       'This button enables Premium locally to test that ads are hidden.');
   String get pfMetasActividad => _t('Metas de Actividad', 'Activity Goals');
   String get pfEditarMetas => _t('Editar metas', 'Edit goals');
-  String get pfMetaPasos => _t('Meta de pasos diarios', 'Daily steps goal');
+  // Etiqueta corta a propósito: "Meta de pasos diarios" era tan larga que en el
+// diálogo de metas ocupaba dos líneas y no se leía igual que la de calorías.
+String get pfMetaPasos => _t('1000 pasos mínimo', '1000 steps minimum');
   String get pfMetaCalorias => _t('Meta de calorías diarias (kcal)', 'Daily calories goal (kcal)');
   String get pfMetaPasosMin => _t(
       'La meta de pasos debe estar entre 1000 y 100000',
@@ -814,6 +825,9 @@ class AppStrings {
   String get regImcBadgeMuyAlto => _t('MUY ALTO', 'VERY HIGH');
   String get regCreaPerfil => _t('CREA TU PERFIL', 'CREATE YOUR PROFILE');
   String get regMetaAtLeast => _t('Selecciona al menos una meta principal', 'Select at least one main goal');
+  // Encabeza el aviso emergente que dice QUÉ campo falta (con su mayúscula,
+  // se lee como "Falta por llenar: Nombre Completo").
+  String get regFaltaPorLlenar => _t('Falta por llenar:', 'Please fill in:');
   List<String> get regSexos => const ['Femenino', 'Masculino', 'Otro'];
 
   // ---- Reproductor de entrenamiento ----
@@ -832,6 +846,14 @@ class AppStrings {
       'On-camera AI posture coaching is a FitPulse Premium feature: 100 % '
       'on-device analysis (the camera never records or uploads anything). '
       'Enable Premium to unlock it.');
+  // Versión honesta para la app publicada: no hay pago todavía, así que no se
+  // ofrece un botón que simule una compra.
+  String get wpPremiumCoachNoDisponible => _t(
+      'La corrección de postura con cámara todavía no está disponible: '
+      'llegará con FitPulse Premium. Todo lo demás de este entrenamiento '
+      'funciona con normalidad.',
+      'On-camera posture coaching is not available yet: it will arrive with '
+      'FitPulse Premium. Everything else in this workout works normally.');
   String get wpSaltar => _t('Saltar', 'Skip');
   String get wpReanudar => _t('Reanudar', 'Resume');
   String get wpPausar => _t('Pausar', 'Pause');

@@ -5,12 +5,15 @@ Una sola guía para probar la app completa, de principio a fin, sin tener que co
 - **App:** FitPulse 1.0.0+1 (`com.fitpulse.app`)
 - **Plataforma:** Android (Pixel 6a como referencia)
 - **Idiomas:** español e inglés
-- **Estado del código en esta revisión:** `flutter analyze` 0 issues, `flutter test` 260/260 verdes
-- **Último commit:** `7d73db0` (L3: constructor de rutinas propias)
+- **Estado del código en esta revisión:** `flutter analyze` 0 issues, `flutter test` 266/266 verdes
+- **Último lote:** cierre UI/UX de los 8 puntos pedidos (avatar cuadrado, toast de
+  registro, "Guardar" fuera del AppBar, imágenes propias de las 41 recetas,
+  estadísticas al pulsar la racha, sin campanas muertas, meta de pasos y sin
+  Premium de prueba)
 
 Esta guía es el recorrido principal. `GUIA_TESTEO_COMPLETA.md` conserva el detalle técnico por fases (P1…P21, L2–L4); `GUIA_TESTEO_INTEGRAL.md`, `GUIA_TESTEO_MANUAL.md` y `GUIA_TESTEO_FASE1.md` quedan como material histórico.
 
-**Alcance:** 13 fases (A–M), 52 pasos de verificación (A1–M5) más 7 escenarios de datos límite, y 61 líneas de checklist PASA/FALLA. Cada paso dice **qué hacer**, **qué debes ver** y **qué cuenta como FALLA**.
+**Alcance:** 14 fases (A–N), 61 pasos de verificación (A1–N9) más 7 escenarios de datos límite, y 70 líneas de checklist PASA/FALLA. Cada paso dice **qué hacer**, **qué debes ver** y **qué cuenta como FALLA**.
 
 ---
 
@@ -435,7 +438,85 @@ Prueba estos escenarios; todos deben avisar en vez de inventar o romperse:
 
 ---
 
-## 14. Checklist final
+## 14. Fase N — Cierre UI/UX (8 puntos)
+
+Comprueba los ocho cambios del último lote. Si uno falla, se anota aparte: son correcciones de interfaz, no de datos.
+
+### N1. Avatar sin marco
+
+**Qué hacer:** Perfil → toca la foto → elige una imagen que tenga fondo blanco o un marco.
+
+**Qué debes ver:** el avatar recortado **cuadrado**, centrado en el círculo, sin ninguna banda blanca pegada al borde del círculo.
+
+**FALLA si:** se ve un cuadrado blanco dentro del círculo; el recorte sale descentrado; la foto elegida no se refleja.
+
+### N2. Aviso del registro
+
+**Qué hacer:** en una instalación limpia, llega al paso de metas y pulsa **Continuar** sin rellenar nada.
+
+**Qué debes ver:** un aviso flotante **"Falta por llenar: …"** con el nombre del primer campo que falta.
+
+**FALLA si:** no aparece ningún aviso, la app avanza igual, o el mensaje sale en otro idioma.
+
+### N3. Editor de rutinas sin "Guardar" arriba
+
+**Qué hacer:** Perfil → Mis rutinas → crea o edita una rutina.
+
+**Qué debes ver:** en la barra superior **no** hay botón "Guardar"; la única opción de guardar es la de abajo al final de la pantalla.
+
+**FALLA si:** quedan dos botones de guardar, o desaparece también el de abajo.
+
+### N4. Cada receta con su dibujo
+
+**Qué hacer:** recorre el catálogo completo de recetas y abre varios detalles.
+
+**Qué debes ver:** cada receta con **su propia** ilustración (plato distinto según el nombre), nunca repetida en dos recetas seguidas.
+
+**FALLA si:** hay una caja roja o un icono roto de imagen; dos recetas distintas muestran el mismo dibujo; todas usan la misma foto genérica.
+
+### N5. Estadísticas desde la racha
+
+**Qué hacer:** en Inicio o Progreso, pulsa el chip de la racha.
+
+**Qué debes ver:** un diálogo con racha actual, mejor racha, días desde la instalación, sesiones y nivel, con números coherentes con tu historial.
+
+**FALLA si:** el chip no responde; el diálogo sale vacío; algún número es imposible (por ejemplo, más días de racha que días desde la instalación).
+
+### N6. Sin campanas que no hacen nada
+
+**Qué hacer:** recorre Inicio, Progreso y Consejos.
+
+**Qué debes ver:** **no** debe quedar ningún icono de campana. Tampoco en Perfil hay botón de Premium de prueba.
+
+**FALLA si:** queda una campana que no abre nada al tocarla, o un botón que active el "Premium de prueba".
+
+### N7. Meta de pasos legible
+
+**Qué hacer:** Perfil → Editar metas → busca la meta de pasos.
+
+**Qué debes ver:** la etiqueta **"1000 pasos mínimo"**.
+
+**FALLA si:** dice "1" o cualquier otro número.
+
+### N8. Ajustes de anuncios sin Premium de prueba
+
+**Qué hacer:** revisa la tarjeta de avisos/configuración de la app en Perfil → Ajustes.
+
+**Qué debes ver:** solo el interruptor real de anuncios; no hay botón de "probar Premium".
+
+**FALLA si:** aparece un botón de activación de Premium marcado como prueba.
+
+### N9. Los enlaces con flecha sí navegan
+
+**Qué hacer:** en Recetas toca **"Ver plan"** de la cabecera "Recomendada para Definir"; en Inicio toca la **tarjeta de pasos** y la fila **Macros** del Día ideal.
+
+**Qué debes ver:** "Ver plan" abre el plan semanal; las dos filas de Inicio abren el detalle del día (pasos, kcal, agua, pulso).
+
+**FALLA si:** alguno hace el efecto de pulsación y no abre nada, o queda una flecha verde de enlace que no responde.
+
+---
+
+## 15. Checklist final
 
 Marca cada línea. **Cualquier FALLA bloquea la entrega.**
 
@@ -501,11 +582,20 @@ M2  Tema oscuro sin textos invisibles ...................... [ ]
 M3  Rotación sin perder datos escritos ..................... [ ]
 M4  es/en x claro/oscuro combinados ....................... [ ]
 M5  Sin acumulación de pantallas en el "atrás" ............ [ ]
+N1  Avatar cuadrado, sin banda blanca en el círculo ....... [ ]
+N2  Registro: aviso "Falta por llenar: ..." ............... [ ]
+N3  Editor de rutinas: un solo botón Guardar (el de abajo)  [ ]
+N4  41 recetas con ilustración propia y sin repetir ....... [ ]
+N5  Chip de racha abre estadísticas coherentes ........... [ ]
+N6  Ninguna campana muerta ni botón de Premium prueba .... [ ]
+N7  Meta de pasos: "1000 pasos mínimo" ................... [ ]
+N8  Ajustes de anuncios sin botón de Premium ............. [ ]
+N9  "Ver plan", pasos y macros abren su destino .......... [ ]
 ```
 
 ---
 
-## 15. Restaurar el estado
+## 16. Restaurar el estado
 
 Al terminar, deja el móvil como estaba:
 
@@ -515,7 +605,7 @@ Al terminar, deja el móvil como estaba:
 
 ---
 
-## 16. No es un bug
+## 17. No es un bug
 
 No abras incidencia por estos casos:
 
@@ -531,7 +621,7 @@ No abras incidencia por estos casos:
 
 ---
 
-## 17. Bloqueos que dependen de cuentas o del cliente
+## 18. Bloqueos que dependen de cuentas o del cliente
 
 Estos no se prueban desde el móvil:
 
@@ -541,7 +631,7 @@ Estos no se prueban desde el móvil:
 
 ---
 
-## 18. Plantilla de reporte
+## 19. Plantilla de reporte
 
 Copia y rellena solo lo que falló.
 

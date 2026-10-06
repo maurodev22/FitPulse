@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -273,7 +274,13 @@ class _WorkoutPlayerScreenState extends State<WorkoutPlayerScreen> {
   }
 
   /// P13: el entrenador con cámara es Premium. Sin Premium se muestra el
-  /// candado y al tocarlo se explica cómo activarlo (modo prueba).
+  /// candado y al tocarlo se explica la situación.
+  ///
+  /// En la app publicada NO hay forma de regalarse Premium: el botón de
+  /// activación solo existe en compilaciones de desarrollo, para poder probar
+  /// el entrenador con cámara antes de que exista el pago. En release el
+  /// diálogo dice la verdad (la función todavía no está disponible) en vez de
+  /// fingir una compra.
   Future<void> _mostrarAvisoPremium() async {
     final strings = context.read<LocaleService>().strings;
     final config = context.read<ConfigService>();
@@ -289,7 +296,9 @@ class _WorkoutPlayerScreenState extends State<WorkoutPlayerScreen> {
           ),
         ),
         content: Text(
-          strings.wpPremiumCoachMensaje,
+          kDebugMode
+              ? strings.wpPremiumCoachMensaje
+              : strings.wpPremiumCoachNoDisponible,
           style: AppType.bodyMd.copyWith(color: AppColors.onSurfaceVariant),
         ),
         actions: [
@@ -300,17 +309,18 @@ class _WorkoutPlayerScreenState extends State<WorkoutPlayerScreen> {
               style: TextStyle(color: AppColors.onSurfaceVariant),
             ),
           ),
-          FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: AppColors.onPrimary,
+          if (kDebugMode)
+            FilledButton(
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: AppColors.onPrimary,
+              ),
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: Text(
+                strings.pfActivarPremium,
+                style: const TextStyle(fontWeight: FontWeight.w700),
+              ),
             ),
-            onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: Text(
-              strings.pfActivarPremium,
-              style: const TextStyle(fontWeight: FontWeight.w700),
-            ),
-          ),
         ],
       ),
     );

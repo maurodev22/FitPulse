@@ -82,19 +82,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildPremium() {
+  /// Tarjeta de anuncios.
+///
+/// Ya NO hay botón de "Activar Premium de prueba": la fase final está cerca y
+/// un interruptor que regala lo de pago es exactamente lo que no debe verse en
+/// una app que se va a publicar. Premium se comprará cuando exista el pago real.
+/// El interruptor de anuncios se queda porque ese sí es un consentimiento
+/// real del usuario y tiene que poder apagarse.
+Widget _buildPremium() {
     final config = context.watch<ConfigService>();
     final strings = context.watch<LocaleService>().strings;
-    final activo = config.premiumEnabled;
     return SettingsCard(
       children: [
-        SettingsCardTitle(icon: Icons.workspace_premium, title: strings.pfPremium),
-        const SizedBox(height: 8),
-        Text(
-          activo ? strings.pfPremiumActivo : strings.pfPremiumQuitar,
-          style: AppType.bodySm.copyWith(color: AppColors.onSurfaceVariant),
+        SettingsCardTitle(
+          icon: Icons.campaign_outlined,
+          title: strings.pfAnunciosHabilitados,
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 8),
         // Consentimiento local de anuncios (Fase 3): el usuario puede apagarlos.
         ToggleRow(
           icon: Icons.campaign_outlined,
@@ -102,21 +106,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
           subtitle: strings.pfAnunciosSub,
           value: config.adsEnabled,
           onChanged: (v) => config.setAds(v),
-        ),
-        const SizedBox(height: 12),
-        SizedBox(
-          width: double.infinity,
-          child: FilledButton.tonal(
-            onPressed: () => config.setPremium(!activo),
-            child: Text(
-              activo ? strings.pfDesactivarPremium : strings.pfActivarPremium,
-            ),
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          strings.pfPremiumNota,
-          style: AppType.bodySm.copyWith(color: AppColors.outline),
         ),
       ],
     );

@@ -26,9 +26,12 @@ void main() {
       expect(recortada, isNotNull, reason: 'debe detectar y recortar el marco');
       final resultado = img.decodeImage(base64Decode(recortada!));
       expect(resultado, isNotNull);
-      // Con el respiro del 2 % (8 px) a cada lado.
-      expect(resultado!.width, inInclusiveRange(320, 340));
-      expect(resultado.height, inInclusiveRange(240, 260));
+      // El avatar se dibuja en un círculo, así que la foto presentada es
+      // CUADRADA: el lado corto del contenido (241 px) menos el respiro
+      // interior, porque hacia fuera volvería a exponer el marco.
+      expect(resultado!.width, inInclusiveRange(220, 245));
+      expect(resultado.height, resultado.width,
+          reason: 'recorte cuadrado: sin esto se ve un cuadrado dentro del círculo');
 
       // La persona (azul) debe estar presente tras el recorte.
       var azules = 0;
@@ -39,6 +42,17 @@ void main() {
         }
       }
       expect(azules, greaterThan(0));
+
+      // Ni un solo pixel del marco blanco puede sobrevivir: si queda, el
+      // usuario ve un borde claro dentro del círculo.
+      var blancos = 0;
+      for (var y = 0; y < resultado.height; y++) {
+        for (var x = 0; x < resultado.width; x++) {
+          final p = resultado.getPixel(x, y);
+          if (p.r.toInt() > 235 && p.g.toInt() > 235 && p.b.toInt() > 235) blancos++;
+        }
+      }
+      expect(blancos, 0, reason: 'el marco blanco debe eliminarse por completo');
     });
 
     test('tolera márgenes casi blancos (gris claro)', () {

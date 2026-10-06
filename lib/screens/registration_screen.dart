@@ -126,7 +126,24 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       _sexoError = sexoError;
       _metaError = metaError;
     });
-    return nombreError == null && sexoError == null && metaError == null;
+    if (nombreError == null && sexoError == null && metaError == null) return true;
+    // El formulario es largo (foto, nombre, ruedas, sexo, metas) y el botón
+    // está fijo abajo: el error en línea puede quedar fuera de la vista. El
+    // aviso dice qué falta SIN obligar a buscarlo.
+    final campo = nombreError != null
+        ? strings.regNameLabel
+        : sexoError != null
+            ? strings.regSexLabel
+            : strings.regMetaLabel;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text('${strings.regFaltaPorLlenar} $campo'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    return false;
   }
 
   /// Traduce el mensaje ES de [Validators] con los getters `err*` oficiales.

@@ -4,7 +4,7 @@ Guía **complementaria** a `docs/GUIA_TESTEO_UNIFICADA.md`. Úsalas en la **mism
 
 | Documento | Qué se responde |
 |---|---|
-| `GUIA_TESTEO_UNIFICADA.md` | ¿La app **funciona**? (52 pasos, 61 líneas PASA/FALLA) |
+| `GUIA_TESTEO_UNIFICADA.md` | ¿La app **funciona**? (61 pasos, 70 líneas PASA/FALLA) |
 | **Esta guía** | ¿La app **se ve y se siente bien**? (12 pantallas, 7 dimensiones, scorecard) |
 
 El build bajo prueba es **release arm64-v8a (AOT, sin banner de debug)**: las animaciones, el desplazamiento y el renderizado reflejan el comportamiento real.
@@ -142,7 +142,8 @@ Recorre la app en el orden de las pestañas. Para cada una, mira **las 7 dimensi
 - ¿El **IMC en vivo** tiene jerarquía adecuada o compite con los campos?
 - ¿Los campos de rueda (edad, peso, altura) se ven como un control reconocible, o parecen texto plano que no sabes que puedes girar?
 - ¿El botón "Continuar" / "Guardar" está siempre en la misma posición y mismo tamaño?
-- **FALLA:** el usuario no sabe si el campo es editable o si es una etiqueta; el botón cambia de posición entre pasos; el progreso no es visible; la validación muestra el error sin explicar cómo corregirlo.
+- Si falta algo, ¿el aviso es un **SnackBar flotante** que nombra el campo concreto ("Falta por llenar: metas") y no se come la mitad de la pantalla?
+- **FALLA:** el usuario no sabe si el campo es editable o si es una etiqueta; el botón cambia de posición entre pasos; el progreso no es visible; la validación muestra el error sin explicar cómo corregirlo; falta el aviso o no dice qué campo falta.
 
 ### U3 · Configuración inicial (tema + avisos)
 
@@ -159,8 +160,10 @@ La pantalla más importante. Revisar como portada.
 - ¿La tarjeta principal de entrenamiento (con "Comenzar") es el elemento más llamativo de la pantalla? Debería serlo.
 - ¿La entrada **"Mis rutinas"** se distingue de "Comenzar"?
 - ¿El chip de **racha** compite con el contenido principal?
+- ¿El chip de racha es **pulsable** y abre un diálogo con las estadísticas (racha, mejor racha, días, sesiones, nivel)? Un chip que no responde parece roto.
+- ¿Queda algún icono de **campana**? No debería: no hace nada y es un botón que miente.
 - **Densidad:** ¿hay que hacer scroll para ver lo esencial? Cuánto scroll hasta "Comenzar".
-- **FALLA:** la acción principal queda por debajo del pliegue (hay que hacer scroll para verla); los números no se leen de un vistazo; hay elementos igual de destacados sin jerarquía entre ellos.
+- **FALLA:** la acción principal queda por debajo del pliegue (hay que hacer scroll para verla); los números no se leen de un vistazo; hay elementos igual de destacados sin jerarquía entre ellos; hay una campana decorativa; el chip de racha no abre nada.
 - **Mide:** anota cuántos scrolls necesitas para llegar a "Comenzar" sin tocar nada.
 
 ### U5 · Progreso
@@ -168,7 +171,8 @@ La pantalla más importante. Revisar como portada.
 - ¿Las pestañas **Semanal / Mensual / Año** se distinguen de las sub-secciones?
 - ¿El gráfico de peso tiene ejes y unidades legibles?
 - ¿El **estado vacío** (sin historial) explica la situación con claridad, en vez de dejar un hueco seco?
-- **FALLA:** el gráfico no se entiende sin explicación; las pestañas parecen contenido no interactivo; el vacío da sensación de fallo.
+- ¿Desapareció la **campana decorativa** de esta pantalla?
+- **FALLA:** el gráfico no se entiende sin explicación; las pestañas parecen contenido no interactivo; el vacío da sensación de fallo; queda una campana que no hace nada.
 
 ### U6 · Entrenamientos (programas + rutinas propias)
 
@@ -176,28 +180,34 @@ La pantalla más importante. Revisar como portada.
 - ¿El temporizador es legible de un vistazo?
 - ¿La lista de **ejercicios** es escaneable (icono + nombre + duración alineados)?
 - El **catálogo de 34 ejercicios**: ¿se ve el grupo muscular? ¿el buscador es visible de inmediato o hay que buscarlo?
-- **FALLA:** en el reproductor no sabes qué toca ahora; el catálogo es una lista plana sin jerarquía; el buscador está escondido.
+- En el editor de rutina, ¿hay **un solo** botón "Guardar" y está al final del formulario? Dos (arriba y abajo) es redundancia que confunde.
+- En el reproductor, ¿queda algún botón de **"Premium de prueba"**? En release no debe existir ninguno.
+- **FALLA:** en el reproductor no sabes qué toca ahora; el catálogo es una lista plana sin jerarquía; el buscador está escondido; hay dos botones "Guardar"; aparece un botón de Premium de prueba.
 
 ### U7 · Recetas
 
-- ¿La **imagen de la receta** carga? Si no carga, ¿el hueco está bien tratado o parece un fallo?
+- ¿La **imagen de la receta** carga? Cada receta tiene **su propio dibujo**, derivado de su nombre: dos recetas seguidas nunca muestran el mismo plato.
 - ¿Los **chips de meta** activos se distinguen de los inactivos?
 - ¿El **"Para tu meta"** con recuento se entiende sin explicación?
-- **FALLA:** chips activo e inactivo casi iguales; imágenes sin marco o un hueco sin tratar; el recuento no cuadra con lo que aparece al pulsar.
+- **FALLA:** chips activo e inactivo casi iguales; cualquier caja roja de imagen o hueco sin tratar; dos recetas distintas comparten ilustración; el recuento no cuadra con lo que aparece al pulsar.
 
 ### U8 · Perfil
 
 - ¿Los datos corporales están **agrupados** de forma escaneable (peso/altura/grasa/IMC juntos)?
 - ¿El **IMC** tiene su etiqueta de estimación visible sin tener que buscar?
-- ¿Las tarjetas (Premium, metas, nivel, insignias) tienen títulos claros y separables?
-- **FALLA:** los datos numéricos no se alinean en columna; hay demasiadas tarjetas sin jerarquía; el botón Guardar se pierde al final.
+- ¿Las tarjetas (metas, nivel, insignias) tienen títulos claros y separables?
+- ¿El **avatar** sale cuadrado y centrado en el círculo, sin banda blanca del recorte asomando por el borde?
+- ¿Queda algún botón de **"Premium de prueba"** en Perfil? No debe quedar ninguno.
+- En "Editar metas", ¿la meta de pasos se lee **"1000 pasos mínimo"** (un número que se entiende sin preguntar)?
+- **FALLA:** los datos numéricos no se alinean en columna; hay demasiadas tarjetas sin jerarquía; el botón Guardar se pierde al final; el avatar muestra un cuadrado blanco dentro del círculo; hay un botón de Premium de prueba.
 
 ### U9 · Ajustes
 
 - ¿Los **interruptores** se ven claramente encendidos/apagados?
 - ¿Los grupos (Preferencias, Tema/Idioma, Datos de salud, Privacidad) están separados visualmente?
 - ¿"Borrar todos los datos" tiene el **tratamiento de peligro** (separado, no junto a "Exportar")?
-- **FALLA:** "Borrar todo" parece una opción más de la lista y no la acción destructiva; los interruptores dejan dudoso su estado; las secciones no están separadas visualmente.
+- En el grupo de anuncios: ¿solo queda el **interruptor real** del usuario (es consentimiento), sin botón de "probar Premium"?
+- **FALLA:** "Borrar todo" parece una opción más de la lista y no la acción destructiva; los interruptores dejan dudoso su estado; las secciones no están separadas visualmente; hay un botón de Premium marcado como prueba.
 
 ### U10 · Comidas (plan semanal + lista de la compra)
 
@@ -209,7 +219,8 @@ La pantalla más importante. Revisar como portada.
 
 - ¿Las pastillas (chips) de categoría se ven como **filtros**, no como botones sueltos?
 - ¿Los artículos tienen **imagen + título + resumen** coherentes en tamaño?
-- **FALLA:** títulos de longitudes muy distintas rompen la rejilla; imágenes con alturas inconsistentes; no se distingue el artículo destacado.
+- ¿Sigue ahí la **campana decorativa**? Debe seguir fuera.
+- **FALLA:** títulos de longitudes muy distintas rompen la rejilla; imágenes con alturas inconsistentes; no se distingue el artículo destacado; queda una campana que no hace nada.
 
 ### U12 · Ayuda
 
@@ -332,7 +343,7 @@ Frecuencia: siempre
 - **Que los datos sean correctos:** los valores de salud llevan su etiqueta de
   estimación; el diseño de la etiqueta está en D2/D3, la veracidad del dato es
   otro test.
-- **Pruebas automáticas:** `flutter analyze` (0 issues) y `flutter test` (260/260)
+- **Pruebas automáticas:** `flutter analyze` (0 issues) y `flutter test` (266/266)
   ya están en verde. Esta guía es para lo que el ojo y el dedo sí ven.
 
 ---

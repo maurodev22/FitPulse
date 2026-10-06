@@ -3,7 +3,9 @@
 > Documento de trabajo del roadmap aprobado (`docs/PLAN_AGREGAR_CORREGIR.md` y
 > `docs/DISENO_GAMIFICACION.md`). **L1 (las 3 correcciones de UI) está completada**
 > (commit `fb8cdec`: filtro de recetas, pestañas de período y "Ver todo").
-> Este archivo lista qué sigue, con tareas accionables y su estado.
+> **L2, L4, L3 y L5 están completas**, y el cierre UI/UX de los 8 puntos pedidos
+> está en la sección de abajo (2026-10-06). Este archivo lista qué sigue, con
+> tareas accionables y su estado.
 > Reglas del proyecto que se mantienen: 100 % local/offline, datos de salud nunca
 > inventados, verificación sin lectura visual (muestreo de píxeles + dump),
 > no commitear PNGs de diagnóstico, `flutter test` + `flutter analyze` limpios al
@@ -166,6 +168,38 @@ insignias. Plan completo por fases en `docs/DISENO_GAMIFICACION.md`.
 
 **Archivos previstos:** `app_state.dart`, `progress_screen.dart`, `home_screen.dart`,
 `workout_player_screen.dart`, `locale_service.dart`, tests.
+
+---
+
+## Cierre UI/UX — 8 puntos pedidos (2026-10-06) ✅ código
+
+Detalle de `PLAN.md §11.7`. Estado: **266/266 tests**, `flutter analyze` 0 issues.
+
+- [x] **Avatar** siempre cuadrado (`lib/utils/foto_avatar.dart`): recorte del lado más
+  corto centrado + respiro 2 % hacia **dentro**; `null` si no hay recorte fiable.
+- [x] **Registro**: `SnackBar` "Falta por llenar: *campo*" con el primer campo vacío.
+- [x] **Editor de rutinas**: fuera el "Guardar" del AppBar; sigue la del pie.
+- [x] **Imágenes de receta**: 41 ilustraciones propias en `assets/images/recetas/`
+  (generadas por `work/gen_recetas.py`, WebP 900×520, ~0,21 MB en total) resueltas por
+  `imagenDeReceta(nombre)`; `Recipe.imagen` es nullable y el catálogo ya no guarda
+  rutas a mano, con lo que dos recetas no pueden acabar con el mismo dibujo.
+- [x] **Chip de racha pulsable** → `mostrarEstadisticas` (racha actual, mejor racha,
+  días desde instalación, sesiones, nivel).
+- [x] **Campanas muertas eliminadas** de Inicio, Progreso y Consejos (no hacían nada).
+- [x] **`pfMetaPasos`** → "1000 pasos mínimo".
+- [x] **Premium de prueba fuera de la UI** en release; el toggle de anuncios se queda
+  porque es consentimiento real.
+- [x] **Enlaces muertos del mismo lote:** "Ver plan" de Recetas (tenía chevron pero no
+  `onAction`), la tarjeta de pasos y la fila de macros de Inicio (`onTap: () {}` que
+  sí hacía ripple) ahora abren el plan semanal y el detalle del día. Hay una búsqueda
+  activa de handlers vacíos en `lib/`.
+
+**Guardián nuevo:** `assets/images/` solo empaqueta los archivos **directos**; hizo
+falta declarar `assets/images/recetas/` aparte en `pubspec.yaml` y hay un test que lo
+comprueba (`test/recetas_imagenes_test.dart`).
+
+**Queda pendiente de este cierre:** la verificación física en el Pixel 6a
+(`docs/GUIA_TESTEO_UNIFICADA.md`) y los reportes del usuario.
 
 ---
 

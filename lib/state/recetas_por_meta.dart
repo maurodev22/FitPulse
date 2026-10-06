@@ -29,7 +29,6 @@ const recetasPorMeta = <Recipe>[
     minutos: 12,
     descripcion:
         'El desayuno de siempre, con aceite de oliva en lugar de mantequilla: proteína completa y grasa insaturada para arrancar el día sin prisas.',
-    imagen: 'assets/images/core.webp',
     ingredientes: [
       Ingrediente('Pan integral', '2 rebanadas (60 g)'),
       Ingrediente('Aguacate', '½ unidad'),
@@ -50,7 +49,6 @@ const recetasPorMeta = <Recipe>[
     minutos: 10,
     descripcion:
         'Huevos cocidos con la yema rellena de atún y aguacate. Más proteína y mucho menos hidrato de carbono que unos huevos fritos, y listo en diez minutos.',
-    imagen: 'assets/images/profile.webp',
     ingredientes: [
       Ingrediente('Huevo', '2 unidades'),
       Ingrediente('Atún en agua escurrido', '80 g'),
@@ -71,7 +69,6 @@ const recetasPorMeta = <Recipe>[
     minutos: 5,
     descripcion:
         'Avena batida con fruta madura: hidrato de carbono de absorción lenta para despertarte y mantener el ritmo hasta el mediodía.',
-    imagen: 'assets/images/workout.webp',
     ingredientes: [
       Ingrediente('Avena integral', '60 g'),
       Ingrediente('Plátano maduro', '1 unidad'),
@@ -92,7 +89,6 @@ const recetasPorMeta = <Recipe>[
     minutos: 5,
     descripcion:
         'Sin azúcar añadida y con grasa de calidad: las nueces y las bayas aportan sabor sin necesidad de endulzar nada.',
-    imagen: 'assets/images/profile.webp',
     ingredientes: [
       Ingrediente('Yogur griego natural', '170 g'),
       Ingrediente('Frutos rojos', '80 g'),
@@ -112,7 +108,6 @@ const recetasPorMeta = <Recipe>[
     minutos: 8,
     descripcion:
         'El queso cottage aporta mucha proteína y poca grasa: una base firme para un desayuno ligero que aguanta hasta media mañana.',
-    imagen: 'assets/images/core.webp',
     ingredientes: [
       Ingrediente('Pan integral', '2 rebanadas'),
       Ingrediente('Queso cottage', '100 g'),
@@ -133,7 +128,6 @@ const recetasPorMeta = <Recipe>[
     minutos: 25,
     descripcion:
         'Reserva de hidrato de carbono con proteína completa. La opción clásica para entrenar en ayunas o para días de doble sesión.',
-    imagen: 'assets/images/workout.webp',
     ingredientes: [
       Ingrediente('Papa', '200 g'),
       Ingrediente('Huevo', '1 unidad'),
@@ -154,7 +148,6 @@ const recetasPorMeta = <Recipe>[
     minutos: 12,
     descripcion:
         'Plátano y avena en la misma masa, sin harina refinada ni azúcar añadida: el dulzor viene solo de la fruta.',
-    imagen: 'assets/images/profile.webp',
     ingredientes: [
       Ingrediente('Plátano maduro', '1 unidad'),
       Ingrediente('Avena integral', '50 g'),
@@ -177,7 +170,6 @@ const recetasPorMeta = <Recipe>[
     minutos: 30,
     descripcion:
         'Cereal integral, proteína magra y verduras cocidas al vapor para no perder nutrientes. El almuerzo completo sin salir de casa.',
-    imagen: 'assets/images/workout.webp',
     ingredientes: [
       Ingrediente('Arroz integral cocido', '150 g'),
       Ingrediente('Pechuga de pollo', '150 g'),
@@ -198,7 +190,6 @@ const recetasPorMeta = <Recipe>[
     minutos: 15,
     descripcion:
         'Legumbre y pescado en el mismo plato: fibra, proteína y grasa buena en una ensalada que aguanta bien hasta la cena.',
-    imagen: 'assets/images/profile.webp',
     ingredientes: [
       Ingrediente('Garbanzos cocidos', '150 g'),
       Ingrediente('Atún en aceite escurrido', '100 g'),
@@ -219,7 +210,6 @@ const recetasPorMeta = <Recipe>[
     minutos: 25,
     descripcion:
         'Salsa de tomate casera con atún, sin nada de nata: un plato de cocina de cada día que no depende de la marca del bote.',
-    imagen: 'assets/images/core.webp',
     ingredientes: [
       Ingrediente('Pasta integral cocida', '160 g'),
       Ingrediente('Atún en tomate', '120 g'),
@@ -240,7 +230,6 @@ const recetasPorMeta = <Recipe>[
     minutos: 25,
     descripcion:
         'Rebozada en pan integral con huevo y cocida a la plancha, con un lecho de lechuga para aportar volumen sin hidratos.',
-    imagen: 'assets/images/workout.webp',
     ingredientes: [
       Ingrediente('Pechuga de pollo', '170 g'),
       Ingrediente('Pan integral', '1 rebanada'),
@@ -261,7 +250,6 @@ const recetasPorMeta = <Recipe>[
     minutos: 20,
     descripcion:
         'Quinoa y garbanzos para el aporte vegetal, aguacate para la grasa buena y una pizca de sal para que todo sepa mejor.',
-    imagen: 'assets/images/core.webp',
     ingredientes: [
       Ingrediente('Quinoa cocida', '140 g'),
       Ingrediente('Garbanzos cocidos', '80 g'),
@@ -282,7 +270,6 @@ const recetasPorMeta = <Recipe>[
     minutos: 35,
     descripcion:
         'Un plato de cuchara barato y saciante: la lenteja aporta fibra y proteína vegetal, y las espinacas suman hierro y folato.',
-    imagen: 'assets/images/profile.webp',
     ingredientes: [
       Ingrediente('Lentejas secas', '80 g'),
       Ingrediente('Espinacas frescas', '60 g'),
@@ -303,7 +290,6 @@ const recetasPorMeta = <Recipe>[
     minutos: 25,
     descripcion:
         'Pavo saltado con pimientos y cebolla, servido con tortilla integral. Sabe a comida de verdad y se prepara en una sartén.',
-    imagen: 'assets/images/workout.webp',
     ingredientes: [
       Ingrediente('Pavo en filetes', '160 g'),
       Ingrediente('Pimiento rojo', '1 unidad'),
@@ -324,7 +310,6 @@ const recetasPorMeta = <Recipe>[
     minutos: 45,
     descripcion:
         'El plato de casa por excelencia: pollo deshebrado en su propio jugo con tomate y pimiento, arroz blanco y plátano maduro al lado.',
-    imagen: 'assets/images/workout.webp',
     ingredientes: [
       Ingrediente('Muslo de pollo', '180 g'),
       Ingrediente('Arroz blanco cocido', '150 g'),
@@ -345,7 +330,6 @@ const recetasPorMeta = <Recipe>[
     minutos: 40,
     descripcion:
         'Versión más ligera de la ropa vieja: mismo sabor, con pavo magro y más verdura en el sofrito.',
-    imagen: 'assets/images/profile.webp',
     ingredientes: [
       Ingrediente('Pechuga de pavo', '150 g'),
       Ingrediente('Arroz', '90 g'),
@@ -368,7 +352,6 @@ const recetasPorMeta = <Recipe>[
     minutos: 25,
     descripcion:
         'Omega 3, proteína completa y un vegetal al vapor al lado. Cena de restaurante con quince minutos de horno.',
-    imagen: 'assets/images/workout.webp',
     ingredientes: [
       Ingrediente('Lomo de salmón', '160 g'),
       Ingrediente('Brócoli', '150 g'),
@@ -389,7 +372,6 @@ const recetasPorMeta = <Recipe>[
     minutos: 20,
     descripcion:
         'La cena más simple que funciona: proteína magra al fuego y volumen vegetal para completar el plato.',
-    imagen: 'assets/images/core.webp',
     ingredientes: [
       Ingrediente('Pechuga de pollo', '170 g'),
       Ingrediente('Lechuga', '60 g'),
@@ -410,7 +392,6 @@ const recetasPorMeta = <Recipe>[
     minutos: 18,
     descripcion:
         'Dos huevos, un puñado de espinacas y queso curado. Cena de veinte minutos con proteína de primer nivel.',
-    imagen: 'assets/images/profile.webp',
     ingredientes: [
       Ingrediente('Huevo', '3 unidades'),
       Ingrediente('Espinacas frescas', '60 g'),
@@ -431,7 +412,6 @@ const recetasPorMeta = <Recipe>[
     minutos: 22,
     descripcion:
         'Calabacín triturado hasta dar textura de crema, con pollo desmenuzado encima. Calorífica suave que no pesa en el estómago.',
-    imagen: 'assets/images/core.webp',
     ingredientes: [
       Ingrediente('Calabacín', '300 g'),
       Ingrediente('Pechuga de pollo', '150 g'),
@@ -452,7 +432,6 @@ const recetasPorMeta = <Recipe>[
     minutos: 12,
     descripcion:
         'Atún, huevo duro y tomate aliñado con aceite de oliva. Una cena de quince minutos con la proteína resuelta.',
-    imagen: 'assets/images/workout.webp',
     ingredientes: [
       Ingrediente('Atún en aceite escurrido', '120 g'),
       Ingrediente('Huevo duro', '1 unidad'),
@@ -473,7 +452,6 @@ const recetasPorMeta = <Recipe>[
     minutos: 30,
     descripcion:
         'Pescado blanco a la plancha con patata cocida y aceite de oliva. Cena de domingo sin complicarse con la sartén.',
-    imagen: 'assets/images/profile.webp',
     ingredientes: [
       Ingrediente('Filete de pescado blanco', '170 g'),
       Ingrediente('Patata', '200 g'),
@@ -494,7 +472,6 @@ const recetasPorMeta = <Recipe>[
     minutos: 25,
     descripcion:
         'Tofu bien dorado con verduras salteadas y arroz integral. Proteína vegetal completa para variar sin aburrirse del pollo.',
-    imagen: 'assets/images/core.webp',
     ingredientes: [
       Ingrediente('Tofu firme', '180 g'),
       Ingrediente('Arroz integral cocido', '130 g'),
@@ -515,7 +492,6 @@ const recetasPorMeta = <Recipe>[
     minutos: 25,
     descripcion:
         'Caldo de pescado con gambas y almejas, sin crema ni patata. Caldo ligero de alto contenido proteico.',
-    imagen: 'assets/images/workout.webp',
     ingredientes: [
       Ingrediente('Gambas peladas', '100 g'),
       Ingrediente('Almejas', '80 g'),
@@ -536,7 +512,6 @@ const recetasPorMeta = <Recipe>[
     minutos: 20,
     descripcion:
         'Cena de casa, bien equilibrada: pollo, atún y trigo integral con tomate y cebolla. Se prepara en un solo bol.',
-    imagen: 'assets/images/profile.webp',
     ingredientes: [
       Ingrediente('Pechuga de pollo', '140 g'),
       Ingrediente('Atún en agua escurrido', '60 g'),
@@ -559,7 +534,6 @@ const recetasPorMeta = <Recipe>[
     minutos: 3,
     descripcion:
         'La clásica de toda la vida: hidrato de carbono de la fruta y grasa del cacahuate. Barato y sin suplementos.',
-    imagen: 'assets/images/workout.webp',
     ingredientes: [
       Ingrediente('Plátano maduro', '1 unidad'),
       Ingrediente('Mantequilla de cacahuate', '1 cda'),
@@ -578,7 +552,6 @@ const recetasPorMeta = <Recipe>[
     minutos: 8,
     descripcion:
         'Avena cocida con miel y canela, lista treinta minutos antes de entrenar. Energía constante sin picos de azúcar.',
-    imagen: 'assets/images/core.webp',
     ingredientes: [
       Ingrediente('Avena integral', '70 g'),
       Ingrediente('Miel', '15 g'),
@@ -598,7 +571,6 @@ const recetasPorMeta = <Recipe>[
     minutos: 5,
     descripcion:
         'Yogur natural con fruta fresca y avena cruda. Se come despacio antes del entreno o se lleva en un bote.',
-    imagen: 'assets/images/profile.webp',
     ingredientes: [
       Ingrediente('Yogur natural', '150 g'),
       Ingrediente('Plátano', '½ unidad'),
@@ -618,7 +590,6 @@ const recetasPorMeta = <Recipe>[
     minutos: 5,
     descripcion:
         'Café, avena y plátano batidos juntos: cafeína natural con carga de hidratos de carbono para sostener el esfuerzo.',
-    imagen: 'assets/images/workout.webp',
     ingredientes: [
       Ingrediente('Café solo', '80 ml'),
       Ingrediente('Plátano maduro', '1 unidad'),
@@ -638,7 +609,6 @@ const recetasPorMeta = <Recipe>[
     minutos: 20,
     descripcion:
         'Barrita casera de avena, miel y frutos secos, hecha en casa y guardada en la nevera. Cinco ingredientes y nada de marca industrial.',
-    imagen: 'assets/images/core.webp',
     ingredientes: [
       Ingrediente('Avena integral', '50 g'),
       Ingrediente('Miel', '15 g'),
@@ -659,7 +629,6 @@ const recetasPorMeta = <Recipe>[
     minutos: 5,
     descripcion:
         'Licuado de fruta sin azúcar añadida, ideal para días de calor o cuando no apetece masticar antes de entrenar.',
-    imagen: 'assets/images/profile.webp',
     ingredientes: [
       Ingrediente('Naranja', '2 unidades'),
       Ingrediente('Plátano', '½ unidad'),
@@ -680,7 +649,6 @@ const recetasPorMeta = <Recipe>[
     minutos: 5,
     descripcion:
         'Leche, plátano y proteína en batidora: la combinación clásica de la ventana anabólica, hecha en casa y sin marcas caras.',
-    imagen: 'assets/images/workout.webp',
     ingredientes: [
       Ingrediente('Leche entera', '250 ml'),
       Ingrediente('Plátano maduro', '1 unidad'),
@@ -700,7 +668,6 @@ const recetasPorMeta = <Recipe>[
     minutos: 5,
     descripcion:
         'Cacao, avena y proteína para cerrar la sesión sin azúcar añadida: sabe a batido de chocolate y cumple lo que promete.',
-    imagen: 'assets/images/core.webp',
     ingredientes: [
       Ingrediente('Leche entera', '250 ml'),
       Ingrediente('Cacao puro en polvo', '15 g'),
@@ -720,7 +687,6 @@ const recetasPorMeta = <Recipe>[
     minutos: 8,
     descripcion:
         'Avena caliente con leche, plátano en rodajas y una cucharada de whey. Reconfortante y con hidratos de recuperación.',
-    imagen: 'assets/images/profile.webp',
     ingredientes: [
       Ingrediente('Avena integral', '60 g'),
       Ingrediente('Leche entera', '200 ml'),
@@ -740,7 +706,6 @@ const recetasPorMeta = <Recipe>[
     minutos: 12,
     descripcion:
         'Atún con aguacate sobre pan integral tostado: cena rápida y con la proteína que pide una sesión de fuerza.',
-    imagen: 'assets/images/workout.webp',
     ingredientes: [
       Ingrediente('Pan integral', '2 rebanadas'),
       Ingrediente('Atún en aceite escurrido', '100 g'),
