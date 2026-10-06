@@ -167,8 +167,9 @@ insignias. Plan completo por fases en `docs/DISENO_GAMIFICACION.md`.
 - [x] **Fase C — insignias (2026-10-06):** detalle en la sección de abajo.
 - [x] **Fase D — ritual semanal (2026-10-06):** detalle en la sección de abajo.
 - [x] **Fase E — toques de contexto (2026-10-06):** detalle en la sección de abajo.
-- [ ] Fase F (profundización opcional) solo si el usuario la quiere (sujeto a su
-  visto bueno).
+- [x] **Fase F (opcional, parcial):** F1 (teaser "Próxima insignia") y F3 (tests de
+  economía) hechos en la sección de abajo; F2 (refactor de tokens de avisos)
+  documentado como pendiente menor sin duplicación detectada.
 
 **Archivos previstos:** `app_state.dart`, `progress_screen.dart`, `home_screen.dart`,
 `workout_player_screen.dart`, `locale_service.dart`, tests.
@@ -257,9 +258,31 @@ bloqueada (silueta gris con candado + condición escrita, sin contadores de prog
 
 ---
 
+## Fase F — Profundización opcional, elegida (F1 + F3) (2026-10-06) ✅ código
+
+> El usuario eligió "F1 + F3 (Recomendado)" de la Fase F opcional
+> (`docs/DISENO_GAMIFICACION.md`, FASE F). F2 (refactor de tokens) queda
+> documentado como pendiente menor: la auditoría no encontró duplicación de
+> lógica de niveles en `avisos.dart` (los textos de avisos no calculan niveles).
+
+- [x] **F1 — Teaser "Próxima insignia"**: en la cuadrícula de Perfil, la
+  insignia bloqueada más cercana en orden de catálogo se realza de forma
+  pasiva (borde sutil + nombre y condición en primario) mostrando su
+  condición escrita ("Constancia: 3 días seguidos"). **Sin barra de progreso
+  numérica** (cero presión) y sin ripple muerto (no es un botón).
+- [x] **F3 — Tests de economía** (`test/fase_f_test.dart`): tabla de premios
+  real (sesión 50, reto 100 en 3→5→7, anuncio una vez/día, día ideal 25 ya en
+  su lote, 7 días seguidos = 550 XP + objetivo 7), umbrales de nivel
+  (Princi/p./Intermedio ≥ 4/Avanzado ≥ 8), persistencia y export/import del
+  XP + ledger + objetivo, reset. Nada inventado: todo sale de `AppState`.
+- [x] Tests: `test/fase_f_test.dart` (10) → suite **303/303** verdes y
+  `flutter analyze` 0 issues.
+
+---
+
 ## Cierre UI/UX — 8 puntos pedidos (2026-10-06) ✅ código
 
-Detalle de `PLAN.md §11.7`. Estado: **293/293 tests**, `flutter analyze` 0 issues.
+Detalle de `PLAN.md §11.7`. Estado: **303/303 tests**, `flutter analyze` 0 issues.
 
 - [x] **Avatar** siempre cuadrado (`lib/utils/foto_avatar.dart`): recorte del lado más
   corto centrado + respiro 2 % hacia **dentro**; `null` si no hay recorte fiable.

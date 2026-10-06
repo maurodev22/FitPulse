@@ -732,7 +732,7 @@ así que las 41 recetas se generaban bien en disco y salían con caja roja
 "Unable to load asset" al ejecutar. Arreglado con la entrada explícita en
 `pubspec.yaml` + guardián en `test/recetas_imagenes_test.dart`.
 
-- ✅ **293/293 tests**, `flutter analyze` **0 issues**.
+- ✅ **303/303 tests**, `flutter analyze` **0 issues**.
 
 ---
 
@@ -784,6 +784,21 @@ así que las 41 recetas se generaban bien en disco y salían con caja roja
 
 ---
 
+## 11.11 Fase F de gamificación — profundización opcional elegida (F1 + F3) (2026-10-06)
+
+> El usuario eligió "F1 + F3 (Recomendado)" de `docs/DISENO_GAMIFICACION.md`,
+> FASE F. F2 (refactor de tokens) queda como pendiente menor: la auditoría no
+> encontró duplicación de lógica de niveles en el sistema de avisos.
+
+| # | Registro |
+|---|---|
+| 1 | **F1 — Teaser "Próxima insignia"** en la cuadrícula de Perfil: la bloqueada más cercana (orden de catálogo) se realza pasivamente (borde sutil + nombre/condición en primario); sin barra de progreso y sin ripple muerto (`_buildInsignias` + `_insigniaTile(esSiguiente:)` con `Key('insignia_siguiente')`). |
+| 2 | **F3 — Tests de economía** (`test/fase_f_test.dart`, 10): tabla de premios real (sesión 50, reto 100 en 3→5→7 con 7 días = 550 XP, anuncio 1/día), umbrales de nivel (Princi./Intermedio ≥ 4/Avanzado ≥ 8), persistencia + export/import del XP/ledger/objetivo y reset. |
+| 3 | F2 documentado: `avisos.dart` no duplica lógica de niveles (los textos de avisos no calculan niveles); no requiere refactor urgente. |
+| 4 | Tests: **303/303 verdes**; `flutter analyze` 0 issues; accesibilidad sintetizada (el teaser es solo color/borde, sin cambio de tamaño). |
+
+---
+
 ## 12. Principios que se mantienen
 
 - Todo funciona en el propio móvil: sin cuentas ni servidores.
@@ -796,7 +811,7 @@ así que las 41 recetas se generaban bien en disco y salían con caja roja
 > Actualizado 2026-10-06 (orden aprobado por el usuario: **L2 → L4 → L3**; iOS
 > descartado). **Los tres lotes están hechos** y con ellos el cierre UI/UX de los
 > 8 puntos pedidos (§11.7) y la **Fase C de insignias** (§11.8). El estado real del
-> código es **293/293 tests y `flutter analyze` limpio** (Fase C §11.8, Fase D §11.9 y Fase E §11.10).
+> código es **303/303 tests y `flutter analyze` limpio** (Fase C §11.8, Fase D §11.9, Fase E §11.10 y Fase F §11.11).
 
 1. **~~L4 — Recetas por metas~~ ✅ hecho**: dimensión `metas` en `Recipe` con las
    4 etiquetas reales del perfil, filtro por meta + sección "Para tu meta" y

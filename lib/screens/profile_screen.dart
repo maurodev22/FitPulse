@@ -401,6 +401,9 @@ Widget _buildPremium() {
     final strings = context.watch<LocaleService>().strings;
     final resultados = evaluarInsignias(state.datosInsignias);
     final conseguidas = resultados.where((r) => r.conseguida).length;
+    // F1: la insignia bloqueada más cercana en orden de catálogo es el
+    // "teaser" pasivo (su condición se realza; sin barra de progreso).
+    final siguiente = resultados.indexWhere((r) => !r.conseguida);
     final localizador = MaterialLocalizations.of(context);
 
     return SettingsCard(
@@ -439,8 +442,13 @@ Widget _buildPremium() {
           spacing: 10,
           runSpacing: 10,
           children: [
-            for (final r in resultados)
-              _insigniaTile(strings, localizador, r),
+            for (var i = 0; i < resultados.length; i++)
+              _insigniaTile(
+                strings,
+                localizador,
+                resultados[i],
+                esSiguiente: i == siguiente,
+              ),
           ],
         ),
       ],
@@ -503,22 +511,32 @@ Widget _buildPremium() {
 
   /// Tarjeta de una insignia: conseguida (icono a color + fecha real) o
   /// bloqueada (silueta gris con candado y condición).
+  ///
+  /// [esSiguiente] marca (F1, teaser) la insignia bloqueada más cercana en
+  /// orden de catálogo: borde sutil y su condición en primario. Sigue siendo
+  /// pasiva — sin barra de progreso numérica (evita presión).
   Widget _insigniaTile(
     AppStrings strings,
     MaterialLocalizations localizador,
-    InsigniaResultado r,
-  ) {
+    InsigniaResultado r, {
+    required bool esSiguiente,
+  }) {
     final info = _infoInsignia(strings, r.id);
     final techo = r.conseguida && r.fecha != null
         ? localizador.formatCompactDate(r.fecha!)
         : info.condicion;
 
     return Container(
+      key: esSiguiente ? const Key('insignia_siguiente') : null,
       width: 105,
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: AppColors.surfaceContainerLow,
         borderRadius: BorderRadius.circular(16),
+        // F1: teaser de la próxima insignia — borde sutil y pasivo.
+        border: esSiguiente
+            ? Border.all(color: AppColors.primary.withValues(alpha: 0.45))
+            : null,
       ),
       child: Column(
         children: [
@@ -552,7 +570,11 @@ Widget _buildPremium() {
           Text(
             info.nombre,
             style: AppType.labelMd.copyWith(
-              color: r.conseguida ? AppColors.onSurface : AppColors.outline,
+              color: r.conseguida
+                  ? AppColors.onSurface
+                  : esSiguiente
+                      ? AppColors.onSurface
+                      : AppColors.outline,
               fontWeight: FontWeight.w700,
             ),
             textAlign: TextAlign.center,
@@ -563,7 +585,11 @@ Widget _buildPremium() {
           Text(
             techo,
             style: AppType.labelSm.copyWith(
-              color: r.conseguida ? AppColors.primary : AppColors.outline,
+              color: r.conseguida
+                  ? AppColors.primary
+                  : esSiguiente
+                      ? AppColors.primary
+                      : AppColors.outline,
             ),
             textAlign: TextAlign.center,
             maxLines: 3,

@@ -5,9 +5,10 @@ Una sola guía para probar la app completa, de principio a fin, sin tener que co
 - **App:** FitPulse 1.0.0+1 (`com.fitpulse.app`)
 - **Plataforma:** Android (Pixel 6a como referencia)
 - **Idiomas:** español e inglés
-- **Estado del código en esta revisión:** `flutter analyze` 0 issues, `flutter test` 293/293 verdes
+- **Estado del código en esta revisión:** `flutter analyze` 0 issues, `flutter test` 303/303 verdes
 - **Último lote:** Fase C de insignias (9, con fecha real) + Fase D "Tu semana" + Fase E
-  (chip "Nv N · Nombre", mini-barra de XP y "Lv N" en el widget de home); el
+  (chip "Nv N · Nombre", mini-barra de XP y "Lv N" en el widget de home) + Fase F
+  (teaser "Próxima insignia" + tests de economía); el
   cierre UI/UX de los 8 puntos previos (avatar cuadrado, toast de
   registro, "Guardar" fuera del AppBar, imágenes propias de las 41 recetas,
   estadísticas al pulsar la racha, sin campanas muertas, meta de pasos y sin
@@ -343,9 +344,9 @@ Cubre EULA, registro y configuración inicial. Si la app ya tiene perfil, ve dir
 
 **Qué hacer:** entra en Perfil → **Insignias & Logros** y revisa la cuadrícula con y sin sesiones.
 
-**Qué debes ver:** **catálogo completo de 9 insignias siempre visible** con dos estados: conseguidas (icono a color y **fecha real de desbloqueo**) y bloqueadas (silueta gris con candado y la **condición escrita**, sin contadores de "te faltan…"). Contador "N / 9 insignias" en la cabecera. Sin sesiones todavía, la nota "Completa tu primer entrenamiento para desbloquear insignias" y las 9 bloqueadas.
+**Qué debes ver:** **catálogo completo de 9 insignias siempre visible** con dos estados: conseguidas (icono a color y **fecha real de desbloqueo**) y bloqueadas (silueta gris con candado y la **condición escrita**, sin contadores de "te faltan…"). Contador "N / 9 insignias" en la cabecera. **Teaser (Fase F):** la insignia bloqueada más cercana en orden de catálogo lleva un **borde sutil** y su condición en color primario, sin barra de progreso y sin ser un botón. Sin sesiones todavía, la nota "Completa tu primer entrenamiento para desbloquear insignias" y las 9 bloqueadas.
 
-**FALLA si:** una insignia aparece conseguida sin haber cumplido su condición real, muestra una fecha inventada, o las bloqueadas muestran progreso tipo "te faltan 2".
+**FALLA si:** una insignia aparece conseguida sin haber cumplido su condición real, muestra una fecha inventada, las bloqueadas muestran progreso tipo "te faltan 2", o un teaser parece un botón sin acción.
 
 ### H7. Guardar cambios y cerrar sesión
 
