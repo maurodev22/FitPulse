@@ -370,13 +370,14 @@ pill, solo quedan los artículos de esa categoría.
 | 3 | Valores inválidos. | Validación con mensaje; no guarda. |
 | 4 | Force-stop → relanzar. | Las metas editadas siguen (fix bug latente `_guardarCambios`). |
 
-### 12.3 P3 — Insignias & Logros en Perfil
+### 12.3 P3 / Fase C — Insignias & Logros en Perfil
 
 | # | Paso | Esperado |
 |---|---|---|
-| 1 | Perfil → **Insignias & Logros**. | Catálogo real derivado del historial: insignia de **Nivel** (`prInsigniaNivel`) y de **Reto N días** (`prInsigniaReto`). |
-| 2 | Sin entrenamientos aún. | Texto honesto "Completa tu primer entrenamiento para desbloquear insignias". |
-| 3 | En Progreso. | Ya NO existe la sección duplicada allí. |
+| 1 | Perfil → **Insignias & Logros**. | Catálogo completo de **9 insignias** (Fase C): contador "N / 9 insignias", conseguidas con icono a color y **fecha real de desbloqueo**, bloqueadas con silueta gris, candado y condición escrita. |
+| 2 | Sin entrenamientos aún. | Nota "Completa tu primer entrenamiento para desbloquear insignias" + las 9 bloqueadas (sin progreso). |
+| 3 | Completar una sesión real. | "Primer paso" se desbloquea con la fecha de la sesión. |
+| 4 | En Progreso. | Ya NO existe la sección duplicada allí (se mudó a Perfil en P3). |
 
 ### 12.4 P7 — Configuración desde el engranaje
 

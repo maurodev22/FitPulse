@@ -587,14 +587,35 @@ class AppStrings {
       _t('Sin sesiones en este período', 'No sessions in this period');
   String get prHistorialTitulo => _t('Historial de sesiones', 'Workout history');
   String get prInsignias => _t('Insignias & Logros', 'Badges & Achievements');
-  String get prPrimeraSesion => _t('Primera Sesión', 'First Session');
-  String get prCompletada => _t('Completada', 'Completed');
-  String get prRacha3 => _t('Racha 3 Días', '3-Day Streak');
-  String get prConstancia => _t('Constancia', 'Consistency');
-  String get prRacha7 => _t('Racha 7 Días', '7-Day Streak');
-  String get prDisciplina => _t('Disciplina', 'Discipline');
-  String prInsigniaNivel(int n) => _t('Nivel $n', 'Level $n');
-  String prInsigniaReto(int n) => _t('Reto $n Días', '$n-Day Challenge');
+  String get prInsPrimerPaso => _t('Primer paso', 'First step');
+  String get prInsConstancia => _t('Constancia', 'Consistency');
+  String get prInsDisciplina => _t('Disciplina', 'Discipline');
+  String get prInsHierro => _t('Hierro', 'Iron');
+  String get prInsVeterano => _t('Veterano', 'Veteran');
+  String get prInsMarcaPersonal => _t('Marca personal', 'Personal best');
+  String get prInsTecnico => _t('Técnico', 'Technique');
+  String get prInsHidratado => _t('Hidratado', 'Hydrated');
+  String get prInsPrimerReto => _t('1er Reto', '1st Challenge');
+  String get prInsCondPrimerPaso =>
+      _t('Completa tu primera sesión', 'Complete your first session');
+  String get prInsCondRacha3 =>
+      _t('Racha de 3 días seguidos', '3-day streak');
+  String get prInsCondRacha7 =>
+      _t('Racha de 7 días seguidos', '7-day streak');
+  String get prInsCondHierro =>
+      _t('25 sesiones completadas', '25 workouts completed');
+  String get prInsCondVeterano =>
+      _t('100 sesiones completadas', '100 workouts completed');
+  String get prInsCondMarcaPersonal => _t(
+      'Peso registrado 4 semanas seguidas', 'Weight logged 4 weeks in a row');
+  String get prInsCondTecnico => _t(
+      'Reps en 10 ejercicios distintos', 'Reps on 10 different exercises');
+  String get prInsCondHidratado =>
+      _t('7 días con la meta de agua', '7 days meeting your water goal');
+  String get prInsCondPrimerReto =>
+      _t('Completa el reto de 3 días', 'Complete the 3-day challenge');
+  String prInsigniasContador(int conseguidas, int total) =>
+      _t('$conseguidas / $total insignias', '$conseguidas / $total badges');
   String get prDesbloqueaInsignias =>
       _t('Completa tu primer entrenamiento para desbloquear insignias',
           'Complete your first workout to unlock badges');

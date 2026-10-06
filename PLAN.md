@@ -732,7 +732,24 @@ así que las 41 recetas se generaban bien en disco y salían con caja roja
 "Unable to load asset" al ejecutar. Arreglado con la entrada explícita en
 `pubspec.yaml` + guardián en `test/recetas_imagenes_test.dart`.
 
-- ✅ **266/266 tests**, `flutter analyze` **0 issues**.
+- ✅ **280/280 tests**, `flutter analyze` **0 issues**.
+
+---
+
+## 11.8 Fase C de gamificación — estructura de insignias (2026-10-06)
+
+> Es la siguiente fase del plan (`docs/DISENO_GAMIFICACION.md`, FASE C) tras la
+> aprobación implícita "tienes permisos para todo". Se apoya en el XP/nivel/racha que
+> ya existía y NO inventa ningún valor: cada insignia se otorga solo con su condición
+> real verificada sobre datos persistidos.
+
+| # | Registro |
+|---|---|
+| 1 | Módulo puro `lib/state/insignias.dart`: `DatosInsignias` (proyección de `AppState`) + `evaluarInsignias` → 9 insignias en orden de catálogo con `fecha` real derivada del historial (nunca inventada). |
+| 2 | Nuevo dato persistido: `diasAguaCumplida` (`fitpulse_agua_dias_v1`, tope 90): días donde el agua real del día ≥ meta. Hooks en `registrarAgua`, `refreshHealthConnect` e `init`; viaja en export/import y se limpia en `resetTrasBorrado`. |
+| 3 | Perfil → "Insignias & Logros": contador "N / 9 insignias", cuadrícula completa con conseguidas (color + fecha con `formatCompactDate`) y bloqueadas (silueta gris con candado y condición, sin presión). |
+| 4 | Nota de diseño: Constancia (racha 3) y 1er Reto comparten fecha porque el reto de 3 días se completa cuando la racha llega a 3; se mantienen las dos insignias (decisión reversible del usuario). Se retira la insignia "Nivel" de la cuadrícula (la tabla del diseño no la incluye; el nivel sigue en Progreso y Perfil). |
+| 5 | Tests: `test/insignias_test.dart` (12) + 2 widget tests en `perfil_test.dart` → **280/280 verdes**; `flutter analyze` 0 issues. Accesibilidad 2.0× cubierta (el contador salió del Row del título para no desbordar a 360 dp). |
 
 ---
 
@@ -747,8 +764,8 @@ así que las 41 recetas se generaban bien en disco y salían con caja roja
 
 > Actualizado 2026-10-06 (orden aprobado por el usuario: **L2 → L4 → L3**; iOS
 > descartado). **Los tres lotes están hechos** y con ellos el cierre UI/UX de los
-> 8 puntos pedidos (§11.7). El estado real del código es **266/266 tests y
-> `flutter analyze` limpio**.
+> 8 puntos pedidos (§11.7) y la **Fase C de insignias** (§11.8). El estado real del
+> código es **280/280 tests y `flutter analyze` limpio**.
 
 1. **~~L4 — Recetas por metas~~ ✅ hecho**: dimensión `metas` en `Recipe` con las
    4 etiquetas reales del perfil, filtro por meta + sección "Para tu meta" y
@@ -764,7 +781,7 @@ así que las 41 recetas se generaban bien en disco y salían con caja roja
 3. **Verificación física acumulada en el Pixel 6a** (`install -r`, nunca desinstalar):
    seguir **`docs/GUIA_TESTEO_UNIFICADA.md`** (fases A–N, 61 pasos, 70 líneas de
    checklist PASA/FALLA). Cubre, entre otros, P17 · P18 · P19 · P20 · P21 ·
-   **L4** · **L3** y el **cierre UI/UX (N1–N8)**; el detalle técnico por requisito
+   **L4** · **L3**, el **cierre UI/UX (N1–N9)** y la **Fase C de insignias (H6)**; el detalle técnico por requisito
    sigue en `GUIA_TESTEO_COMPLETA.md` §23–§29. Los reportes P11–P13 del usuario
    siguen sin llegar.
 4. **8.3 UMP**: el código está listo pero no verificable sin red a Google y una cuenta

@@ -5,7 +5,7 @@ Una sola guía para probar la app completa, de principio a fin, sin tener que co
 - **App:** FitPulse 1.0.0+1 (`com.fitpulse.app`)
 - **Plataforma:** Android (Pixel 6a como referencia)
 - **Idiomas:** español e inglés
-- **Estado del código en esta revisión:** `flutter analyze` 0 issues, `flutter test` 266/266 verdes
+- **Estado del código en esta revisión:** `flutter analyze` 0 issues, `flutter test` 280/280 verdes
 - **Último lote:** cierre UI/UX de los 8 puntos pedidos (avatar cuadrado, toast de
   registro, "Guardar" fuera del AppBar, imágenes propias de las 41 recetas,
   estadísticas al pulsar la racha, sin campanas muertas, meta de pasos y sin
@@ -321,9 +321,13 @@ Cubre EULA, registro y configuración inicial. Si la app ya tiene perfil, ve dir
 
 **Qué debes ver:** nivel de condición y etiquetas de preferencias (HIIT, Fuerza funcional, Running…) que se pueden añadir y quitar.
 
-### H6. Insignias
+### H6. Insignias completas (Fase C)
 
-**Qué debes ver:** las insignias obtenidas con su nivel. Las no obtenidas no se prometen.
+**Qué hacer:** entra en Perfil → **Insignias & Logros** y revisa la cuadrícula con y sin sesiones.
+
+**Qué debes ver:** **catálogo completo de 9 insignias siempre visible** con dos estados: conseguidas (icono a color y **fecha real de desbloqueo**) y bloqueadas (silueta gris con candado y la **condición escrita**, sin contadores de "te faltan…"). Contador "N / 9 insignias" en la cabecera. Sin sesiones todavía, la nota "Completa tu primer entrenamiento para desbloquear insignias" y las 9 bloqueadas.
+
+**FALLA si:** una insignia aparece conseguida sin haber cumplido su condición real, muestra una fecha inventada, o las bloqueadas muestran progreso tipo "te faltan 2".
 
 ### H7. Guardar cambios y cerrar sesión
 
@@ -559,7 +563,7 @@ H2  Peso, altura, grasa e IMC coherentes ................... [ ]
 H3  Metas de actividad editables y reflejadas ............. [ ]
 H4  Meta de agua editable (0,5-10 L) y persistente ......... [ ]
 H5  Nivel y preferencias: añadir / quitar .................. [ ]
-H6  Insignias obtenidas con su nivel ....................... [ ]
+H6  Insignias completas: contador, fecha real, siluetas ... [ ]
 H7  Guardar persiste; cerrar sesión no borra datos ......... [ ]
 I1  Preferencias: 5 interruptores operativos ................ [ ]
 I2  Tema claro / oscuro / sistema inmediato ................. [ ]

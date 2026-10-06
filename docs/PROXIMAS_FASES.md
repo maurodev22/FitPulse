@@ -3,7 +3,8 @@
 > Documento de trabajo del roadmap aprobado (`docs/PLAN_AGREGAR_CORREGIR.md` y
 > `docs/DISENO_GAMIFICACION.md`). **L1 (las 3 correcciones de UI) está completada**
 > (commit `fb8cdec`: filtro de recetas, pestañas de período y "Ver todo").
-> **L2, L4, L3 y L5 están completas**, y el cierre UI/UX de los 8 puntos pedidos
+> **L2, L4, L3 y L5 están completas** (A+B+C: la Fase C de insignias está resuelta la
+> sección de abajo), y el cierre UI/UX de los 8 puntos pedidos
 > está en la sección de abajo (2026-10-06). Este archivo lista qué sigue, con
 > tareas accionables y su estado.
 > Reglas del proyecto que se mantienen: 100 % local/offline, datos de salud nunca
@@ -21,7 +22,7 @@
 | L2 — Agua (registro manual + meta diaria) | ✅ **completa** — registro manual P14, honestidad P19, meta editable P21 | Meta de agua real y persistida por el usuario |
 | L3 — Constructor de entrenamientos | ✅ **completa** — catálogo único de 34 ejercicios, "Mis rutinas" con editor y entrada desde Home | Crear rutinas propias con descanso de 60 s |
 | L4 — Recetas originales por metas | ✅ **completa** — 41 recetas (35 nuevas originales), filtro por meta y sección "Para tu meta" | Catálogo agrupado por meta, sin plagio |
-| L5 — Gamificación Fase A + B | ✅ **completa** | XP/nivel/insignias con feedback sutil (sin modales/sonidos) |
+| L5 — Gamificación Fase A + B + C | ✅ **completa** | XP/nivel/insignias con feedback sutil y **catálogo completo de 9 insignias** (siluetas bloqueadas + fecha real de desbloqueo) |
 | Verificación física L1 | ✅ Pixel 6a (30/09, píxeles+dump) · ⏳ Xiaomi (dump MIUI) | Guía: `docs/GUIA_TESTEO_INTEGRAL.md §12` |
 
 ---
@@ -146,34 +147,65 @@ y "smoothie", que el catálogo original ya usaba y son de uso normal en español
 
 ---
 
-## L5 — Gamificación sutil: Fase A + B (sobre el XP existente)
+## L5 — Gamificación sutil (Fases A + B + C, sobre el XP existente)
 
 **Contexto:** la economía ya existe y se persiste (`app_state.dart:288-313`): +50 XP/sesión,
 +100 reto 3→5→7, nivel = 1 + XP~/300, `progresoNivel`, `nombreNivel`, racha real y 5
 insignias. Plan completo por fases en `docs/DISENO_GAMIFICACION.md`.
 
-- [ ] **Fase A — semilla:** `AppState.premiar(evento)` con tabla de eventos
+- [x] **Fase A — semilla:** `AppState.premiar(evento)` con tabla de eventos
   (`sesion: 50`, `reto: 100`, `metasDia: 25`, …) que centraliza los `_xp +=` dispersos;
   micro-barra de nivel (8 px, sin animación) bajo el header de Progreso; test de que el XP
   sobrevive export/import.
-- [ ] **Fase B — feedback en el momento:** SnackBar `+50 XP` al completar sesión;
+- [x] **Fase B — feedback en el momento:** SnackBar `+50 XP` al completar sesión;
   mini-tarjeta NO bloqueante al subir de nivel (icono + nombre del nivel, se desvanece
   sola, sin botón); insignia nueva con punto de color 24 h; `+25` una vez al día por
   completar los 3 ítems del Día ideal (datos reales).
-- [ ] **Reglas innegociables:** sin modales que interrumpan el reproductor, sin sonidos,
+- [x] **Reglas innegociables:** sin modales que interrumpan el reproductor, sin sonidos,
   sin vibración, niveles nunca bloquean funcionalidad, logros solo con datos reales.
-- [ ] Tests: economía de XP (premios, nivel, persistencia, export/import); analyze 0.
-- [ ] Fases C (insignias temáticas), D (ritual semanal), E (toques de contexto) y F
-  (opcional) solo tras aprobar A+B.
+- [x] Tests: economía de XP (premios, nivel, persistencia, export/import); analyze 0.
+- [x] **Fase C — insignias (2026-10-06):** detalle en la sección de abajo.
+- [ ] Fases D (ritual semanal), E (toques de contexto) y F (opcional) solo tras aprobar la
+  Fase C (sujeto al visto bueno del usuario).
 
 **Archivos previstos:** `app_state.dart`, `progress_screen.dart`, `home_screen.dart`,
 `workout_player_screen.dart`, `locale_service.dart`, tests.
 
 ---
 
+## Fase C — Estructura de insignias (2026-10-06) ✅ código
+
+**Objetivo (`docs/DISENO_GAMIFICACION.md`, FASE C):** catálogo completo y siempre visible
+de **9 insignias** con dos estados: conseguida (icono a color + fecha REAL de desbloqueo) y
+bloqueada (silueta gris con candado + condición escrita, sin contadores de progreso).
+
+- [x] `lib/state/insignias.dart`: catálogo declarativo + `evaluarInsignias` puro. Cada
+  insignia se otorga SOLO con su condición real sobre datos persistidos; las fechas se
+  derivan del historial (nunca se inventan): primera sesión, racha 3/7 (primer día en que
+  la racha alcanzó el objetivo), hierro (25ª sesión), veterano (100ª), marca personal
+  (4ª semana seguida con peso), técnico (fecha en que se llegó a 10 ejercicios con reps),
+  hidratado (7º día con la meta de agua) y 1er reto.
+- [x] **Nuevo dato persistido:** días (medianoche) con la **meta de agua cumplida**
+  (`fitpulse_agua_dias_v1`, máx. 90). Se anota un día solo si el agua real del día ≥ meta;
+  hooks en `registrarAgua`, `refreshHealthConnect` e `init`. Viaja en export/import y se
+  limpia con `resetTrasBorrado`.
+- [x] **Perfil → Insignias & Logros:** contador **"N / 9 insignias"**, cuadrícula de 9,
+  siluetas con candado y fecha real en las conseguidas (`MaterialLocalizations.formatCompactDate`).
+- [x] **Nota de diseño:** "Constancia" (racha 3) y "1er Reto" comparten día de desbloqueo
+  porque el reto de 3 días se completa exactamente cuando la racha llega a 3
+  (`retoCompletado` deriva de la racha). La tabla del diseño las lista por separado y hoy
+  ya eran dos insignias; se mantienen las dos (pendiente de que el usuario decida fusionar).
+- [x] **Cambio frente al estado anterior:** se retira la insignia "Nivel" de la cuadrícula
+  (la tabla del diseño tiene 9 y no la incluye; el nivel/XP sigue visible en Progreso y en
+  "Nivel y preferencias" del Perfil).
+- [x] Tests: `test/insignias_test.dart` (12) + 2 widget tests en `perfil_test.dart`;
+  suite **280/280** y `flutter analyze` 0 issues.
+
+---
+
 ## Cierre UI/UX — 8 puntos pedidos (2026-10-06) ✅ código
 
-Detalle de `PLAN.md §11.7`. Estado: **266/266 tests**, `flutter analyze` 0 issues.
+Detalle de `PLAN.md §11.7`. Estado: **280/280 tests**, `flutter analyze` 0 issues.
 
 - [x] **Avatar** siempre cuadrado (`lib/utils/foto_avatar.dart`): recorte del lado más
   corto centrado + respiro 2 % hacia **dentro**; `null` si no hay recorte fiable.

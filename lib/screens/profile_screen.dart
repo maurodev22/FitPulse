@@ -9,6 +9,7 @@ import '../services/config_service.dart';
 import '../services/locale_service.dart';
 import '../state/app_state.dart';
 import '../state/athlete_profile.dart';
+import '../state/insignias.dart';
 import '../theme.dart';
 import '../utils/foto_avatar.dart';
 import '../utils/validators.dart';
@@ -384,108 +385,192 @@ Widget _buildPremium() {
     );
   }
 
-  /// P3: insignias y logros del atleta. Catálogo real derivado del historial,
-  /// la racha máxima, el nivel y los retos completados (nunca se inventa).
+  /// FASE C (gamificación): insignias y logros del atleta.
+  ///
+  /// Catálogo completo y siempre visible, con dos estados:
+  ///  * conseguida → icono a color + fecha REAL de desbloqueo (derivada del
+  ///    propio historial, nunca inventada);
+  ///  * bloqueada → silueta gris con candado y la condición escrita, sin
+  ///    contadores de progreso ("te faltan 2 para…") para no generar presión.
+  ///
+  /// Cada insignia se otorga SOLO con su condición real verificada sobre datos
+  /// ya persistidos (`evaluarInsignias`); si la fecha no se puede derivar no
+  /// se muestra.
   Widget _buildInsignias() {
     final state = context.watch<AppState>();
     final strings = context.watch<LocaleService>().strings;
-    final insignias = <({IconData icono, String nombre, String detalle})>[
-      if (state.historial.isNotEmpty)
-        (
-          icono: Icons.fitness_center,
-          nombre: strings.prPrimeraSesion,
-          detalle: strings.prCompletada,
-        ),
-      if (state.rachaMaxima >= 3)
-        (
-          icono: Icons.local_fire_department,
-          nombre: strings.prRacha3,
-          detalle: strings.prConstancia,
-        ),
-      if (state.rachaMaxima >= 7)
-        (
-          icono: Icons.whatshot,
-          nombre: strings.prRacha7,
-          detalle: strings.prDisciplina,
-        ),
-      if (state.nivel >= 2)
-        (
-          icono: Icons.workspace_premium,
-          nombre: strings.prInsigniaNivel(state.nivel),
-          detalle: strings.nivelName(state.nombreNivel),
-        ),
-      if (state.retoCompletado)
-        (
-          icono: Icons.emoji_events,
-          nombre: strings.prInsigniaReto(state.retoObjetivo),
-          detalle: strings.prCompletado,
-        ),
-    ];
+    final resultados = evaluarInsignias(state.datosInsignias);
+    final conseguidas = resultados.where((r) => r.conseguida).length;
+    final localizador = MaterialLocalizations.of(context);
 
-    Widget tarjetaVacia() {
-      return Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: AppColors.surfaceContainerLow,
-          borderRadius: BorderRadius.circular(16),
+    return SettingsCard(
+      children: [
+        SettingsCardTitle(
+          icon: Icons.emoji_events_outlined,
+          title: strings.prInsignias,
         ),
-        child: Column(
-          children: [
-            Icon(Icons.emoji_events_outlined, size: 28, color: AppColors.outline),
-            const SizedBox(height: 8),
-            Text(
+        // C3: contador del catálogo. Va en su propia fila (no como `action`
+        // del título) para que a escala de texto 2.0× no desborde el Row de
+        // la cabecera.
+        Align(
+          alignment: Alignment.centerRight,
+          child: Text(
+            strings.prInsigniasContador(conseguidas, resultados.length),
+            style: AppType.labelSm.copyWith(color: AppColors.outline),
+          ),
+        ),
+        const SizedBox(height: 12),
+        if (conseguidas == 0)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.surfaceContainerLow,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Text(
               strings.prDesbloqueaInsignias,
               textAlign: TextAlign.center,
               style: AppType.bodySm.copyWith(color: AppColors.outline),
             ),
+          ),
+        if (conseguidas == 0) const SizedBox(height: 12),
+        Wrap(
+          spacing: 10,
+          runSpacing: 10,
+          children: [
+            for (final r in resultados)
+              _insigniaTile(strings, localizador, r),
           ],
         ),
-      );
-    }
+      ],
+    );
+  }
 
-    return SettingsCard(
-      children: [
-        SettingsCardTitle(icon: Icons.emoji_events_outlined, title: strings.prInsignias),
-        const SizedBox(height: 12),
-        if (insignias.isEmpty)
-          tarjetaVacia()
-        else
-          Wrap(
-            spacing: 10,
-            runSpacing: 10,
+  /// Icono, nombre y condición de cada insignia del catálogo (Fase C).
+  ({IconData icono, String nombre, String condicion}) _infoInsignia(
+    AppStrings strings,
+    InsigniaId id,
+  ) {
+    return switch (id) {
+      InsigniaId.primeraSesion => (
+          icono: Icons.fitness_center,
+          nombre: strings.prInsPrimerPaso,
+          condicion: strings.prInsCondPrimerPaso,
+        ),
+      InsigniaId.constancia => (
+          icono: Icons.local_fire_department,
+          nombre: strings.prInsConstancia,
+          condicion: strings.prInsCondRacha3,
+        ),
+      InsigniaId.disciplina => (
+          icono: Icons.whatshot,
+          nombre: strings.prInsDisciplina,
+          condicion: strings.prInsCondRacha7,
+        ),
+      InsigniaId.hierro => (
+          icono: Icons.sports_martial_arts,
+          nombre: strings.prInsHierro,
+          condicion: strings.prInsCondHierro,
+        ),
+      InsigniaId.veterano => (
+          icono: Icons.military_tech,
+          nombre: strings.prInsVeterano,
+          condicion: strings.prInsCondVeterano,
+        ),
+      InsigniaId.marcaPersonal => (
+          icono: Icons.monitor_weight_outlined,
+          nombre: strings.prInsMarcaPersonal,
+          condicion: strings.prInsCondMarcaPersonal,
+        ),
+      InsigniaId.tecnico => (
+          icono: Icons.repeat,
+          nombre: strings.prInsTecnico,
+          condicion: strings.prInsCondTecnico,
+        ),
+      InsigniaId.hidratado => (
+          icono: Icons.water_drop_outlined,
+          nombre: strings.prInsHidratado,
+          condicion: strings.prInsCondHidratado,
+        ),
+      InsigniaId.primerReto => (
+          icono: Icons.emoji_events,
+          nombre: strings.prInsPrimerReto,
+          condicion: strings.prInsCondPrimerReto,
+        ),
+    };
+  }
+
+  /// Tarjeta de una insignia: conseguida (icono a color + fecha real) o
+  /// bloqueada (silueta gris con candado y condición).
+  Widget _insigniaTile(
+    AppStrings strings,
+    MaterialLocalizations localizador,
+    InsigniaResultado r,
+  ) {
+    final info = _infoInsignia(strings, r.id);
+    final techo = r.conseguida && r.fecha != null
+        ? localizador.formatCompactDate(r.fecha!)
+        : info.condicion;
+
+    return Container(
+      width: 105,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        children: [
+          Stack(
+            clipBehavior: Clip.none,
             children: [
-              for (final ins in insignias)
-                Container(
-                  width: 105,
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: AppColors.surfaceContainerLow,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Column(
-                    children: [
-                      Icon(ins.icono, size: 22, color: AppColors.primary),
-                      const SizedBox(height: 6),
-                      Text(
-                        ins.nombre,
-                        style: AppType.labelMd.copyWith(
-                          color: AppColors.onSurface,
-                          fontWeight: FontWeight.w700,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      Text(
-                        ins.detalle,
-                        style: AppType.labelSm.copyWith(color: AppColors.outline),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
+              Icon(
+                info.icono,
+                size: 22,
+                color: r.conseguida
+                    ? AppColors.primary
+                    : AppColors.outlineVariant,
+              ),
+              if (!r.conseguida)
+                Positioned(
+                  right: -8,
+                  bottom: -8,
+                  child: Container(
+                    width: 14,
+                    height: 14,
+                    decoration: BoxDecoration(
+                      color: AppColors.surfaceContainerLow,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(Icons.lock, size: 10, color: AppColors.outline),
                   ),
                 ),
             ],
           ),
-      ],
+          const SizedBox(height: 6),
+          Text(
+            info.nombre,
+            style: AppType.labelMd.copyWith(
+              color: r.conseguida ? AppColors.onSurface : AppColors.outline,
+              fontWeight: FontWeight.w700,
+            ),
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 3),
+          Text(
+            techo,
+            style: AppType.labelSm.copyWith(
+              color: r.conseguida ? AppColors.primary : AppColors.outline,
+            ),
+            textAlign: TextAlign.center,
+            maxLines: 3,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
     );
   }
 

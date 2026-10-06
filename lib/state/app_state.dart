@@ -10,6 +10,7 @@ import '../services/usage_log_service.dart';
 import '../utils/validators.dart';
 import 'athlete_profile.dart';
 import 'estado_salud.dart';
+import 'insignias.dart';
 import 'registros.dart';
 import 'rutinas.dart';
 import 'workout.dart';
@@ -42,6 +43,11 @@ class AppState extends ChangeNotifier {
 
   // L2: meta diaria de agua editable por el usuario (litros).
   static const _metaAguaKey = 'fitpulse_meta_agua_v1';
+
+  // Fase C: días en los que se cumplió la meta de agua — dato real de la
+  // insignia "Hidratado" (7 días distintos). No es un valor de salud
+  // inventado: se anota un día solo si el agua real de ese día ≥ la meta.
+  static const _aguaDiasKey = 'fitpulse_agua_dias_v1';
 
   // Fase 2: historial de sesiones, puntos y retos.
   static const _historyKey = 'fitpulse_workout_history_v1';
@@ -350,6 +356,19 @@ class AppState extends ChangeNotifier {
     } else {
       _resetAguaManual();
     }
+
+    // Fase C: días con la meta de agua cumplida (insignia "Hidratado").
+    final diasAguaCumplidos = <DateTime>[];
+    for (final s in _prefs!.getStringList(_aguaDiasKey) ?? const <String>[]) {
+      final dt = DateTime.tryParse(s);
+      if (dt != null) diasAguaCumplidos.add(dt);
+    }
+    diasAguaCumplidos.sort();
+    diasAguaCumplida = diasAguaCumplidos;
+
+    // Fase C: si el día de hoy ya cumplió la meta (p. ej. con agua manual
+    // persistida o Health Connect), se anota para no perderlo.
+    await _registrarDiaAguaCumplida();
     notifyListeners();
   }
 
@@ -399,6 +418,8 @@ class AppState extends ChangeNotifier {
     final today = _dayKey(DateTime.now());
     await _prefs?.setDouble(_aguaManualKey, aguaManualHoy);
     await _prefs?.setString(_aguaManualDateKey, today);
+    // Fase C: si el total real del día ya llegó a la meta, se anota el día.
+    await _registrarDiaAguaCumplida();
     notifyListeners();
   }
 
@@ -422,6 +443,60 @@ class AppState extends ChangeNotifier {
     if (hc != null) return 'health';
     return null;
   }
+
+  // ---------------------------------------------------------------------
+  //  Fase C (gamificación): días con la meta de agua cumplida
+  // ---------------------------------------------------------------------
+
+  /// Días (medianoche) en los que el agua REAL del día llegó a la meta,
+  /// ascendentes y sin repetir. Es el dato de la insignia "Hidratado".
+  List<DateTime> diasAguaCumplida = [];
+
+  /// Anota HOY como día con la meta de agua cumplida, solo si de verdad se
+  /// cumple (manual + Health Connect). Ideal: una vez por día.
+  Future<void> _registrarDiaAguaCumplida() async {
+    final ahora = DateTime.now();
+    final dia = DateTime(ahora.year, ahora.month, ahora.day);
+    if (diasAguaCumplida.contains(dia)) return;
+    final agua = aguaHoy;
+    if (agua == null || agua < metaAguaDiaria) return;
+    diasAguaCumplida.add(dia);
+    diasAguaCumplida.sort();
+    // Se acota a 90 días: la condición real es contar 7 días distintos.
+    if (diasAguaCumplida.length > 90) {
+      diasAguaCumplida.removeRange(0, diasAguaCumplida.length - 90);
+    }
+    await _prefs?.setStringList(
+      _aguaDiasKey,
+      diasAguaCumplida.map((d) => d.toIso8601String()).toList(),
+    );
+  }
+
+  /// Proyección de los datos reales que evalúa el catálogo de insignias
+  /// (Fase C). El histórico se ordena ascendente para la derivación de
+  /// fechas; la racha máxima usa exactamente los mismos días que la app.
+  DatosInsignias get datosInsignias {
+    final fechas = historial.map((s) => s.fecha).toList()..sort();
+    final semanas = <DateTime>{};
+    for (final r in historialPeso) {
+      semanas.add(r.lunes);
+    }
+    final semanasAsc = semanas.toList()..sort();
+    final primeras = <String, DateTime>{};
+    for (final r in historialReps) {
+      final prev = primeras[r.ejercicio];
+      if (prev == null || r.fecha.isBefore(prev)) {
+        primeras[r.ejercicio] = r.fecha;
+      }
+    }
+    return DatosInsignias(
+      fechasSesiones: fechas,
+      semanasPeso: semanasAsc,
+      primerasRepsPorEjercicio: primeras,
+      diasAguaCumplida: List.of(diasAguaCumplida)..sort(),
+    );
+  }
+
   double? get gastoActivoHoy => _healthToday.gastoActivoKcal;
   int? get tiempoActivoMin => _healthToday.tiempoActivoMin;
 
@@ -496,6 +571,8 @@ class AppState extends ChangeNotifier {
     if (!healthDisponible && _healthToday.pasos > 0) {
       pasosHoy = _healthToday.pasos;
     }
+    // Fase C: el agua leída de Health Connect pueda completar la meta de hoy.
+    await _registrarDiaAguaCumplida();
     notifyListeners();
   }
 
@@ -947,6 +1024,7 @@ class AppState extends ChangeNotifier {
       'reto_objetivo': _retoObjetivo,
       'favoritas': favoritas.toList(),
       'meta_agua': _metaAguaLitros,
+      'dias_agua': diasAguaCumplida.map((d) => d.toIso8601String()).toList(),
       'rutinas': rutinas.map((r) => r.toJson()).toList(),
       'pasos_base_fecha': _prefs?.getString(_pasosBaseDateKey),
     };
@@ -1016,6 +1094,23 @@ class AppState extends ChangeNotifier {
       await _prefs?.setDouble(_metaAguaKey, _metaAguaLitros);
     }
 
+    // Fase C: días con la meta de agua cumplida del backup. Si el backup es
+    // anterior (sin la clave), se conservan los del dispositivo.
+    final rawDiasAgua = snapshot['dias_agua'];
+    if (rawDiasAgua is List) {
+      final dias = <DateTime>[];
+      for (final s in rawDiasAgua.whereType<String>()) {
+        final dt = DateTime.tryParse(s);
+        if (dt != null) dias.add(dt);
+      }
+      dias.sort();
+      diasAguaCumplida = dias;
+      await _prefs?.setStringList(
+        _aguaDiasKey,
+        diasAguaCumplida.map((d) => d.toIso8601String()).toList(),
+      );
+    }
+
     // L3: rutinas propias del backup. Si el backup es anterior (sin la clave), se
     // conservan las rutinas que ya hubiera en el dispositivo en vez de borrarlas.
     final rawRutinas = snapshot['rutinas'];
@@ -1043,6 +1138,7 @@ class AppState extends ChangeNotifier {
     _xp = 0;
     _retoObjetivo = 3;
     _metaAguaLitros = metaAguaInicial;
+    diasAguaCumplida = [];
     rutinas = <Rutina>[];
     _pasosBase = null;
     pasosHoy = 0;

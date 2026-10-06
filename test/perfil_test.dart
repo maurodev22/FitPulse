@@ -113,4 +113,63 @@ void main() {
     expect(find.text('2 días / semana'), findsOneWidget);
     expect(find.text('1 día / semana'), findsNothing);
   });
+
+  testWidgets('Fase C: catálogo completo de insignias, todo bloqueado',
+      (tester) async {
+    final state = AppState();
+    await state.init();
+    final locale = LocaleService();
+    await locale.init();
+    final config = ConfigService();
+    await config.init();
+
+    await pumpPerfil(tester, state: state, locale: locale, config: config);
+
+    await tester.scrollUntilVisible(find.text('Insignias & Logros'), 200);
+    await tester.pumpAndSettle();
+
+    // Contador honesto y cuadrícula completa: las 9 bloqueadas con candado
+    // (la silueta gris comunica "existe y es alcanzable" sin presión).
+    expect(find.text('0 / 9 insignias'), findsOneWidget);
+    expect(find.byIcon(Icons.lock), findsNWidgets(9));
+    expect(find.text('Primer paso'), findsOneWidget);
+    expect(find.text('Veterano'), findsOneWidget);
+  });
+
+  testWidgets('Fase C: una sesión real desbloquea "Primer paso"',
+      (tester) async {
+    final state = AppState();
+    await state.init();
+    await state.registrarSesionCompletada(
+      nombre: 'Full Body',
+      duracion: const Duration(minutes: 30),
+      calorias: 180,
+    );
+    final locale = LocaleService();
+    await locale.init();
+    final config = ConfigService();
+    await config.init();
+
+    await pumpPerfil(tester, state: state, locale: locale, config: config);
+
+    await tester.scrollUntilVisible(find.text('Insignias & Logros'), 200);
+    await tester.pumpAndSettle();
+
+    expect(find.text('1 / 9 insignias'), findsOneWidget);
+    expect(find.byIcon(Icons.lock), findsNWidgets(8));
+    // La conseguida ("Primer paso") ya no muestra su condición, esa baja
+    // solo aparece en las afinidades bloqueadas.
+    expect(find.text('Completa tu primera sesión'), findsNothing);
+    final tarjetaInsignia = find.ancestor(
+      of: find.text('Primer paso'),
+      matching: find.byType(Container),
+    );
+    expect(
+      find.descendant(
+        of: tarjetaInsignia.first,
+        matching: find.byIcon(Icons.fitness_center),
+      ),
+      findsOneWidget,
+    );
+  });
 }

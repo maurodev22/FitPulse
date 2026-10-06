@@ -343,8 +343,9 @@ Frecuencia: siempre
 - **Que los datos sean correctos:** los valores de salud llevan su etiqueta de
   estimación; el diseño de la etiqueta está en D2/D3, la veracidad del dato es
   otro test.
-- **Pruebas automáticas:** `flutter analyze` (0 issues) y `flutter test` (266/266)
-  ya están en verde. Esta guía es para lo que el ojo y el dedo sí ven.
+- **Pruebas automáticas:** `flutter analyze` (0 issues) y `flutter test` (280/280)
+  ya están en verde (incluyen la Fase C de insignias y su accesibilidad a 2.0×).
+  Esta guía es para lo que el ojo y el dedo sí ven.
 
 ---
 
