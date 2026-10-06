@@ -21,7 +21,7 @@
 | Fase 6 (extras de retención) | ✅ instalado/verificado | Widget de home (pasos/calorías/racha) + avisos locales por tipo; instalado y verificado en Pixel 6a y Xiaomi |
 | Fase 7 (premium + accesibilidad) | ✅ código | Modo oscuro (sistema/claro/oscuro), contraste WCAG AA, tamaño accesible (0 desbordes a 2.0×), micro-animaciones, i18n es/en completo; `flutter analyze` 0 issues y 55 tests verdes. Pendiente PASA/FALLA manual del usuario |
 | Fase 8 | ✅ código (falta verificación EEE + 8.5) | Privacidad GDPR: export/import legible + borrado total (8.1 ✅); política de privacidad + EULA v2 (8.2 ✅); UMP publicidad nativo + app open (8.3 ✅ código); aviso de IA (8.4 ✅); release firmado + Data Safety (8.5, bloqueado por cuenta Play desde Cuba) |
-| Fase 9 (correcciones UI + plan aprobado) | 🚧 L1 en verificación | Plan aprobado 2026-09-29 (`docs/PLAN_AGREGAR_CORREGIR.md` + `docs/DISENO_GAMIFICACION.md`). L1 código ✅ (filtro recetas, pestañas de período, "Ver todo") con 108 tests; agua, constructor, recetas y gamificación ⏳ según orden del plan |
+| Fase 9 (correcciones UI + plan aprobado) | ✅ código | Plan aprobado 2026-09-29 (`docs/PLAN_AGREGAR_CORREGIR.md` + `docs/DISENO_GAMIFICACION.md`). L1 ✅ (filtro recetas, pestañas de período, "Ver todo"); **L2 agua** (metas/registro manual), **L4 recetas originales por meta**, **L3 constructor de rutinas** y **L5 gamificación A→E + F1/F3** ✅ (§11.x). **303/303 tests** + `flutter analyze` 0 issues. Verificación física en móvil pendiente |
 
 **Sesión** (`FUNCIONALIDADES.md`), **guía de prueba manual** (`GUIA_TESTEO_FASE1.md`) y
 **README** están pendientes de actualización con el estado de Fases 1 y 2.
@@ -354,7 +354,7 @@ AAB firmado y política/privacy visibles en Perfil y en la ficha de Play.
 
 ---
 
-## 11.5 Fase 9 — Correcciones L1 y plan aprobado (agregar/corregir) 🚧
+## 11.5 Fase 9 — Correcciones L1 y plan aprobado (agregar/corregir) ✅ código
 
 Plan aprobado por el cliente el 2026-09-29. Documentos de diseño:
 `docs/PLAN_AGREGAR_CORREGIR.md` (7 ítems) y `docs/DISENO_GAMIFICACION.md` (gamificación
@@ -372,13 +372,25 @@ sutil por fases A-F, construida sobre el XP/nivel/insignias existentes).
   (`HistorialSesionesScreen`); la fila de sesión se extrajo a un widget compartido
   (`widgets/sesion_row.dart`).
 
-**Pendientes del plan (⏳):** 2.1 Agua (registro manual de vasos 250 ml + meta diaria
-editable, def. 3 L), 2.2 Constructor de entrenamientos (rutinas propias con descanso
-60 s, reutiliza el reproductor), 2.3 Recetas originales por metas (sin copiar medios,
-por copyright; Bajar de peso / Mantener / Ganar músculo) y 2.4 Gamificación Fase A+B.
+**L2 — Agua (código y tests ✅):** registro manual de vasos 250 ml + meta diaria editable
+(def. 3 L), persistencia por día y cierre del plan de comidas con "Día libre".
 
-Estado: `flutter analyze` 0 issues y 108 tests verdes; verificación física pendiente en
-Pixel 6a (muestreo de píxeles + `uiautomator dump`, tema oscuro y español intactos).
+**L3 — Constructor de entrenamientos (código y tests ✅):** rutinas propias con descanso
+60 s que reutilizan el reproductor, catálogo único de 34 ejercicios.
+
+**L4 — Recetas originales por metas (código y tests ✅):** 41 recetas originales por meta
+(Bajar de peso / Mantener / Ganar músculo), sin copiar medios (copyright), con
+ilustración propia por receta.
+
+**L5 — Gamificación Fase A → B → C → D → E + F1/F3 (código y tests ✅):** detalle en
+§11.8 (Estructura de insignias), §11.9 (Ritual semanal "Tu semana"), §11.10 (Toques de
+contexto: chip "Nv N · Nombre", mini-barra de XP y "Lv N" en el widget) y §11.11
+(Profundización opcional: teaser "Próxima insignia" + tests de economía). F2 (refactor
+de tokens) queda documentado como pendiente menor.
+
+Estado: `flutter analyze` 0 issues y **303/303 tests verdes**; verificación física
+pendiente en Pixel 6a (muestreo de píxeles + `uiautomator dump`, tema oscuro y español
+intactos), bloqueada por pantalla PIN del dispositivo.
 
 ---
 
