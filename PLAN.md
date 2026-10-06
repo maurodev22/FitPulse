@@ -276,8 +276,11 @@ fuera de Cuba (se deja la puerta abierta sin bloquear la app).
 - **EULA actualizado a v2** (implementado): cláusulas 5 (datos de salud art. 9 +
   edad mínima 16) y 6 (publicidad/consentimiento + devolución 14 días + datos
   de comerciante). `kEulaVersion = 2` → se vuelve a pedir aceptación.
-- **Política de copy anti-claims (MDR)**: pendiente de auditar los textos de
-  tips y fijarla por escrito (ningún texto afirma diagnosticar/tratar/prevenir).
+- **Política de copy anti-claims (MDR)** ✅ (2026-10-06): auditoría hecha y
+  documentada en `docs/POLITICA_COPY_SALUD.md`. Se suavizaron 4 afirmaciones
+  fisiológicas (volemia, catabolismo, quema lipídica, cortisol) y se mantienen los
+  descargos (`tipsAvisoSalud`, `esOrientativo`). La app queda fuera del ámbito de
+  producto sanitario (MDR 2017/745).
 
 ### 8.3 Consentimiento publicitario UE (UMP + ePrivacy) ✅ código (verificación EEE pendiente)
 - Integrar **Google User Messaging Platform** (UMP) para EEE/Reino Unido: mensaje de
@@ -320,11 +323,19 @@ fuera de Cuba (se deja la puerta abierta sin bloquear la app).
   de IA en tu dispositivo (ML Kit): el análisis es local y la cámara no graba ni sube
   nada." Visible de forma permanente bajo la barra inferior del coach.
 
-### 8.5 Release firmado y publicación ⏳ parcial
-- **Firma propia**: pendiente de generar keystore (fuera del repo) + `build.gradle.kts`
-  con signing condicional y `app-release.aab` con Play App Signing.
-- **Ficha Data Safety** cumplimentada con lo real (datos locales, cifrado, sin
-  compartición) — pendiente de rellenar al publicar.
+### 8.5 Release firmado y publicación ⏳ parcial (Bloque B implementado)
+- **Firma propia** ✅ (Bloque B, 2026-10-06): keystore generado **fuera del repo**
+  (`C:\Users\mauro\fitpulse-keys\fitpulse-release.jks`, alias `fitpulse`, RSA 2048,
+  10 000 días) + `android/key.properties` (gitignored) + **signing condicional** en
+  `android/app/build.gradle.kts` (si no existe la clave degrada a debug, no rompe el
+  build) + **`app-release.aab` firmado** listo para Play App Signing. Compile/target
+  SDK 36 (cumple el mínimo de Play 2026, verificado en el plugin Flutter 3.47.3).
+- **Ficha Data Safety** ✅ preparada: respuestas exactas en `docs/DATA_SAFETY.md`
+  (rellenar en consola al publicar).
+- **URL de política de privacidad** ✅ lista: `docs/privacidad/index.html` (es/en,
+  autocontenida) → publicar con GitHub Pages (rama `main`, carpeta `/docs`).
+- **Checklist completo**: `docs/DEPLOY_PLAY_STORE.md` (A: cuentas ⚠️ · B: código ✅ ·
+  C: al publicar ⚠️ · D: verificación física ⚠️).
 - **Bloqueo estructural**: la cuenta de desarrollador de Play no puede crearse desde
   Cuba (país no soportado; requiere entidad + datos fiscales fuera). Publicar solo
   cuando exista esa entidad; hasta entonces el AAB firmado queda listo para subir.

@@ -1,8 +1,28 @@
+import java.io.FileInputStream
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
 }
+
+// Firma de release (deployment oficial, Bloque B): el keystore NO vive en el
+// repo. `android/key.properties` está en .gitignore y apunta al .jks que se
+// generó fuera del repositorio (C:\Users\mauro\fitpulse-keys\). Si el archivo
+// no existe (CI, clon limpio), el build degrada a la firma debug con un aviso
+// para que el proyecto nunca se rompa.
+val keystoreProperties = Properties()
+val keystorePropertiesFile = rootProject.file("key.properties")
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(FileInputStream(keystorePropertiesFile))
+}
+val releaseStoreFile = if (keystorePropertiesFile.exists()) {
+    keystoreProperties["storeFile"]?.toString()
+} else {
+    null
+}
+val tieneFirmaRelease = keystorePropertiesFile.exists() && !releaseStoreFile.isNullOrBlank()
 
 android {
     namespace = "com.fitpulse.app"
@@ -40,11 +60,27 @@ android {
         versionName = flutter.versionName
     }
 
+    signingConfigs {
+        create("release") {
+            if (tieneFirmaRelease) {
+                keyAlias = keystoreProperties["keyAlias"] as String
+                keyPassword = keystoreProperties["keyPassword"] as String
+                storeFile = file(releaseStoreFile!!)
+                storePassword = keystoreProperties["storePassword"] as String
+            }
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            // Firma propia (Bloque B): si android/key.properties existe se firma
+            // con el keystore de producción; si no (clon/CI sin secretos), se
+            // degrada a debug para que `flutter build appbundle` no falle.
+            signingConfig = if (tieneFirmaRelease) {
+                signingConfigs.getByName("release")
+            } else {
+                signingConfigs.getByName("debug")
+            }
             // Fase 3 "app ligera": R8 (shrinker) + eliminación de recursos sin uso.
             // Reduce el tamaño del APK de release (target ~28-35 MB instalado).
             isMinifyEnabled = true

@@ -670,18 +670,18 @@ class AppStrings {
   String get tipsTip1Titulo => _t('Hidratación Óptima', 'Optimal Hydration');
   String get tipsTip1Sub => _t('Pre-entreno', 'Pre-workout');
   String get tipsTip1Desc => _t(
-      'Bebe 500ml de agua 30 min antes de entrenar para mantener la volemia y potencia muscular.',
-      'Drink 500ml of water 30 min before training to maintain blood volume and muscle power.');
+      'Bebe 500ml de agua 30 min antes de entrenar para llegar hidratado y rendir mejor en tu sesión.',
+      'Drink 500ml of water 30 min before training to stay hydrated and perform better in your session.');
   String get tipsTip2Titulo => _t('Ventana Anabólica', 'Anabolic Window');
   String get tipsTip2Sub => _t('Post-HIIT', 'Post-HIIT');
   String get tipsTip2Desc => _t(
-      'Consume 25-30g de proteína de rápida asimilación tras tus sesiones HIIT para frenar el catabolismo.',
-      'Have 25-30g of fast-absorbing protein after your HIIT sessions to curb catabolism.');
+      'Consume 25-30g de proteína de rápida asimilación tras tus sesiones HIIT para apoyar la recuperación muscular.',
+      'Have 25-30g of fast-absorbing protein after your HIIT sessions to support muscle recovery.');
   String get tipsTip3Titulo => _t('Sueño Profundo', 'Deep Sleep');
   String get tipsTip3Sub => _t('Regeneración', 'Recovery');
   String get tipsTip3Desc => _t(
-      'Garantiza 7-8 horas de reposo; la hormona de crecimiento nocturna maximiza la quema lipídica.',
-      'Ensure 7-8 hours of rest; night-time growth hormone maximizes fat burning.');
+      'Duerme 7-8 horas: el descanso nocturno es clave para la recuperación y el rendimiento del día siguiente.',
+      'Sleep 7-8 hours: nightly rest is key for recovery and next-day performance.');
   String get tipsArticulosRecomendados => _t('Artículos Recomendados', 'Recommended Articles');
   String tipsVerTodos(int n) => _t('Ver todos ($n)', 'See all ($n)');
   String get tipsSinResultados =>
@@ -700,8 +700,8 @@ class AppStrings {
       _t('Alineación del fémur, movilidad de tobillos.',
           'Femur alignment, ankle mobility.');
   String get tipsArt3Titulo =>
-      _t('Respiración diafragmática para bajar el cortisol',
-          'Diaphragmatic breathing to lower cortisol');
+      _t('Respiración diafragmática para relajarte',
+          'Diaphragmatic breathing to relax');
   String get tipsArt3Cuerpo =>
       _t('Técnica box-breathing de 4 tiempos.', '4-count box-breathing technique.');
   String get tipsAvisoSalud => _t(
