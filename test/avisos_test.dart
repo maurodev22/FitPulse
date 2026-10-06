@@ -58,11 +58,13 @@ void main() {
         pasos: 4321,
         calorias: 187.6,
         racha: 3,
+        nivel: 2,
         fecha: '2026-09-25',
       );
       expect(json, contains('"pasos":4321'));
       expect(json, contains('"calorias":188'));
       expect(json, contains('"racha":3'));
+      expect(json, contains('"nivel":2'));
       expect(json, contains('"fecha":"2026-09-25"'));
     });
 
@@ -72,9 +74,11 @@ void main() {
         pasos: 100,
         calorias: null,
         racha: 0,
+        nivel: 1,
         fecha: '2026-09-25',
       );
       expect(json, contains('"calorias":null'));
+      expect(json, contains('"nivel":1'));
     });
   });
 }

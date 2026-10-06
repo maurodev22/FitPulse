@@ -568,6 +568,10 @@ class AppStrings {
           'Train $o consecutive days and earn +100 bonus pts.');
   String prNivel(int n, String nombreEs) =>
       _t('Nivel $n · $nombreEs', 'Level $n · ${nivelName(nombreEs)}');
+
+  /// Fase E1: chip compacto "Nv 3 · Intermedio" de los headers.
+  String prNivelChip(int n, String nombreEs) =>
+      _t('Nv $n · $nombreEs', 'Lv $n · ${nivelName(nombreEs)}');
   String prPts(int xp) => _t('$xp pts', '$xp pts');
   String prPtsParaNivel(int restantes, int siguiente) => _t(
       '+50 pts por sesión completada · $restantes pts para nivel $siguiente',

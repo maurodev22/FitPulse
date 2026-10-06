@@ -54,6 +54,7 @@ class HomeWidgetBridge with WidgetsBindingObserver {
           ? _appState.gastoActivoHoy
           : null,
       racha: _appState.rachaDias,
+      nivel: _appState.nivel,
       fecha: fecha,
     );
   }

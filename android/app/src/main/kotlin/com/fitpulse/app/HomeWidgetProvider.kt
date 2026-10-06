@@ -49,6 +49,10 @@ object HomeWidgetRenderer {
                 if (cal == null || cal == JSONObject.NULL) "—" else cal.toString()
             )
             views.setTextViewText(R.id.w_racha, "${o.optInt("racha")} d")
+            // E3: micro-burbuja "Lv N" en el subtítulo (mismo valor que el
+            // nivel calculado por la app: 1 + xp/300).
+            val nv = o.optInt("nivel")
+            if (nv > 0) views.setTextViewText(R.id.w_subtitulo, "Hoy · Lv $nv")
         } catch (_: Exception) {
             views.setTextViewText(R.id.w_pasos, "—")
             views.setTextViewText(R.id.w_calorias, "—")

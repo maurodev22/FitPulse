@@ -595,7 +595,29 @@ class _HomeHeader extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 8),
-          RachaChip(racha: state.rachaDias, borde: true),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              RachaChip(racha: state.rachaDias, borde: true),
+              const SizedBox(height: 4),
+              // E2: mini-barra de progreso de nivel (10 px), pasiva. Muestra el
+              // mismo valor que AppState.nivel; no admite interacción.
+              ClipRRect(
+                borderRadius: BorderRadius.circular(999),
+                child: SizedBox(
+                  width: 56,
+                  height: 10,
+                  child: LinearProgressIndicator(
+                    key: const Key('barra_nivel_home'),
+                    value: state.progresoNivel,
+                    minHeight: 10,
+                    backgroundColor: AppColors.surfaceContainer,
+                    color: AppColors.primary,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     );

@@ -22,7 +22,7 @@
 | L2 — Agua (registro manual + meta diaria) | ✅ **completa** — registro manual P14, honestidad P19, meta editable P21 | Meta de agua real y persistida por el usuario |
 | L3 — Constructor de entrenamientos | ✅ **completa** — catálogo único de 34 ejercicios, "Mis rutinas" con editor y entrada desde Home | Crear rutinas propias con descanso de 60 s |
 | L4 — Recetas originales por metas | ✅ **completa** — 41 recetas (35 nuevas originales), filtro por meta y sección "Para tu meta" | Catálogo agrupado por meta, sin plagio |
-| L5 — Gamificación Fase A + B + C + D | ✅ **completa** | XP/nivel/insignias con feedback sutil, **catálogo completo de 9 insignias** (siluetas bloqueadas + fecha real) y **tarjeta "Tu semana"** con datos reales de la semana pasada |
+| L5 — Gamificación Fase A + B + C + D + E | ✅ **completa** | XP/nivel/insignias con feedback sutil, **catálogo completo de 9 insignias** (siluetas bloqueadas + fecha real), **tarjeta "Tu semana"** con datos reales de la semana pasada y **toques de contexto**: chip "Nv N · Nombre" en Progreso y Perfil, mini-barra de XP (10 px) en Home y "Lv N" en el widget de home |
 | Verificación física L1 | ✅ Pixel 6a (30/09, píxeles+dump) · ⏳ Xiaomi (dump MIUI) | Guía: `docs/GUIA_TESTEO_INTEGRAL.md §12` |
 
 ---
@@ -166,8 +166,9 @@ insignias. Plan completo por fases en `docs/DISENO_GAMIFICACION.md`.
 - [x] Tests: economía de XP (premios, nivel, persistencia, export/import); analyze 0.
 - [x] **Fase C — insignias (2026-10-06):** detalle en la sección de abajo.
 - [x] **Fase D — ritual semanal (2026-10-06):** detalle en la sección de abajo.
-- [ ] Fases E (toques de contexto) y F (opcional) solo tras aprobar la Fase D
-  (sujeto al visto bueno del usuario).
+- [x] **Fase E — toques de contexto (2026-10-06):** detalle en la sección de abajo.
+- [ ] Fase F (profundización opcional) solo si el usuario la quiere (sujeto a su
+  visto bueno).
 
 **Archivos previstos:** `app_state.dart`, `progress_screen.dart`, `home_screen.dart`,
 `workout_player_screen.dart`, `locale_service.dart`, tests.
@@ -231,9 +232,34 @@ bloqueada (silueta gris con candado + condición escrita, sin contadores de prog
 
 ---
 
+## Fase E — Toques de contexto (identidad leve) (2026-10-06) ✅ código
+
+> Objetivo (`docs/DISENO_GAMIFICACION.md`, FASE E): que el nivel forme parte de
+> la identidad del usuario, sin invadirlo, y que los tres puntos muestren el
+> mismo valor que `AppState.nivel` tras reiniciar la app.
+
+- [x] **E1 — Chip "Nv 3 · Intermedio"** en el header de **Progreso** y en el
+  **Perfil**: `NivelChip` (pasivo, sin ripple muerto). Vive en su propia línea
+  bajo el Row del header: a escala de texto 2.0× no compite con el chip de
+  racha por el ancho (un LayoutBuilder + `Flexible` + `softWrap` garantiza que
+  nunca desborde: compacto a 1.0×, envuelve si hace falta).
+- [x] **E2 — Mini-barra de XP en Home** (10 px, bajo la racha, información
+  pasiva): `LinearProgressIndicator` con `progresoNivel` real, sin interacción.
+- [x] **E3 — Widget de home 2×2**: el snapshot JSON del widget ahora lleva el
+  nivel real (`construirSnapshotWidget(..., nivel)`), `HomeWidgetBridge` lo
+  envía y el lado nativo (`HomeWidgetProvider.kt`) pinta la micro-burbuja
+  "Hoy · Lv N" en el subtítulo (mismo cálculo que la app: 1 + XP/300). El
+  cambio nativo se verifica en la próxima instalación en móvil (no cubierta
+  por `flutter test`).
+- [x] Tests: `test/fase_e_test.dart` (5) + `avisos_test` actualizado → suite
+  **293/293** verdes y `flutter analyze` 0 issues; accesibilidad/responsive
+  re-verificadas con los chips nuevos (360/393/411 dp, 2.0×).
+
+---
+
 ## Cierre UI/UX — 8 puntos pedidos (2026-10-06) ✅ código
 
-Detalle de `PLAN.md §11.7`. Estado: **288/288 tests**, `flutter analyze` 0 issues.
+Detalle de `PLAN.md §11.7`. Estado: **293/293 tests**, `flutter analyze` 0 issues.
 
 - [x] **Avatar** siempre cuadrado (`lib/utils/foto_avatar.dart`): recorte del lado más
   corto centrado + respiro 2 % hacia **dentro**; `null` si no hay recorte fiable.

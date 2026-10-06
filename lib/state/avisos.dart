@@ -72,14 +72,16 @@ String textoAvisoRacha(int rachaDias) {
 /// - [calorias]: gasto activo real de Health Connect, o `null` si no hay
 ///   permiso + dato (el widget mostrará "—").
 /// - [racha]: días de racha reales del historial.
+/// - [nivel]: nivel real derivado del XP (burbuja "Lv N" del widget).
 /// - [fecha]: día en formato ISO (yyyy-MM-dd) para refresco del widget.
 String construirSnapshotWidget({
   required int pasos,
   double? calorias,
   required int racha,
+  required int nivel,
   required String fecha,
 }) {
   return '{"fecha":"$fecha","pasos":$pasos,'
       '"calorias":${calorias == null ? 'null' : calorias.round()},'
-      '"racha":$racha}';
+      '"racha":$racha,"nivel":$nivel}';
 }

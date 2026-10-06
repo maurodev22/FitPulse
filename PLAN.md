@@ -732,7 +732,7 @@ así que las 41 recetas se generaban bien en disco y salían con caja roja
 "Unable to load asset" al ejecutar. Arreglado con la entrada explícita en
 `pubspec.yaml` + guardián en `test/recetas_imagenes_test.dart`.
 
-- ✅ **288/288 tests**, `flutter analyze` **0 issues**.
+- ✅ **293/293 tests**, `flutter analyze` **0 issues**.
 
 ---
 
@@ -769,6 +769,21 @@ así que las 41 recetas se generaban bien en disco y salían con caja roja
 
 ---
 
+## 11.10 Fase E de gamificación — toques de contexto (identidad leve) (2026-10-06)
+
+> Cierra el plan (`docs/DISENO_GAMIFICACION.md`, FASE E): el nivel como parte de
+> la identidad, sin invadir. Los tres puntos muestran el mismo valor que
+> `AppState.nivel` (verificado por tests con 900 XP → nivel 4 → "Nv 4 · Intermedio").
+
+| # | Registro |
+|---|---|
+| 1 | **E1 — Chip "Nv N · Nombre"** (`NivelChip`, pasivo, sin ripple muerto) en el header de Progreso y de Perfil, en su propia línea bajo el Row (LayoutBuilder + Flexible + softWrap: compacto a 1.0× y sin desbordes a 2.0× en 360 dp). String nueva `prNivelChip`. |
+| 2 | **E2 — Mini-barra de XP en Home** (10 px bajo la racha): `LinearProgressIndicator` con `progresoNivel` real, pasiva (sin interacción). |
+| 3 | **E3 — Widget de home 2×2**: `construirSnapshotWidget` ahora incluye `nivel`; `HomeWidgetBridge` lo envía con cada refresco; `HomeWidgetProvider.kt` pinta "Hoy · Lv N" en el subtítulo. Verificación nativa pendiente de instalación en móvil (fuera del alcance de `flutter test`). |
+| 4 | Tests: `test/fase_e_test.dart` (5) + `avisos_test.dart` actualizado → **293/293 verdes**; `flutter analyze` 0 issues; accessibilidad/responsive (360/393/411) re-verificadas. |
+
+---
+
 ## 12. Principios que se mantienen
 
 - Todo funciona en el propio móvil: sin cuentas ni servidores.
@@ -781,7 +796,7 @@ así que las 41 recetas se generaban bien en disco y salían con caja roja
 > Actualizado 2026-10-06 (orden aprobado por el usuario: **L2 → L4 → L3**; iOS
 > descartado). **Los tres lotes están hechos** y con ellos el cierre UI/UX de los
 > 8 puntos pedidos (§11.7) y la **Fase C de insignias** (§11.8). El estado real del
-> código es **288/288 tests y `flutter analyze` limpio** (Fase C §11.8 y Fase D §11.9).
+> código es **293/293 tests y `flutter analyze` limpio** (Fase C §11.8, Fase D §11.9 y Fase E §11.10).
 
 1. **~~L4 — Recetas por metas~~ ✅ hecho**: dimensión `metas` en `Recipe` con las
    4 etiquetas reales del perfil, filtro por meta + sección "Para tu meta" y

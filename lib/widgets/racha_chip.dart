@@ -67,7 +67,55 @@ class RachaChip extends StatelessWidget {
   }
 }
 
-/// Diálogo pequeño con las estadísticas generales de la cuenta.
+/// Chip pasivo "Nv 3 · Intermedio" (Fase E1): el nivel como parte de la
+/// identidad en headers (Progreso y Perfil). NO es pulsable a propósito: no
+/// hay acción detrás, así que no finge ser un botón (sin ripple muerto).
+class NivelChip extends StatelessWidget {
+  const NivelChip({super.key, required this.nivel, required this.nombre});
+
+  /// Nivel real derivado del XP (`AppState.nivel`).
+  final int nivel;
+
+  /// Etiqueta del nivel en español ('Principiante' | 'Intermedio' |
+  /// 'Avanzado'); el chip la traduce con LocaleService.
+  final String nombre;
+
+  @override
+  Widget build(BuildContext context) {
+    final strings = context.watch<LocaleService>().strings;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+          decoration: BoxDecoration(
+            color: AppColors.surfaceContainerLow,
+            borderRadius: BorderRadius.circular(999),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.workspace_premium, size: 13, color: AppColors.primary),
+              const SizedBox(width: 5),
+              // Flexible + softWrap: a escala de texto 2.0× el texto se
+              // envuelve en vez de desbordar (identidad pasiva, sin presión).
+              Flexible(
+                child: Text(
+                  strings.prNivelChip(nivel, nombre),
+                  softWrap: true,
+                  style: AppType.labelMd.copyWith(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 13,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
 ///
 /// Todos los números salen del historial real: no se estima ni se rellena
 /// nada. Cuando aún no hay sesiones, se dice explícitamente en lugar de

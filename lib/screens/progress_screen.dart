@@ -941,25 +941,34 @@ class _ProgressHeader extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       decoration: BoxDecoration(color: AppColors.surface),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  strings.navProgress,
-                  style: AppType.headlineSm.copyWith(fontWeight: FontWeight.w700, height: 1.1),
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      strings.navProgress,
+                      style: AppType.headlineSm.copyWith(fontWeight: FontWeight.w700, height: 1.1),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      state.entrenadoHoy ? strings.prDiaCompletado : strings.listoParaEntrenar,
+                      style: AppType.bodySm.copyWith(color: AppColors.onSurfaceVariant),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  state.entrenadoHoy ? strings.prDiaCompletado : strings.listoParaEntrenar,
-                  style: AppType.bodySm.copyWith(color: AppColors.onSurfaceVariant),
-                ),
-              ],
-            ),
+              ),
+              RachaChip(racha: state.rachaDias, borde: true),
+            ],
           ),
-          RachaChip(racha: state.rachaDias, borde: true),
+          const SizedBox(height: 10),
+          // E1: el nivel como identidad, pasivo (sin acción detrás). Vive en
+          // su propia línea: a 2.0× no compite con la racha por el ancho.
+          NivelChip(nivel: state.nivel, nombre: state.nombreNivel),
         ],
       ),
     );

@@ -766,41 +766,51 @@ class _ProfileHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final strings = context.watch<LocaleService>().strings;
+    final state = context.watch<AppState>();
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
       decoration: BoxDecoration(color: AppColors.surface),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  strings.pfMiPerfil,
-                  style: AppType.headlineSm.copyWith(fontWeight: FontWeight.w700, height: 1.1),
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      strings.pfMiPerfil,
+                      style: AppType.headlineSm.copyWith(fontWeight: FontWeight.w700, height: 1.1),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      strings.pfSuperaLimites,
+                      style: AppType.bodySm.copyWith(color: AppColors.onSurfaceVariant),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  strings.pfSuperaLimites,
-                  style: AppType.bodySm.copyWith(color: AppColors.onSurfaceVariant),
+              ),
+              RachaChip(racha: context.watch<AppState>().rachaDias),
+              const SizedBox(width: 4),
+              InkWell(
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute<void>(builder: (_) => const ConfiguracionScreen()),
+                  );
+                },
+                borderRadius: BorderRadius.circular(999),
+                child: Padding(
+                  padding: EdgeInsets.all(10),
+                  child: Icon(Icons.settings_outlined, size: 22, color: AppColors.onSurfaceVariant),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-          RachaChip(racha: context.watch<AppState>().rachaDias),
-          const SizedBox(width: 4),
-          InkWell(
-            onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute<void>(builder: (_) => const ConfiguracionScreen()),
-              );
-            },
-            borderRadius: BorderRadius.circular(999),
-            child: Padding(
-              padding: EdgeInsets.all(10),
-              child: Icon(Icons.settings_outlined, size: 22, color: AppColors.onSurfaceVariant),
-            ),
-          ),
+          const SizedBox(height: 10),
+          // E1: el nivel como identidad, pasivo (sin acción detrás). Vive en
+          // su propia línea: a 2.0× no compite con la racha por el ancho.
+          NivelChip(nivel: state.nivel, nombre: state.nombreNivel),
         ],
       ),
     );

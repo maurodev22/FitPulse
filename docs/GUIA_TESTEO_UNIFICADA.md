@@ -5,8 +5,9 @@ Una sola guía para probar la app completa, de principio a fin, sin tener que co
 - **App:** FitPulse 1.0.0+1 (`com.fitpulse.app`)
 - **Plataforma:** Android (Pixel 6a como referencia)
 - **Idiomas:** español e inglés
-- **Estado del código en esta revisión:** `flutter analyze` 0 issues, `flutter test` 288/288 verdes
-- **Último lote:** Fase C de insignias (9, con fecha real) + Fase D "Tu semana"; el
+- **Estado del código en esta revisión:** `flutter analyze` 0 issues, `flutter test` 293/293 verdes
+- **Último lote:** Fase C de insignias (9, con fecha real) + Fase D "Tu semana" + Fase E
+  (chip "Nv N · Nombre", mini-barra de XP y "Lv N" en el widget de home); el
   cierre UI/UX de los 8 puntos previos (avatar cuadrado, toast de
   registro, "Guardar" fuera del AppBar, imágenes propias de las 41 recetas,
   estadísticas al pulsar la racha, sin campanas muertas, meta de pasos y sin
@@ -14,7 +15,7 @@ Una sola guía para probar la app completa, de principio a fin, sin tener que co
 
 Esta guía es el recorrido principal. `GUIA_TESTEO_COMPLETA.md` conserva el detalle técnico por fases (P1…P21, L2–L4); `GUIA_TESTEO_INTEGRAL.md`, `GUIA_TESTEO_MANUAL.md` y `GUIA_TESTEO_FASE1.md` quedan como material histórico.
 
-**Alcance:** 14 fases (A–N), 62 pasos de verificación (A1–N9) más 7 escenarios de datos límite, y 71 líneas de checklist PASA/FALLA. Cada paso dice **qué hacer**, **qué debes ver** y **qué cuenta como FALLA**.
+**Alcance:** 14 fases (A–N), 63 pasos de verificación (A1–N9) más 7 escenarios de datos límite, y 72 líneas de checklist PASA/FALLA. Cada paso dice **qué hacer**, **qué debes ver** y **qué cuenta como FALLA**.
 
 ---
 
@@ -157,6 +158,14 @@ Cubre EULA, registro y configuración inicial. Si la app ya tiene perfil, ve dir
 **Qué debes ver:** la tarjeta **"Tu semana"** con datos reales de la semana pasada ("6 días · 4 sesiones · 350 XP"); con racha viva, la línea discreta **"Vas 3 de 5 días"**. Sin actividad la semana pasada, la tarjeta **no aparece**.
 
 **FALLA si:** la tarjeta aparece sin actividad previa, los números no coinciden con las sesiones/XP reales de esa semana, o muestra lenguaje negativo ("te quedan…", "racha perdida").
+
+### B9. Nivel: chip y mini-barra (Fase E)
+
+**Qué hacer:** mira el header de **Progreso** (chip "Nv N · Nombre" bajo el título) y del **Perfil** (chip igual), y en **Home** la mini-barra de 10 px bajo el chip de racha.
+
+**Qué debes ver:** el mismo número de nivel que en Progreso → "Nivel" (chip, tarjeta y mini-barra coinciden entre sí y con el XP acumulado tras reiniciar la app). En el widget de home 2×2 (si está colocado), el subtítulo "Hoy · Lv N" con el mismo N.
+
+**FALLA si:** el chip/barra/widget muestran un nivel distinto al de Progreso, o el chip parece un botón sin acción (pulsarlo no hace nada raro ni esperado: es pasivo).
 
 ---
 
@@ -547,6 +556,7 @@ B5  Entrenamiento de hoy visible con botón Comenzar ......... [ ]
 B6  Entrada "Mis rutinas" visible y sin cortes ............. [ ]
 B7  Racha, retos y XP cuadran .............................. [ ]
 B8  "Tu semana" con datos reales de la semana pasada ...... [ ]
+B9  Nivel: chip Nv N, mini-barra y widget coinciden ........ [ ]
 C1  Panel de evolución visible sin scroll obligatorio ...... [ ]
 C2  Pestañas Semanal / Mensual / Año cambian datos ......... [ ]
 C3  Historial de sesiones con datos reales .................. [ ]
