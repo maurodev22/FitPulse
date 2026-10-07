@@ -33,18 +33,28 @@ dependen de cuentas, negocio o verificación física.
 - [x] **Data Safety** cumplimentada: `docs/DATA_SAFETY.md` (respuestas exactas).
 - [x] **Auditoría anti-claims (MDR/Health Apps)** hecha: `docs/POLITICA_COPY_SALUD.md`
       (4 textos suavizados, descargos presentes).
+- [x] **Assets de ficha (icono + feature graphic)**: `docs/store_assets/icono_512.png`
+      (512×512) y `feature_graphic.png` (1024×500), generados con
+      `tools/crear_assets_playstore.ps1` (re-ejecutable). Icono = upscale del
+      launcher actual (192→512) — sustituir por un diseño nativo 512 si se desea
+      más nitidez.
+- [x] **Copy de la ficha listo** (es/en): `docs/FICHA_PLAY_STORE.md` — nombre,
+      descripción corta (≤80), descripción larga, release notes v1.0.0, categoría,
+      edad y avisos. Sin claims médicos.
+- [x] **Script de sustitución de IDs de AdMob**: `tools/activar_ids_ads.ps1`
+      (valida 1 ocurrencia por ID, aborta si algo cambió, UTF-8 sin BOM).
 
 ## C. Al publicar (con cuenta creada)
 
-- [ ] ⚠️ **IDs de AdMob reales** (hoy solo IDs de prueba):
-      - `android/app/src/main/AndroidManifest.xml`: sustituir
-        `ca-app-pub-3940256099942544~3347511713` por el ID de app real.
-      - Unit IDs de banner/recompensado/app open en `lib/services/ads_service.dart`
-        (app open test `ca-app-pub-3940256099942544/9257395921`).
-      - Lista completa de sustitución: `docs/ADS_CLIENTE.md`.
-- [ ] ⚠️ **Assets de ficha** (no existen hoy): icono 512×512, feature graphic
-      1024×500, 2+ capturas de teléfono y tablet (capturas limpias, no las PNGs de
-      verificación), vídeo corto opcional, descripción corta/larga es/en.
+- [ ] ⚠️ **IDs de AdMob reales** (hoy solo IDs de prueba): ejecutar
+      `tools/activar_ids_ads.ps1` con los 4 IDs del cliente, o sustituir a mano
+      siguiendo `docs/ADS_CLIENTE.md`:
+      - `android/app/src/main/AndroidManifest.xml`: `ca-app-pub-3940256099942544~3347511713`
+      - `lib/services/ads_service.dart`: `kAdmobBannerTestId`, `kAdmobRewardedTestId`,
+        `kAdmobAppOpenTestId`.
+- [ ] ⚠️ **Capturas de pantalla de la ficha** (2+ por teléfono y tablet, limpias):
+      únicas pieza pendiente de assets; se capturan en el Pixel 6a al desbloquear
+      (no usar las PNGs de verificación). Vídeo corto opcional.
 - [ ] ⚠️ **Decisión de monetización pendiente** (no implementada a propósito):
       - Opción A (recomendada): publicar **gratis con anuncios** y decir en la ficha
         "contiene anuncios" + consentimiento UMP. El toggle "Premium" es local de

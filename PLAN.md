@@ -334,6 +334,11 @@ fuera de Cuba (se deja la puerta abierta sin bloquear la app).
   (rellenar en consola al publicar).
 - **URL de política de privacidad** ✅ lista: `docs/privacidad/index.html` (es/en,
   autocontenida) → publicar con GitHub Pages (rama `main`, carpeta `/docs`).
+- **Assets de ficha** ✅ (2026-10-07): `docs/store_assets/icono_512.png` y
+  `feature_graphic.png`, generados por `tools/crear_assets_playstore.ps1`. **Copy
+  de la ficha** ✅ es/en en `docs/FICHA_PLAY_STORE.md` (nombre, descripciones,
+  release notes v1.0.0, sin claims médicos). **Script de IDs de AdMob** ✅
+  `tools/activar_ids_ads.ps1` (sustituye test→real con validación).
 - **Checklist completo**: `docs/DEPLOY_PLAY_STORE.md` (A: cuentas ⚠️ · B: código ✅ ·
   C: al publicar ⚠️ · D: verificación física ⚠️).
 - **Bloqueo estructural**: la cuenta de desarrollador de Play no puede crearse desde
@@ -855,10 +860,10 @@ así que las 41 recetas se generaban bien en disco y salían con caja roja
    siguen sin llegar.
 4. **8.3 UMP**: el código está listo pero no verificable sin red a Google y una cuenta
    AdMob real.
-5. **8.5 Release firmado** (bloqueado): requiere keystore propio + `app-release.aab` +
-   Data Safety, y la cuenta de Play exige entidad fuera de Cuba. Lo que sí puede
-   quedar preparado desde aquí: firma por variables de entorno con el keystore
-   **fuera del repo**, más el comando de build.
+5. **8.5 Release firmado** ✅ parcial: keystore propio **fuera del repo** +
+   `app-release.aab` firmado + Data Safety + assets + copy de ficha + script de
+   IDs (Bloque B, 2026-10-06/07, ver §8.5). La **cuenta de Play** exige entidad
+   fuera de Cuba: es el único paso que sigue bloqueado.
 6. **Prueba PASA/FALLA de Fases 1-8 en los móviles** siguiendo
    `docs/GUIA_TESTEO_UNIFICADA.md` (Health Connect, entrenamientos, anuncios, Premium,
    comidas, entrenador con cámara, widget/avisos, modo oscuro, texto 2.0×, idioma en

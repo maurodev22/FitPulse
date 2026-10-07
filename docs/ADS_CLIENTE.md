@@ -18,6 +18,21 @@ Pasos en la consola AdMob: Apps → +Nueva app → creador de bloques
 (`Banner`, `Interstitial` — **no usado en FitPulse**, `Rewarded`, `App open`).
 Copiar cada `ca-app-pub-…/…` sobre la constante correspondiente.
 
+**Automatizado (recomendado):** cuando existan los 4 IDs reales, ejecutar
+
+```powershell
+powershell -File tools/activar_ids_ads.ps1 `
+  -AppId "ca-app-pub-XXXX~YYYY" `
+  -BannerId "ca-app-pub-XXXX/YYYY" `
+  -RewardedId "ca-app-pub-XXXX/YYYY" `
+  -AppOpenId "ca-app-pub-XXXX/YYYY"
+```
+
+El script valida que cada ID de prueba aparezca exactamente una vez (aborta sin
+tocar nada si no), reescribe manifest + constantes en UTF-8 sin BOM y recuerda
+los pasos finales (analyze/test, rebuild del AAB, Data Safety). Revertir:
+`git checkout -- android/app/src/main/AndroidManifest.xml lib/services/ads_service.dart`
+
 ## 2. Mensaje de consentimiento UMP (obligatorio para UE/EEE/Reino Unido)
 
 - Consola AdMob → **Privacidad y mensajes** → Configuración de consentimiento (GDPR).
