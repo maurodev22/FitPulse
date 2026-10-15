@@ -246,7 +246,7 @@ bloqueada (silueta gris con candado + condición escrita, sin contadores de prog
   nunca desborde: compacto a 1.0×, envuelve si hace falta).
 - [x] **E2 — Mini-barra de XP en Home** (10 px, bajo la racha, información
   pasiva): `LinearProgressIndicator` con `progresoNivel` real, sin interacción.
-- [x] **E3 — Widget de home 2×2**: el snapshot JSON del widget ahora lleva el
+- [x] **E3 — Widget de home (banda 4×1)**: el snapshot JSON del widget ahora lleva el
   nivel real (`construirSnapshotWidget(..., nivel)`), `HomeWidgetBridge` lo
   envía y el lado nativo (`HomeWidgetProvider.kt`) pinta la micro-burbuja
   "Hoy · Lv N" en el subtítulo (mismo cálculo que la app: 1 + XP/300). El

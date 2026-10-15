@@ -164,7 +164,7 @@ Cubre EULA, registro y configuración inicial. Si la app ya tiene perfil, ve dir
 
 **Qué hacer:** mira el header de **Progreso** (chip "Nv N · Nombre" bajo el título) y del **Perfil** (chip igual), y en **Home** la mini-barra de 10 px bajo el chip de racha.
 
-**Qué debes ver:** el mismo número de nivel que en Progreso → "Nivel" (chip, tarjeta y mini-barra coinciden entre sí y con el XP acumulado tras reiniciar la app). En el widget de home 2×2 (si está colocado), el subtítulo "Hoy · Lv N" con el mismo N.
+**Qué debes ver:** el mismo número de nivel que en Progreso → "Nivel" (chip, tarjeta y mini-barra coinciden entre sí y con el XP acumulado tras reiniciar la app). En el widget de home (banda horizontal 4×1, si está colocado), el subtítulo "Hoy · Lv N" con el mismo N.
 
 **FALLA si:** el chip/barra/widget muestran un nivel distinto al de Progreso, o el chip parece un botón sin acción (pulsarlo no hace nada raro ni esperado: es pasivo).
 
@@ -270,11 +270,13 @@ Cubre EULA, registro y configuración inicial. Si la app ya tiene perfil, ve dir
 
 **Qué debes ver:** la lista se filtra; "Ver todo" lleva al catálogo completo.
 
-### E3. Detalle de receta
+### E3. Ingredientes de las recetas (ver F2)
 
-**Qué debes ver:** ingredientes con cantidad, pasos, tiempo, y el aviso de que la información es orientativa.
+**Qué hacer:** las recetas no tienen ficha propia con pasos: para ver sus ingredientes, entra en **Plan semanal → Lista de la compra** (lo mismo que F2). Las tarjetas de receta solo ofrecen favorito (E4) y "Registrar balance".
 
-**FALLA si:** faltan ingredientes o pasos; el tiempo no está; desaparece el aviso de orientación.
+**Qué debes ver:** en la sección de recetas, el aviso de **contenido orientativo** bajo "Para tu meta" (y en el estado vacío); en la lista del plan, los ingredientes con cantidad y el recuento total real ("20 ingredientes…").
+
+**FALLA si:** los ingredientes de las recetas del plan no aparecen en la lista de la compra, el recuento total no cuadra, o desaparece el aviso de orientación.
 
 ### E4. Favoritos e historial
 
@@ -571,7 +573,7 @@ D5  Ejecutar, editar, renombrar y borrar rutina propia ..... [ ]
 D6  "Estimación:" en kcal; intensidad coherente ........... [ ]
 E1  "Para tu meta" con recuento real en los chips ........... [ ]
 E2  Filtros por meta y categoría; "Ver todo" .............. [ ]
-E3  Detalle con ingredientes, pasos, tiempo y aviso ........ [ ]
+E3  Ingredientes en lista del plan; aviso de recetas ...... [ ]
 E4  Favoritos persisten .................................... [ ]
 F1  Plan semanal coherente con el perfil ................... [ ]
 F2  Lista de la compra agrupada ............................ [ ]

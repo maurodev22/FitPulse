@@ -152,7 +152,7 @@ Tabla propuesta (condiciones sobre datos ya persistidos):
 
 - **E1. Chip "Nv 3 · Intermedio"** en el header de Progreso y en el Perfil.
 - **E2. Mini-barra de XP en Home** (10 px, bajo la racha), información pasiva.
-- **E3. Widget de home 2x2:** micro-burbuja "Lv N" opcional (extiende
+- **E3. Widget de home (banda 4×1):** micro-burbuja "Lv N" opcional (extiende
   `home_widget_service` con el valor ya persistido).
 - **Criterio de aceptación:** los tres puntos muestran el mismo valor que
   `AppState.nivel` tras reiniciar la app.
