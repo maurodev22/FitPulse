@@ -47,6 +47,25 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('el área de encuadre se recorta en círculo, no en cuadrado', (tester) async {
+    final foto = _png(200, 200, (im) => img.fill(im, color: img.ColorRgb8(10, 120, 40)));
+    await pumpEditor(tester, prepararFotoParaEditar(foto)!);
+
+    final area = find.byKey(const Key('croArea'));
+    expect(area, findsOneWidget);
+    expect(
+      find.descendant(of: area, matching: find.byType(ClipOval)),
+      findsOneWidget,
+      reason: 'el editor debe recortar la foto en círculo, igual que el avatar',
+    );
+    expect(
+      find.descendant(of: area, matching: find.byType(ClipRect)),
+      findsNothing,
+      reason: 'no debe verse un encuadre cuadrado',
+    );
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('arrastrar para posicionar y restablecer no rompe', (tester) async {
     // Mitad roja / mitad azul para que el arrastre tenga efecto visible.
     final foto = _png(240, 120, (im) {

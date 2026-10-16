@@ -211,34 +211,45 @@ class _PhotoCropScreenState extends State<PhotoCropScreen> {
     return SizedBox(
       width: lado,
       height: lado,
-      child: ClipRect(
-        child: GestureDetector(
-          key: const Key('croArea'),
-          onScaleStart: _onScaleStart,
-          onScaleUpdate: (d) => _onScaleUpdate(d, lado),
-          onDoubleTap: _restablecer,
-          child: Stack(
-            children: [
-              Positioned(
-                left: offX,
-                top: offY,
-                width: _ancho * k,
-                height: _alto * k,
-                child: Image.memory(
-                  _bytes,
-                  fit: BoxFit.fill,
-                  gaplessPlayback: true,
-                  filterQuality: FilterQuality.medium,
+      child: Stack(
+        children: [
+          // El encuadre es circular: la foto se recorta al mismo círculo que
+          // mostrará el avatar, así que aquí no asoma ninguna esquina cuadrada.
+          Positioned.fill(
+            child: GestureDetector(
+              key: const Key('croArea'),
+              behavior: HitTestBehavior.opaque,
+              onScaleStart: _onScaleStart,
+              onScaleUpdate: (d) => _onScaleUpdate(d, lado),
+              onDoubleTap: _restablecer,
+              child: ClipOval(
+                child: Stack(
+                  children: [
+                    Positioned(
+                      left: offX,
+                      top: offY,
+                      width: _ancho * k,
+                      height: _alto * k,
+                      child: Image.memory(
+                        _bytes,
+                        fit: BoxFit.fill,
+                        gaplessPlayback: true,
+                        filterQuality: FilterQuality.medium,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              Positioned.fill(
-                child: IgnorePointer(
-                  child: CustomPaint(painter: _GuiaEncuadre()),
-                ),
-              ),
-            ],
+            ),
           ),
-        ),
+          Positioned.fill(
+            child: IgnorePointer(
+              child: CustomPaint(
+                painter: _BordeCirculo(borde: AppColors.outlineVariant),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -288,32 +299,29 @@ class _PhotoCropScreenState extends State<PhotoCropScreen> {
   }
 }
 
-/// Oscurece lo que queda fuera del círculo del avatar y dibuja su borde.
-class _GuiaEncuadre extends CustomPainter {
+/// Borde circular del encuadre: coincide con el marco del avatar y deja claro
+/// hasta dónde llega el recorte (lo de fuera ya está recortado, sin esquinas).
+class _BordeCirculo extends CustomPainter {
+  const _BordeCirculo({required this.borde});
+
+  final Color borde;
+
   @override
   void paint(Canvas canvas, Size size) {
-    final circulo = Path()
-      ..addOval(
-        Rect.fromCircle(
-          center: Offset(size.width / 2, size.height / 2),
-          radius: math.min(size.width, size.height) / 2,
-        ),
-      );
-    final fuera = Path.combine(
-      PathOperation.difference,
-      Path()..addRect(Offset.zero & size),
-      circulo,
-    );
-    canvas.drawPath(fuera, Paint()..color = Colors.black.withValues(alpha: 0.55));
-    canvas.drawPath(
-      circulo,
+    final centro = Offset(size.width / 2, size.height / 2);
+    final radio = math.min(size.width, size.height) / 2 - 1.5;
+    if (radio <= 0) return;
+    canvas.drawCircle(
+      centro,
+      radio,
       Paint()
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 2
-        ..color = Colors.white.withValues(alpha: 0.9),
+        ..strokeWidth = 3
+        ..color = borde,
     );
   }
 
   @override
-  bool shouldRepaint(covariant _GuiaEncuadre oldDelegate) => false;
+  bool shouldRepaint(covariant _BordeCirculo oldDelegate) =>
+      oldDelegate.borde != borde;
 }
