@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
@@ -8,9 +9,11 @@ import '../services/locale_service.dart';
 import '../state/app_state.dart';
 import '../state/athlete_profile.dart';
 import '../theme.dart';
+import '../utils/foto_avatar.dart';
 import '../utils/validators.dart';
 import '../widgets/common.dart';
 import '../widgets/wheel_number_picker.dart';
+import 'photo_crop_screen.dart';
 import 'setup_screen.dart';
 
 class RegistrationScreen extends StatefulWidget {
@@ -86,22 +89,31 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     );
   }
 
-  /// Sube la foto desde la galería (paso opcional). Falla sin romper el
-  /// registro: la foto se puede dejar para después.
+  /// Sube la foto desde la galería (paso opcional) y deja que el usuario la
+  /// encuadre (arrastrar/zoom). Falla sin romper el registro: la foto se puede
+  /// dejar para después.
   Future<void> _elegirFoto() async {
     final strings = context.read<LocaleService>().strings;
     final messenger = ScaffoldMessenger.of(context);
     try {
       final foto = await ImagePicker().pickImage(
         source: ImageSource.gallery,
-        maxWidth: 512,
-        maxHeight: 512,
-        imageQuality: 85,
+        maxWidth: 1080,
+        maxHeight: 1080,
+        imageQuality: 90,
       );
       if (foto == null) return; // El usuario canceló → se queda sin foto.
       final bytes = await foto.readAsBytes();
       if (bytes.isEmpty) return;
-      setState(() => _fotoBase64 = base64Encode(bytes));
+      final prep = await compute(prepararFotoParaEditar, base64Encode(bytes));
+      if (prep == null) {
+        messenger.showSnackBar(SnackBar(content: Text(strings.pfErrorFoto)));
+        return;
+      }
+      if (!mounted) return;
+      final ajustada = await PhotoCropScreen.abrir(context, prep);
+      if (ajustada == null) return; // Canceló el encuadre.
+      setState(() => _fotoBase64 = ajustada);
     } catch (_) {
       messenger.showSnackBar(SnackBar(content: Text(strings.pfErrorFoto)));
     }

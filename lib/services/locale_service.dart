@@ -845,6 +845,17 @@ String get pfMetaPasos => _t('1000 pasos mínimo', '1000 steps minimum');
   String get regFotoOpcional => _t('Opcional', 'Optional');
   String get regFotoHint => _t('Añade una foto para identificarte (puedes saltar este paso)', 'Add a photo to identify yourself (you can skip this step)');
   String get regSubirImagen => _t('Subir imagen', 'Upload image');
+
+  // ---- Editor de encuadre de la foto de perfil ----
+  String get croTitulo => _t('Ajustar foto', 'Adjust photo');
+  String get croAyuda => _t(
+      'Arrastra para mover y pellizca para acercar. Lo que queda dentro del círculo es lo que se verá.',
+      'Drag to move and pinch to zoom. What stays inside the circle is what will show.');
+  String get croRestablecer => _t('Restablecer', 'Reset');
+  String get croListo => _t('Listo', 'Done');
+  String get croCancelar => _t('Cancelar', 'Cancel');
+  String get croAjustarFoto => _t('Ajustar la foto actual', 'Adjust the current photo');
+  String get croCambiarFoto => _t('Elegir otra foto', 'Choose another photo');
   String get regNameHint => _t('Escribe tu nombre', 'Enter your name');
   String get regEligeMetas => _t('Elige hasta 2 metas', 'Choose up to 2 goals');
   String get regMetaLimite => _t('Máximo 2 metas seleccionadas', 'Maximum 2 goals selected');

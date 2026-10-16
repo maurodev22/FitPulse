@@ -19,6 +19,7 @@ import '../widgets/racha_chip.dart';
 import '../widgets/settings_widgets.dart';
 import '../widgets/wheel_number_picker.dart';
 import 'configuracion_screen.dart';
+import 'photo_crop_screen.dart';
 
 /// Perfil y Ajustes: muestra y edita los datos del atleta de la sesión.
 class ProfileScreen extends StatefulWidget {
@@ -848,8 +849,17 @@ class _ProfileHero extends StatelessWidget {
 
   final AthleteProfile profile;
 
-  /// Sube una foto desde la galería y la guarda en el perfil de la sesión.
-  /// Paso opcional: si falla o se cancela el perfil sigue sin foto (iniciales).
+  /// Prepara la foto (orientación EXIF + ventana sugerida) en un isolate.
+  Future<PreparacionFoto?> _preparar(String fotoBase64) =>
+      compute(prepararFotoParaEditar, fotoBase64);
+
+  /// Abre el editor de encuadre con un base64 ya elegido. `null` = cancelado o
+  /// foto ilegible.
+  Future<String?> _abrirEditor(BuildContext context, PreparacionFoto prep) =>
+      PhotoCropScreen.abrir(context, prep);
+
+  /// Pide una foto nueva a la galería, deja que el usuario la encuadre
+  /// (arrastrar/zoom) y la guarda en el perfil de la sesión.
   Future<void> _subirFoto(BuildContext context) async {
     final strings = context.read<LocaleService>().strings;
     final messenger = ScaffoldMessenger.of(context);
@@ -857,22 +867,99 @@ class _ProfileHero extends StatelessWidget {
     try {
       final foto = await ImagePicker().pickImage(
         source: ImageSource.gallery,
-        maxWidth: 512,
-        maxHeight: 512,
-        imageQuality: 85,
+        maxWidth: 1080,
+        maxHeight: 1080,
+        imageQuality: 90,
       );
-      if (foto == null) return; // Cancelado: sigue sin foto (iniciales).
+      if (foto == null) return; // Cancelado: no se cambia la foto.
       final bytes = await foto.readAsBytes();
       if (bytes.isEmpty) return;
-      final base64 = base64Encode(bytes);
-      // Fase 9: recortar el encuadre casi uniforme (marco blanco/gris) para
-      // que la persona llene el círculo y no se vea un "borde cuadrado"
-      // dentro del avatar.
-      final recortada = await compute(recuadrarFoto, base64);
-      await appState.guardarPerfil(profile.copiarConFoto(recortada ?? base64));
+      final prep = await _preparar(base64Encode(bytes));
+      if (prep == null) {
+        messenger.showSnackBar(SnackBar(content: Text(strings.pfErrorFoto)));
+        return;
+      }
+      if (!context.mounted) return;
+      final ajustada = await _abrirEditor(context, prep);
+      if (ajustada == null) return; // Canceló el encuadre.
+      await appState.guardarPerfil(profile.copiarConFoto(ajustada));
       messenger.showSnackBar(SnackBar(content: Text(strings.pfFotoGuardada)));
     } catch (_) {
       messenger.showSnackBar(SnackBar(content: Text(strings.pfErrorFoto)));
+    }
+  }
+
+  /// Reencuadra la foto ya guardada (mover/zoom) sin elegir otra.
+  Future<void> _ajustarFoto(BuildContext context) async {
+    final foto = profile.fotoBase64;
+    if (foto == null || foto.isEmpty) return;
+    final strings = context.read<LocaleService>().strings;
+    final messenger = ScaffoldMessenger.of(context);
+    final appState = context.read<AppState>();
+    try {
+      final prep = await _preparar(foto);
+      if (prep == null) {
+        messenger.showSnackBar(SnackBar(content: Text(strings.pfErrorFoto)));
+        return;
+      }
+      if (!context.mounted) return;
+      final ajustada = await _abrirEditor(context, prep);
+      if (ajustada == null) return;
+      await appState.guardarPerfil(profile.copiarConFoto(ajustada));
+      messenger.showSnackBar(SnackBar(content: Text(strings.pfFotoGuardada)));
+    } catch (_) {
+      messenger.showSnackBar(SnackBar(content: Text(strings.pfErrorFoto)));
+    }
+  }
+
+  /// Con foto ya puesta ofrece "ajustar" o "cambiar"; sin foto, elige directa.
+  Future<void> _accionFoto(BuildContext context) async {
+    final foto = profile.fotoBase64;
+    if (foto == null || foto.isEmpty) {
+      await _subirFoto(context);
+      return;
+    }
+    final strings = context.read<LocaleService>().strings;
+    final accion = await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: AppColors.surfaceLowest,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 18, 20, 8),
+              child: Text(
+                strings.regFotoTitulo,
+                style: AppType.labelLg.copyWith(
+                  color: AppColors.onSurface,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.crop),
+              title: Text(strings.croAjustarFoto),
+              onTap: () => Navigator.pop(ctx, 'ajustar'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library_outlined),
+              title: Text(strings.croCambiarFoto),
+              onTap: () => Navigator.pop(ctx, 'cambiar'),
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+    if (!context.mounted) return;
+    if (accion == 'ajustar') {
+      await _ajustarFoto(context);
+    } else if (accion == 'cambiar') {
+      await _subirFoto(context);
     }
   }
 
@@ -908,7 +995,7 @@ class _ProfileHero extends StatelessWidget {
                 right: 0,
                 bottom: 0,
                 child: InkWell(
-                  onTap: () => _subirFoto(context),
+                  onTap: () => _accionFoto(context),
                   customBorder: const CircleBorder(),
                   child: Container(
                     width: 32,

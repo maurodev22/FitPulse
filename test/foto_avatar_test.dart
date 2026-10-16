@@ -150,4 +150,158 @@ void main() {
       expect(recuadrarFoto(foto), isNull);
     });
   });
+
+  group('regionEncuadre (ventana que usa el editor)', () {
+    test('devuelve una ventana cuadrada dentro del contenido (sin marco)', () {
+      final foto = _png(400, 300, (im) {
+        img.fill(im, color: img.ColorRgb8(255, 255, 255));
+        img.fillRect(im, x1: 40, y1: 30, x2: 360, y2: 270, color: img.ColorRgb8(20, 60, 200));
+      });
+
+      final region = regionEncuadre(foto);
+
+      expect(region, isNotNull);
+      expect(region!.width, region.height, reason: 'la ventana es cuadrada');
+      // La ventana queda DENTRO del contenido: ni un píxel del marco blanco.
+      expect(region.x, greaterThanOrEqualTo(40));
+      expect(region.y, greaterThanOrEqualTo(30));
+      expect(region.x + region.width, lessThanOrEqualTo(360));
+      expect(region.y + region.height, lessThanOrEqualTo(270));
+    });
+
+    test('devuelve null para base64 no válido o sin sujeto', () {
+      expect(regionEncuadre('!!!no-base64!!!'), isNull);
+      final foto = _png(200, 200, (im) {
+        img.fill(im, color: img.ColorRgb8(255, 255, 255));
+        for (var y = 0; y < 8; y++) {
+          for (var x = 0; x < 200; x++) {
+            if ((x ~/ 8 + y) % 2 == 0) {
+              im.setPixel(x, y, img.ColorRgb8(20, 20, 20));
+              im.setPixel(x, 200 - 1 - y, img.ColorRgb8(20, 20, 20));
+            }
+          }
+        }
+      });
+      expect(regionEncuadre(foto), isNull);
+    });
+  });
+
+  group('prepararFotoParaEditar', () {
+    test('normaliza a PNG y devuelve medidas y ventana sugerida', () {
+      final foto = _png(400, 300, (im) {
+        img.fill(im, color: img.ColorRgb8(255, 255, 255));
+        img.fillRect(im, x1: 40, y1: 30, x2: 360, y2: 270, color: img.ColorRgb8(20, 60, 200));
+      });
+
+      final prep = prepararFotoParaEditar(foto);
+      expect(prep, isNotNull);
+      expect(prep!.ancho, 400);
+      expect(prep.alto, 300);
+      expect(prep.sugerencia, isNotNull);
+
+      final imagen = img.decodeImage(base64Decode(prep.fotoBase64));
+      expect(imagen, isNotNull);
+      expect(imagen!.width, 400);
+      expect(imagen.height, 300);
+    });
+
+    test('devuelve null si el contenido no es una imagen', () {
+      expect(prepararFotoParaEditar('!!!no-base64!!!'), isNull);
+      expect(prepararFotoParaEditar(base64Encode(utf8.encode('no soy imagen'))), isNull);
+    });
+  });
+
+  group('recortarRegionFoto (recorte manual)', () {
+    test('recorta exactamente la región pedida', () {
+      // Mitad izquierda roja, mitad derecha azul.
+      final foto = _png(100, 100, (im) {
+        img.fillRect(im, x1: 0, y1: 0, x2: 50, y2: 100, color: img.ColorRgb8(220, 30, 30));
+        img.fillRect(im, x1: 50, y1: 0, x2: 100, y2: 100, color: img.ColorRgb8(30, 30, 220));
+      });
+
+      final out = recortarRegionFoto(
+        (fotoBase64: foto, x: 50, y: 0, lado: 50, salida: 50),
+      );
+      expect(out, isNotNull);
+      final res = img.decodeImage(base64Decode(out!))!;
+      expect(res.width, 50);
+      expect(res.height, 50);
+
+      var rojos = 0;
+      for (var y = 0; y < res.height; y++) {
+        for (var x = 0; x < res.width; x++) {
+          final p = res.getPixel(x, y);
+          if (p.r.toInt() > 150 && p.b.toInt() < 120) rojos++;
+        }
+      }
+      expect(rojos, 0, reason: 'la región pedida es la mitad azul');
+    });
+
+    test('reduce a la salida cuando la región es mayor', () {
+      final foto = _png(200, 200, (im) => img.fill(im, color: img.ColorRgb8(10, 120, 40)));
+      final out = recortarRegionFoto(
+        (fotoBase64: foto, x: 0, y: 0, lado: 200, salida: 64),
+      );
+      final res = img.decodeImage(base64Decode(out!))!;
+      expect(res.width, 64);
+      expect(res.height, 64);
+    });
+
+    test('no amplía cuando la región es menor que la salida', () {
+      final foto = _png(200, 200, (im) => img.fill(im, color: img.ColorRgb8(10, 120, 40)));
+      final out = recortarRegionFoto(
+        (fotoBase64: foto, x: 10, y: 10, lado: 30, salida: 512),
+      );
+      final res = img.decodeImage(base64Decode(out!))!;
+      expect(res.width, 30);
+      expect(res.height, 30);
+    });
+
+    test('satura las regiones que se salen de la imagen', () {
+      final foto = _png(100, 100, (im) => img.fill(im, color: img.ColorRgb8(10, 120, 40)));
+      final out = recortarRegionFoto(
+        (fotoBase64: foto, x: 90, y: 90, lado: 50, salida: 512),
+      );
+      final res = img.decodeImage(base64Decode(out!))!;
+      expect(res.width, 10);
+      expect(res.height, 10);
+    });
+  });
+
+  group('limitarCentro (sin huecos en los bordes)', () {
+    test('con zoom 1 mantiene el centro dentro de la imagen 100x200', () {
+      final esquina = limitarCentro(ancho: 100, alto: 200, zoom: 1, x: 0, y: 0);
+      expect(esquina.x, 50);
+      expect(esquina.y, 50);
+      final opuesta = limitarCentro(ancho: 100, alto: 200, zoom: 1, x: 999, y: 999);
+      expect(opuesta.x, 50);
+      expect(opuesta.y, 150);
+    });
+
+    test('al acercar (zoom 2) el rango se ensancha', () {
+      final c = limitarCentro(ancho: 100, alto: 200, zoom: 2, x: 0, y: 0);
+      expect(c.x, 25);
+      expect(c.y, 25);
+    });
+  });
+
+  group('regionBajoEncuadre (región que se guardará)', () {
+    test('zoom 1 sobre 200x100 cubre todo el alto y centra el ancho', () {
+      final r = regionBajoEncuadre(
+        ancho: 200, alto: 100, lado: 100, zoom: 1, centroX: 100, centroY: 50,
+      );
+      expect(r.lado, 100);
+      expect(r.x, 50);
+      expect(r.y, 0);
+    });
+
+    test('al doblar el zoom la región se reduce a la mitad', () {
+      final r = regionBajoEncuadre(
+        ancho: 200, alto: 100, lado: 100, zoom: 2, centroX: 100, centroY: 50,
+      );
+      expect(r.lado, 50);
+      expect(r.x, 75);
+      expect(r.y, 25);
+    });
+  });
 }

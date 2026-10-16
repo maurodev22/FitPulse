@@ -4,12 +4,22 @@ import 'dart:typed_data';
 
 import 'package:image/image.dart' as img;
 
+/// Región rectangular (en píxeles) dentro de una imagen.
+typedef RegionFoto = ({int x, int y, int width, int height});
+
+/// Foto lista para el editor de encuadre (ver `PhotoCropScreen`).
+typedef PreparacionFoto = ({
+  String fotoBase64,
+  int ancho,
+  int alto,
+  RegionFoto? sugerencia,
+});
+
 /// Recorte del avatar del perfil (Fase 9 — pulido de la foto).
 ///
-/// El avatar se dibuja dentro de un círculo con `BoxFit.cover`. Por eso la
-/// foto presentada se devuelve **siempre cuadrada**: un recorte rectangular
-/// deja ver sus bordes rectos dentro del círculo. Dos problemas comunes se
-/// corrigen aquí:
+/// El avatar se dibuja dentro de un círculo con `BoxFit.cover`, así que la foto
+/// presentada se devuelve **siempre cuadrada**: un recorte rectangular deja ver
+/// sus bordes rectos dentro del círculo. Dos problemas comunes se corrigen:
 ///
 /// 1. Un encuadre casi uniforme alrededor de la persona (capturas, fondos
 ///    lisos) se percibe como un "borde cuadrado" dentro del círculo y se
@@ -18,23 +28,51 @@ import 'package:image/image.dart' as img;
 ///    a los lados, techo gris arriba), se aplica un recorte cuadrado centrado
 ///    en el sujeto para que la persona llene el círculo.
 ///
-/// `recuadrarFoto` devuelve una versión recortada (PNG, base64) o `null` si no
-/// hay nada que recortar (o la imagen no se pudo decodificar); en ese caso el
-/// llamador usa la foto original. Nunca inventa contenido: solo recorta la
-/// propia foto del usuario.
+/// [regionEncuadre] calcula esa ventana sugerida; el editor de encuadre la usa
+/// como punto de partida y el usuario puede moverla y ampliarla. Nunca se
+/// inventa contenido: solo se recorta la propia foto del usuario.
+RegionFoto? regionEncuadre(String fotoBase64) {
+  final imagen = _decodificar(fotoBase64);
+  if (imagen == null) return null;
+  return _regionFinal(imagen);
+}
+
+/// Aplica la ventana de [regionEncuadre] y devuelve la foto ya recortada (PNG,
+/// base64) o `null` si no hay nada que recortar (o la imagen no se pudo
+/// decodificar); en ese caso el llamador usa la foto original. Nunca inventa
+/// contenido: solo recorta la propia foto del usuario.
 String? recuadrarFoto(String fotoBase64) {
+  final imagen = _decodificar(fotoBase64);
+  if (imagen == null) return null;
+  final region = _regionFinal(imagen);
+  if (region == null) return null;
+  final recortada = img.copyCrop(
+    imagen,
+    x: region.x,
+    y: region.y,
+    width: region.width,
+    height: region.height,
+  );
+  return base64Encode(img.encodePng(recortada));
+}
+
+/// Decodifica y normaliza la orientación EXIF (hay que editar lo que el usuario
+/// ve), o `null` si no es una imagen válida.
+img.Image? _decodificar(String fotoBase64) {
   final Uint8List bytes;
   try {
     bytes = base64Decode(fotoBase64);
   } catch (_) {
-    return null; // Base64 corrupto: no hay foto que recuadrar.
+    return null; // Base64 corrupto: no hay foto que recortar.
   }
   final imagen = img.decodeImage(bytes);
   if (imagen == null) return null;
-  // Normaliza la orientación EXIF para recortar lo que el usuario ve.
-  img.bakeOrientation(imagen);
+  return img.bakeOrientation(imagen);
+}
 
-  // 1. Marco uniforme (borde cuadrado). 2. Sujeto pequeño en foto vertical.
+/// Ventana cuadrada final (con un pequeño respiro interior) para la foto, o
+/// `null` si no hay una sugerencia fiable.
+RegionFoto? _regionFinal(img.Image imagen) {
   final recorte = _boundsDelContenido(imagen) ?? _recorteDeSujeto(imagen);
   if (recorte == null) return null; // Sin marco ni sujeto: nada que hacer.
 
@@ -43,19 +81,16 @@ String? recuadrarFoto(String fotoBase64) {
   // Si el recorte detectado es la imagen entera, no hay nada que arreglar.
   if (recorte.width >= ancho && recorte.height >= alto) return null;
 
-  // El avatar se dibuja SIEMPRE dentro de un círculo, así que la foto
-  // presentada tiene que ser cuadrada. Si se devuelve un rectángulo,
-  // `BoxFit.cover` deja ver los bordes rectos de la foto dentro del círculo:
-  // es el defecto de "un cuadrado dentro de un círculo". Cuadrar aquí (el lado
-  // más corto del recorte, centrado) elimina esa clase de defecto de raíz y
-  // además garantiza que el marco detectado desaparezca por completo.
+  // Cuadrar (el lado más corto del recorte, centrado) elimina de raíz el
+  // defecto de "un cuadrado dentro de un círculo" y garantiza que el marco
+  // detectado desaparezca por completo.
   final ladoMax = math.min(recorte.width, recorte.height);
   final cx = recorte.x + (recorte.width / 2).round();
   final cy = recorte.y + (recorte.height / 2).round();
 
   // Pequeño respiro para que la persona no quede pegada al borde del círculo.
-  // Se aplica HACIA DENTRO a propósito: hacia fuera volvería a exponer el
-  // marco que el recorte acaba de quitar.
+  // Se aplica HACIA DENTRO a propósito: hacia fuera volvería a exponer el marco
+  // que el recorte acaba de quitar.
   final respiro = (ladoMax * 0.02).round().clamp(2, 12);
   final lado = ladoMax - respiro * 2;
   if (lado < 24) return null; // Recorte absurdo: mejor la foto original.
@@ -64,9 +99,70 @@ String? recuadrarFoto(String fotoBase64) {
   final y = (cy - (lado / 2).round()).clamp(0, alto - 1);
   final w = lado.clamp(1, ancho - x);
   final h = lado.clamp(1, alto - y);
+  return (x: x, y: y, width: w, height: h);
+}
 
-  final recortada = img.copyCrop(imagen, x: x, y: y, width: w, height: h);
-  return base64Encode(img.encodePng(recortada));
+/// Prepara la foto para el editor de encuadre: normaliza la orientación EXIF y
+/// devuelve los bytes listos (PNG base64), sus medidas y la ventana sugerida
+/// (o `null` si no hay una). Pensada para `compute` (una sola arg).
+PreparacionFoto? prepararFotoParaEditar(String fotoBase64) {
+  final imagen = _decodificar(fotoBase64);
+  if (imagen == null) return null;
+  return (
+    fotoBase64: base64Encode(img.encodePng(imagen)),
+    ancho: imagen.width,
+    alto: imagen.height,
+    sugerencia: _regionFinal(imagen),
+  );
+}
+
+/// Restringe el centro del encuadre (en píxeles de imagen) para que la ventana
+/// cuadrada nunca deje huecos en los bordes. [zoom] vale 1 (la imagen cubre el
+/// cuadrado justo) o más; [ancho]/[alto] son las medidas de la imagen.
+({double x, double y}) limitarCentro({
+  required int ancho,
+  required int alto,
+  required double zoom,
+  required double x,
+  required double y,
+}) {
+  final medio = math.min(ancho, alto).toDouble() / (2 * zoom);
+  return (x: x.clamp(medio, ancho - medio), y: y.clamp(medio, alto - medio));
+}
+
+/// Región de la imagen (en píxeles) que queda dentro del encuadre cuadrado de
+/// lado [lado] (unidades de pantalla) para el [zoom] y el centro dados.
+({double x, double y, double lado}) regionBajoEncuadre({
+  required int ancho,
+  required int alto,
+  required double lado,
+  required double zoom,
+  required double centroX,
+  required double centroY,
+}) {
+  // Escala para cubrir el cuadrado por completo: lado / min(ancho, alto).
+  final k = (lado / math.min(ancho, alto)) * zoom;
+  final ladoPix = lado / k;
+  return (x: centroX - ladoPix / 2, y: centroY - ladoPix / 2, lado: ladoPix);
+}
+
+/// Recorta la región cuadrada [x], [y], [lado] de la foto y devuelve un PNG
+/// base64 de [salida] px (sin ampliar si la región es más pequeña). Pensada
+/// para `compute`.
+String? recortarRegionFoto(
+  ({String fotoBase64, int x, int y, int lado, int salida}) args,
+) {
+  final imagen = _decodificar(args.fotoBase64);
+  if (imagen == null) return null;
+  final x = args.x.clamp(0, imagen.width - 1).toInt();
+  final y = args.y.clamp(0, imagen.height - 1).toInt();
+  final maxLado = math.min(imagen.width - x, imagen.height - y);
+  final lado = args.lado.clamp(1, maxLado).toInt();
+  final recorte = img.copyCrop(imagen, x: x, y: y, width: lado, height: lado);
+  final salida = recorte.width < args.salida
+      ? recorte
+      : img.copyResize(recorte, width: args.salida, height: args.salida);
+  return base64Encode(img.encodePng(salida));
 }
 
 /// Rectángulo del contenido sin el marco casi uniforme, o `null` si no hay
