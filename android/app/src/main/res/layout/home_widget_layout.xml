@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Widget de home de FitPulse (Fase 6): pasos, calorías, racha. Datos reales
-     enviados desde la app; "—" si no hay dato real (nunca inventado). -->
+<!-- Widget de home de FitPulse (Fase 6): agua de hoy, pasos, BPM y racha.
+     Datos reales enviados desde la app y desde el servicio de pasos en primer
+     plano; "—" si no hay dato real (nunca inventado). -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/w_root"
     android:layout_width="match_parent"
@@ -24,7 +25,7 @@
             android:id="@+id/w_titulo"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="FITPULSE"
+            android:text="AGUA HOY"
             android:textColor="#FF93EABE"
             android:textSize="11sp"
             android:textStyle="bold"
@@ -35,7 +36,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="2dp"
-            android:text="Hoy"
+            android:text="—"
             android:textColor="#FF9AA0A6"
             android:textSize="12sp" />
     </LinearLayout>
@@ -73,15 +74,15 @@
         android:gravity="center">
 
         <TextView
-            android:id="@+id/w_calorias_label"
+            android:id="@+id/w_bpm_label"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Calorías"
+            android:text="BPM"
             android:textColor="#FF93EABE"
             android:textSize="11sp" />
 
         <TextView
-            android:id="@+id/w_calorias"
+            android:id="@+id/w_bpm"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="—"

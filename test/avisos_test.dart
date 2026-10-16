@@ -56,29 +56,41 @@ void main() {
     test('construirSnapshotWidget: JSON con valores reales', () {
       final json = construirSnapshotWidget(
         pasos: 4321,
-        calorias: 187.6,
+        agua: 1.5,
+        bpm: 72,
         racha: 3,
-        nivel: 2,
         fecha: '2026-09-25',
       );
       expect(json, contains('"pasos":4321'));
-      expect(json, contains('"calorias":188'));
+      expect(json, contains('"agua":1.5'));
+      expect(json, contains('"bpm":72'));
       expect(json, contains('"racha":3'));
-      expect(json, contains('"nivel":2'));
       expect(json, contains('"fecha":"2026-09-25"'));
     });
 
-    test('construirSnapshotWidget: calorias null → "—" nativo (null en JSON)',
-        () {
+    test('construirSnapshotWidget: sin datos → null (el widget pinta "—")', () {
       final json = construirSnapshotWidget(
         pasos: 100,
-        calorias: null,
+        agua: null,
+        bpm: null,
         racha: 0,
-        nivel: 1,
         fecha: '2026-09-25',
       );
-      expect(json, contains('"calorias":null'));
-      expect(json, contains('"nivel":1'));
+      expect(json, contains('"agua":null'));
+      expect(json, contains('"bpm":null'));
+      expect(json, contains('"racha":0'));
+    });
+
+    test('construirSnapshotWidget: el agua se fija a 1 decimal (número JSON)',
+        () {
+      final json = construirSnapshotWidget(
+        pasos: 0,
+        agua: 2.0,
+        bpm: null,
+        racha: 0,
+        fecha: '2026-09-25',
+      );
+      expect(json, contains('"agua":2.0'));
     });
   });
 }

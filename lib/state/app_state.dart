@@ -238,6 +238,20 @@ class AppState extends ChangeNotifier {
   int pasosHoy = 0;
   int? _pasosBase;
 
+  /// Último valor crudo del contador (desde el arranque). Permite recalcular
+  /// [pasosHoy] si más tarde se adopta una base más antigua (del servicio
+  /// nativo del widget) sin esperar al siguiente paso.
+  int? _ultimoRaw;
+
+  /// Línea base de pasos que lleva el servicio nativo en primer plano (misma
+  /// cuenta para la app y el widget). Se adopta solo si es más antigua que la
+  /// base local y corresponde al día de hoy.
+  int? _baseNativo;
+  String? _baseNativoFecha;
+
+  /// Fecha a la que pertenece [_pasosBase] (para no publicar una base vieja).
+  String? _pasosBaseFecha;
+
   /// Si el teléfono tiene sensor de pasos disponible y autorizado.
   bool get healthDisponible => _healthSource?.isAvailable ?? false;
 
@@ -264,6 +278,7 @@ class AppState extends ChangeNotifier {
 
   void _onPasos(int raw) {
     final today = _dayKey(DateTime.now());
+    _ultimoRaw = raw;
 
     // Si cambió el día, reseteamos el balance, el agua manual y el baseline.
     if (_prefs?.getString(_balanceDateKey) != today) {
@@ -273,15 +288,62 @@ class AppState extends ChangeNotifier {
       _prefs?.setString(_balanceDateKey, today);
     }
 
+    // Base compartida con el servicio nativo del widget: si existe una base
+    // de HOY más antigua (el servicio lleva contando desde antes), se adopta
+    // para que la app muestre el MISMO número real que el widget. Si no hay
+    // servicio, se mantiene la lógica local de siempre.
+    var base = _pasosBase;
+    if (_baseNativoFecha == today &&
+        _baseNativo != null &&
+        (base == null || _baseNativo! < base)) {
+      base = _baseNativo;
+    }
     // El contador reserva como baseline el primer valor del día; si el
     // dispositivo reinicia (valor menor), se re-basifica automáticamente.
-    if (_pasosBase == null || raw < _pasosBase!) {
-      _pasosBase = raw;
-      _prefs?.setInt(_pasosBaseKey, raw);
+    if (base == null || raw < base) {
+      base = raw;
+    }
+    if (base != _pasosBase) {
+      _pasosBase = base;
+      _prefs?.setInt(_pasosBaseKey, base);
       _prefs?.setString(_pasosBaseDateKey, today);
     }
-    pasosHoy = raw - _pasosBase!;
+    _pasosBaseFecha = today;
+    final pasos = raw - base;
+    pasosHoy = pasos < 0 ? 0 : pasos;
     notifyListeners();
+  }
+
+  /// Línea base de pasos del día (contador crudo al primer paso de hoy) y su
+  /// fecha, o `null` si aún no hay o es de otro día. La app la publica al
+  /// servicio nativo del widget para que ambos cuenten exactamente igual.
+  ({int base, String fecha})? get pasosBaseDia {
+    final base = _pasosBase;
+    final fecha = _pasosBaseFecha;
+    if (base == null || fecha == null) return null;
+    if (fecha != _dayKey(DateTime.now())) return null;
+    return (base: base, fecha: fecha);
+  }
+
+  /// Registra la línea base de pasos publicada por el servicio nativo (widget
+  /// en tiempo real) y adopta la más antigua para hoy, recalculando [pasosHoy]
+  /// con el último valor crudo conocido. Sin servicio, no hace nada.
+  void registrarBaseNativa(int? base, String? fecha) {
+    if (base == null || fecha == null) return;
+    if (fecha != _dayKey(DateTime.now())) return; // Base de otro día: ignorar.
+    _baseNativo = base;
+    _baseNativoFecha = fecha;
+    final raw = _ultimoRaw;
+    if (raw == null) return;
+    if (_pasosBase == null || base < _pasosBase!) {
+      _pasosBase = base;
+      _pasosBaseFecha = fecha;
+      _prefs?.setInt(_pasosBaseKey, base);
+      _prefs?.setString(_pasosBaseDateKey, fecha);
+      final pasos = raw - base;
+      pasosHoy = pasos < 0 ? 0 : pasos;
+      notifyListeners();
+    }
   }
 
   /// Vuelve el balance diario a cero (no borra el perfil ni favoritos).
@@ -350,6 +412,7 @@ class AppState extends ChangeNotifier {
     } else {
       // Mismo día: restauramos el baseline de pasos para continuar el conteo.
       _pasosBase = _prefs!.getInt(_pasosBaseKey);
+      _pasosBaseFecha = today;
       pasosHoy = 0;
     }
 

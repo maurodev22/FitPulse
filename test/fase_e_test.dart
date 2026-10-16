@@ -17,10 +17,10 @@ import 'package:fitpulse/widgets/racha_chip.dart';
 ///
 /// E1: chip "Nv 3 · Intermedio" en el header de Progreso y en el Perfil.
 /// E2: mini-barra de XP en Home (10 px bajo la racha), información pasiva.
-/// E3: el widget de home recibe el nivel real ("Lv N") en su snapshot.
-///
-/// Criterio de aceptación del diseño: los tres puntos muestran el mismo valor
-/// que `AppState.nivel` (aquí: 600 XP → nivel 3 → "Nv 3 · Intermedio").
+/// E3: el widget de home recibe un snapshot con datos reales. Por decisión de
+///     producto, el widget ya NO muestra el nivel ("Lv N"): su banda 4×1 pasó a
+///     mostrar agua de hoy, pasos, BPM y racha (los dos primeros cambian en
+///     vivo). El nivel sigue viviendo en la app (E1/E2).
 void main() {
   setUp(() {
     SharedPreferences.setMockInitialValues({});
@@ -141,17 +141,24 @@ void main() {
     });
   });
 
-  group('E3 · snapshot del widget de home con el nivel real', () {
-    test('el snapshot JSON incluye "nivel" == estado.nivel', () async {
+  group('E3 · snapshot del widget de home (datos reales)', () {
+    test('el snapshot JSON lleva agua, pasos, BPM y racha (sin nivel)', () async {
       final state = await estadoNivel4();
       final json = construirSnapshotWidget(
         pasos: 1200,
-        calorias: null,
+        agua: 1.5,
+        bpm: 68,
         racha: 2,
-        nivel: state.nivel,
         fecha: '2026-10-06',
       );
-      expect(json, contains('"nivel":4'));
+      expect(json, contains('"pasos":1200'));
+      expect(json, contains('"agua":1.5'));
+      expect(json, contains('"bpm":68'));
+      expect(json, contains('"racha":2'));
+      // El nivel ya no viaja al widget (decisión de producto).
+      expect(json, isNot(contains('"nivel"')));
+      // El estado sigue calculando el nivel para la app (E1/E2).
+      expect(state.nivel, 4);
     });
   });
 }

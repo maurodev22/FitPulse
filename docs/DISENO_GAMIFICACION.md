@@ -152,10 +152,18 @@ Tabla propuesta (condiciones sobre datos ya persistidos):
 
 - **E1. Chip "Nv 3 · Intermedio"** en el header de Progreso y en el Perfil.
 - **E2. Mini-barra de XP en Home** (10 px, bajo la racha), información pasiva.
-- **E3. Widget de home (banda 4×1):** micro-burbuja "Lv N" opcional (extiende
-  `home_widget_service` con el valor ya persistido).
-- **Criterio de aceptación:** los tres puntos muestran el mismo valor que
-  `AppState.nivel` tras reiniciar la app.
+- **E3. Widget de home (banda 4×1) — datos REALES** (rediseñado 2026-10-16):
+  izquierda "AGUA HOY" con los litros reales del día (sin dato → "—") y
+  columnas **Pasos / BPM / Racha** (BPM sin dato → "—"). `nivel` y `calorias`
+  salieron del snapshot. Los pasos se actualizan en tiempo real vía
+  `StepWidgetService` (servicio en primer plano, notificación permanente
+  `fitpulse_pasos`, `foregroundServiceType="health"`); agua y BPM se pintan
+  al sincronizar la app. Limitación: sin arranque por BOOT (los pasos se
+  recalibran al abrir la app) — declarar el servicio en Data Safety/políticas
+  de Play.
+- **Criterio de aceptación:** E1 y E2 muestran el mismo valor que
+  `AppState.nivel` tras reiniciar la app; el widget muestra los MISMOS pasos
+  que la app y "—" honesto en cualquier dato no disponible (nunca inventa).
 
 ---
 

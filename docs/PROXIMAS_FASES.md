@@ -246,12 +246,18 @@ bloqueada (silueta gris con candado + condición escrita, sin contadores de prog
   nunca desborde: compacto a 1.0×, envuelve si hace falta).
 - [x] **E2 — Mini-barra de XP en Home** (10 px, bajo la racha, información
   pasiva): `LinearProgressIndicator` con `progresoNivel` real, sin interacción.
-- [x] **E3 — Widget de home (banda 4×1)**: el snapshot JSON del widget ahora lleva el
-  nivel real (`construirSnapshotWidget(..., nivel)`), `HomeWidgetBridge` lo
-  envía y el lado nativo (`HomeWidgetProvider.kt`) pinta la micro-burbuja
-  "Hoy · Lv N" en el subtítulo (mismo cálculo que la app: 1 + XP/300). El
-  cambio nativo se verifica en la próxima instalación en móvil (no cubierta
-  por `flutter test`).
+- [x] **E3 — Widget de home (banda 4×1)**: rediseñado el 2026-10-16 a petición
+  del usuario — sin nivel ni calorías. El snapshot (`construirSnapshotWidget`)
+  ahora lleva `{fecha, pasos, agua, bpm, racha}`; el layout nativo pinta
+  "AGUA HOY" + litros (null → "—") y las columnas Pasos / BPM / Racha (BPM
+  null → "—"); `HomeWidgetRenderer.llenar()` formatea el agua con `Locale.US
+  "%.1f L"`. Los pasos se actualizan en tiempo real con `StepWidgetService`
+  (servicio en primer plano, notificación permanente, repintado ≤1/s,
+  `START_STICKY`); la baseline del contador se comparte Dart↔Kotlin
+  (`getPasosBase`/`registrarBaseNativa`) para que app y widget no discrepen.
+  Layout verificado en el Pixel (2003); el fix de baseline (2004) está pendiente
+  de re-verificación en dispositivo (no cubierta por `flutter test`).
+  Limitación: sin arranque por BOOT; declarar el servicio en Data Safety.
 - [x] Tests: `test/fase_e_test.dart` (5) + `avisos_test` actualizado → suite
   **293/293** verdes y `flutter analyze` 0 issues; accesibilidad/responsive
   re-verificadas con los chips nuevos (360/393/411 dp, 2.0×).

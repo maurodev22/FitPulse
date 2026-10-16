@@ -71,13 +71,14 @@ dependen de cuentas, negocio o verificación física.
 
 ## D. Verificación física antes de subir (PASA/FALLA)
 
-- [ ] ⚠️ Pixel 6a (pendiente desbloqueo PIN): suite manual final (`GUIA_TESTEO_UNIFICADA`)
-      + verificar **E3** "Hoy · Lv N" del widget de home (cambio nativo).
+- [ ] ⚠️ Pixel 6a: suite manual final (`GUIA_TESTEO_UNIFICADA`)
+      + verificar el widget rediseñado (agua/BPM/pasos reales, "—" sin dato)
+      y que app y widget muestran los MISMOS pasos (fix baseline 2004).
 - [ ] ⚠️ Xiaomi: `uiautomator dump` y flujo UMP.
 - [ ] ⚠️ Prueba end-to-end EEE: consentimiento UMP → anuncios (no) personalizados
       con IDs reales; desactivar anuncios desde Perfil.
 
 ## E. Salud del proyecto (verde hoy)
 
-- `flutter analyze` 0 issues · `flutter test` 303/303 · accesibilidad 2.0×
+- `flutter analyze` 0 issues · `flutter test` 304/304 · accesibilidad 2.0×
 - Sin commits de PNGs/`work/`; `android/key.properties` y el .jks fuera del repo.

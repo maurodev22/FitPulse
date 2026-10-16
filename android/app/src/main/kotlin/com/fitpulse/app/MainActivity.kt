@@ -6,6 +6,7 @@ import android.content.ComponentName
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Bundle
 import android.provider.Settings
 import com.google.android.ump.ConsentInformation
 import com.google.android.ump.ConsentRequestParameters
@@ -16,6 +17,14 @@ import io.flutter.plugin.common.MethodChannel
 
 class MainActivity : FlutterActivity() {
     private var pendingCameraResult: MethodChannel.Result? = null
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        // Fase 6 (widget en tiempo real): con la app en primer plano se puede
+        // arrancar el servicio de pasos (el sistema lo restringe en segundo
+        // plano). Solo sigue vivo si hay un widget colocado.
+        StepWidgetService.ensureRunning(this)
+    }
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
@@ -38,8 +47,9 @@ class MainActivity : FlutterActivity() {
                 else -> result.notImplemented()
             }
         }
-        // Fase 6: el widget de home recibe el snapshot (pasos, calorías, racha)
-        // y se repinta al instante.
+        // Fase 6: el widget de home recibe el snapshot (agua, pasos, BPM,
+        // racha) y se repinta al instante. `getPasosBase` devuelve la línea
+        // base del servicio de pasos para que la app cuente igual que el widget.
         MethodChannel(
             flutterEngine.dartExecutor.binaryMessenger,
             "fitpulse/home_widget"
@@ -48,9 +58,17 @@ class MainActivity : FlutterActivity() {
                 "actualizar" -> {
                     val datos = call.argument<String>("datos") ?: ""
                     HomeWidgetRenderer.guardar(this, datos)
+                    // Línea base de pasos del día que publica la app: el
+                    // servicio la adopta para contar igual que la app.
+                    StepWidgetService.registrarBaseDeLaApp(
+                        this,
+                        call.argument<Int>("base"),
+                        call.argument<String>("baseFecha")
+                    )
                     HomeWidgetProvider.forzarActualizacion(this)
                     result.success(true)
                 }
+                "getPasosBase" -> result.success(StepWidgetService.leerBase(this))
                 else -> result.notImplemented()
             }
         }

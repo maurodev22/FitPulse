@@ -223,10 +223,10 @@ Requisito: Play Services + red para cargar anuncios de PRUEBA. Sin red/Play: pla
 
 | # | Paso | Esperado |
 |---|---|---|
-| w1 | Añadir widget FitPulse (home del teléfono). | Banda oscura con **Pasos**, **Calorías** y **Racha** reales. |
-| w2 | Calorías. | Gasto activo real solo con permiso + dato; si no "—". |
+| w1 | Añadir widget FitPulse (home del teléfono). | Banda oscura con **"AGUA HOY"** + litros a la izquierda y columnas **Pasos**, **BPM** y **Racha** reales. |
+| w2 | Agua y BPM. | Litros reales registrados y pulso real; sin dato → "—". Los pasos se actualizan en tiempo real (servicio en primer plano). |
 | w3 | Racha. | Días reales del historial (si no hay sesiones "0 d" o "—"). |
-| w4 | Tocar el widget. | Abre FitPulse; valores se refrescan al volver/cada 30 min. |
+| w4 | Tocar el widget. | Abre FitPulse; agua/BPM se refrescan al volver; pasos en tiempo real. |
 | n1 | Perfil → Preferencias → **Recordatorios de hidratación**. | Notificación 💧 programada cada hora. |
 | n2 | Perfil → Preferencias → **Aviso de racha en riesgo**. | Notificación 🏃 diaria 20:00 con la racha real. |
 | n3 | Primer activado. | Permiso de notificaciones una sola vez, sin doble diálogo. Denegado → toggle con aviso honesto. |

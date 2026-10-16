@@ -64,8 +64,11 @@ Future<void> main() async {
       ),
     );
   }
-  // Fase 6: widget de home — snapshot con datos reales (pasos, calorías, racha).
+  // Fase 6: widget de home — snapshot con datos reales (agua, pasos, BPM,
+  // racha). El servicio en primer plano mantiene el sensor vivo con la app
+  // cerrada; aquí se adopta su línea base para que app y widget cuenten igual.
   final widgetBridge = HomeWidgetBridge(appState);
+  unawaited(widgetBridge.sincronizarBaseNativa());
   widgetBridge.sincronizarAhora();
   // Zona de anuncio visible cuando el banner de prueba no carga (sin red a
   // AdMob). Solo en la app real; los tests no llaman a main().

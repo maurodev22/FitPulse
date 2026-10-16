@@ -68,20 +68,28 @@ String textoAvisoRacha(int rachaDias) {
 
 /// Construye el snapshot JSON que se envía al widget nativo de home.
 ///
+/// El widget muestra solo datos REALES; si un valor no existe, viaja `null` y
+/// el lado nativo pinta "—" (nunca se inventa).
+///
 /// - [pasos]: pasos reales de hoy (sensor del teléfono).
-/// - [calorias]: gasto activo real de Health Connect, o `null` si no hay
-///   permiso + dato (el widget mostrará "—").
+/// - [agua]: litros de agua reales de hoy (manual + Health Connect), o `null`
+///   si no hay ningún dato (el widget mostrará "—").
+/// - [bpm]: pulso real de hoy de Health Connect, o `null` si no hay dato
+///   (el widget mostrará "—").
 /// - [racha]: días de racha reales del historial.
-/// - [nivel]: nivel real derivado del XP (burbuja "Lv N" del widget).
 /// - [fecha]: día en formato ISO (yyyy-MM-dd) para refresco del widget.
 String construirSnapshotWidget({
   required int pasos,
-  double? calorias,
+  double? agua,
+  int? bpm,
   required int racha,
-  required int nivel,
   required String fecha,
 }) {
+  // Se fija a 1 decimal (sin notación científica ni colas de coma flotante);
+  // es un número JSON válido, p. ej. 1.5 o 2.0.
+  final aguaJson = agua == null ? 'null' : agua.toStringAsFixed(1);
   return '{"fecha":"$fecha","pasos":$pasos,'
-      '"calorias":${calorias == null ? 'null' : calorias.round()},'
-      '"racha":$racha,"nivel":$nivel}';
+      '"agua":$aguaJson,'
+      '"bpm":${bpm ?? 'null'},'
+      '"racha":$racha}';
 }

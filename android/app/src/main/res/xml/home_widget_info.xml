@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Configuración del widget: banda horizontal de 4 celdas. El refresco
-     automático mínimo es 30 min; la app además lo actualiza al instante
-     cuando cambian datos reales (pasos, gasto, racha). -->
+<!-- Configuración del widget: banda horizontal de 4 celdas (agua de hoy, pasos,
+     BPM y racha). El refresco automático mínimo es 30 min; además el servicio
+     de pasos en primer plano lo repinta en vivo y la app lo refresca al
+     instante cuando cambian datos reales (agua, BPM, racha). -->
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
     android:minWidth="250dp"
     android:minHeight="40dp"

@@ -160,13 +160,13 @@ Cubre EULA, registro y configuración inicial. Si la app ya tiene perfil, ve dir
 
 **FALLA si:** la tarjeta aparece sin actividad previa, los números no coinciden con las sesiones/XP reales de esa semana, o muestra lenguaje negativo ("te quedan…", "racha perdida").
 
-### B9. Nivel: chip y mini-barra (Fase E)
+### B9. Nivel: chip y mini-barra (Fase E) + widget (banda 4×1)
 
-**Qué hacer:** mira el header de **Progreso** (chip "Nv N · Nombre" bajo el título) y del **Perfil** (chip igual), y en **Home** la mini-barra de 10 px bajo el chip de racha.
+**Qué hacer:** mira el header de **Progreso** (chip "Nv N · Nombre" bajo el título) y del **Perfil** (chip igual), y en **Home** la mini-barra de 10 px bajo el chip de racha. Si el widget de home está colocado, compara sus números con los de la app.
 
-**Qué debes ver:** el mismo número de nivel que en Progreso → "Nivel" (chip, tarjeta y mini-barra coinciden entre sí y con el XP acumulado tras reiniciar la app). En el widget de home (banda horizontal 4×1, si está colocado), el subtítulo "Hoy · Lv N" con el mismo N.
+**Qué debes ver:** el mismo número de nivel que en Progreso → "Nivel" (chip y mini-barra coinciden entre sí y con el XP acumulado tras reiniciar la app). El widget (banda horizontal 4×1) muestra: a la izquierda **"AGUA HOY"** con los litros reales registrados hoy (sin dato: "—"); las columnas **Pasos**, **BPM** y **Racha** con datos reales (BPM sin dato: "—"); los pasos del widget coinciden con los de la app porque se actualizan en tiempo real (servicio en primer plano). El widget ya NO muestra nivel ni calorías.
 
-**FALLA si:** el chip/barra/widget muestran un nivel distinto al de Progreso, o el chip parece un botón sin acción (pulsarlo no hace nada raro ni esperado: es pasivo).
+**FALLA si:** el chip o la mini-barra muestran un nivel distinto al de Progreso; el widget muestra algún dato que no existe (debe ser "—" en lugar de 0 inventado); los pasos del widget difieren de los de la app; el widget muestra nivel o calorías; o el chip parece un botón sin acción (pulsarlo no hace nada raro ni esperado: es pasivo).
 
 ---
 
@@ -559,7 +559,7 @@ B5  Entrenamiento de hoy visible con botón Comenzar ......... [ ]
 B6  Entrada "Mis rutinas" visible y sin cortes ............. [ ]
 B7  Racha, retos y XP cuadran .............................. [ ]
 B8  "Tu semana" con datos reales de la semana pasada ...... [ ]
-B9  Nivel: chip Nv N, mini-barra y widget coinciden ........ [ ]
+B9  Chip/mini-barra nivel; widget agua/BPM/pasos real ..... [ ]
 C1  Panel de evolución visible sin scroll obligatorio ...... [ ]
 C2  Pestañas Semanal / Mensual / Año cambian datos ......... [ ]
 C3  Historial de sesiones con datos reales .................. [ ]

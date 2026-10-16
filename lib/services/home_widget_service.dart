@@ -34,10 +34,18 @@ class HomeWidgetBridge with WidgetsBindingObserver {
     final ahora = DateTime.now();
     final cambioSignificativo = snap != _ultimoSnapshot;
     final desdeUltima = ahora.difference(_ultimaEscritura).inSeconds;
-    if (forzar || (cambioSignificativo && desdeUltima >= 10)) {
+    // Refresco casi al instante: los cambios vienen de acciones del usuario
+    // (un vaso de agua, un dato nuevo de Health Connect). Los pasos en vivo los
+    // pinta el servicio nativo, así que aquí basta con no abusar del disco.
+    if (forzar || (cambioSignificativo && desdeUltima >= 3)) {
       _ultimaEscritura = ahora;
       _ultimoSnapshot = snap;
-      unawaited(HomeWidgetService.actualizar(snap));
+      final baseDia = _appState.pasosBaseDia;
+      unawaited(HomeWidgetService.actualizar(
+        snap,
+        base: baseDia?.base,
+        baseFecha: baseDia?.fecha,
+      ));
     }
   }
 
@@ -50,18 +58,28 @@ class HomeWidgetBridge with WidgetsBindingObserver {
         '${ahora.day.toString().padLeft(2, '0')}';
     return construirSnapshotWidget(
       pasos: _appState.pasosHoy,
-      calorias: _appState.gastoActivoConPermiso
-          ? _appState.gastoActivoHoy
-          : null,
+      agua: _appState.aguaHoy,
+      bpm: _appState.pulsoHoy,
       racha: _appState.rachaDias,
-      nivel: _appState.nivel,
       fecha: fecha,
+    );
+  }
+
+  /// Adopta la línea base de pasos del servicio nativo para que la app y el
+  /// widget cuenten exactamente igual (mismo sensor, misma base).
+  Future<void> sincronizarBaseNativa() async {
+    final datos = await HomeWidgetService.leerBasePasos();
+    if (datos == null) return;
+    _appState.registrarBaseNativa(
+      (datos['base'] as num?)?.toInt(),
+      datos['fecha'] as String?,
     );
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
+      unawaited(sincronizarBaseNativa());
       _onCambio(forzar: true);
     }
   }
@@ -77,14 +95,33 @@ class HomeWidgetService {
   static const MethodChannel _canal = MethodChannel('fitpulse/home_widget');
 
   /// Envía el [snapshot] JSON al lado nativo, que guarda y refresca el widget.
-  static Future<bool> actualizar(String snapshot) async {
+  /// Con [base]/[baseFecha] publica además la línea base de pasos del día para
+  /// que el servicio en primer plano cuente exactamente igual que la app.
+  static Future<bool> actualizar(
+    String snapshot, {
+    int? base,
+    String? baseFecha,
+  }) async {
     try {
       final ok = await _canal.invokeMethod<bool>('actualizar', {
         'datos': snapshot,
+        'base': ?base,
+        'baseFecha': ?baseFecha,
       });
       return ok ?? false;
     } catch (_) {
       return false; // Sin canal (tests/escritorio): inofensivo.
+    }
+  }
+
+  /// Línea base de pasos del servicio nativo en primer plano: `{'base': int,
+  /// 'fecha': 'yyyy-MM-dd'}` o `null` si el servicio aún no ha contado nada.
+  /// La app la adopta para mostrar el mismo número real que el widget.
+  static Future<Map<String, Object?>?> leerBasePasos() async {
+    try {
+      return await _canal.invokeMapMethod<String, Object?>('getPasosBase');
+    } catch (_) {
+      return null; // Sin canal (tests/escritorio): la app cuenta por su cuenta.
     }
   }
 }

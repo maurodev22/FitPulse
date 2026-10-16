@@ -21,6 +21,11 @@
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"
         android:maxSdkVersion="32"/>
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <!-- Fase 6 (widget en tiempo real): servicio en primer plano que mantiene
+         vivo el sensor de pasos aunque la app esté cerrada. El sistema exige
+         una notificación permanente visible mientras está activo. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_HEALTH"/>
     <application
         android:label="FitPulse"
         android:name="${applicationName}"
@@ -69,7 +74,7 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
-        <!-- Fase 6: widget de home (pasos, calorías, racha reales). -->
+        <!-- Fase 6: widget de home (agua, pasos, BPM y racha reales). -->
         <receiver
             android:name=".HomeWidgetProvider"
             android:exported="false">
@@ -80,6 +85,13 @@
                 android:name="android.appwidget.provider"
                 android:resource="@xml/home_widget_info"/>
         </receiver>
+        <!-- Fase 6 (tiempo real): servicio en primer plano que lee el sensor de
+             pasos con la app cerrada y repinta el widget. Tipo `health` porque
+             cuenta actividad física (requiere ACTIVITY_RECOGNITION). -->
+        <service
+            android:name=".StepWidgetService"
+            android:exported="false"
+            android:foregroundServiceType="health"/>
         <!-- Fase 6: avisos locales — reprogramación tras reinicio/actualización
              de la app (receptores del plugin flutter_local_notifications). -->
         <receiver
