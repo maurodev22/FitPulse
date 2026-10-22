@@ -64,18 +64,18 @@ void main() {
     // Catálogo real: 4 artículos (destacado + 3 recomendados).
     expect(find.text('Ver todos (4)'), findsOneWidget);
 
-    // Búsqueda por cuerpo/título: solo queda el artículo de sentadilla.
-    await tester.enterText(find.byType(TextField), 'sentadilla');
+    // Búsqueda por cuerpo/título: solo queda el artículo de fuerza.
+    await tester.enterText(find.byType(TextField), 'fuerza');
     await tester.pumpAndSettle();
 
     expect(find.text('Ver todos (1)'), findsOneWidget);
     expect(
-      find.text('Cómo mejorar tu técnica de sentadilla profunda'),
+      find.text('Fuerza dos días por semana: lo que el cardio no cubre'),
       findsOneWidget,
     );
 
     // El destacado de Recuperación se oculta al filtrar por fuerza.
-    expect(find.text('HOY • RECUPERACIÓN'), findsNothing);
+    expect(find.text('HOY • DESTACADO'), findsNothing);
   });
 
   testWidgets('P4: las pills de categoría filtran por categoría real',
@@ -85,13 +85,13 @@ void main() {
     // Sin filtro: los 4 artículos.
     expect(find.text('Ver todos (4)'), findsOneWidget);
 
-    // Pill "Nutrición" → solo el artículo de déficit calórico.
+    // Pill "Nutrición" → solo el artículo de fruta y verdura.
     await tester.tap(find.text('Nutrición').first);
     await tester.pumpAndSettle();
 
     expect(find.text('Ver todos (1)'), findsOneWidget);
     expect(
-      find.text('5 Errores comunes al calcular tu déficit calórico'),
+      find.text('400 g de fruta y verdura al día: la referencia de la OMS'),
       findsOneWidget,
     );
 
@@ -115,11 +115,11 @@ void main() {
     expect(find.text('Todos los artículos'), findsOneWidget);
     expect(find.byType(TextField), findsOneWidget);
     expect(
-      find.text('La importancia de los descansos activos para no perder masa muscular'),
+      find.text('Dormir 7-9 horas también es entrenar'),
       findsOneWidget,
     );
     expect(
-      find.text('5 Errores comunes al calcular tu déficit calórico'),
+      find.text('400 g de fruta y verdura al día: la referencia de la OMS'),
       findsOneWidget,
     );
   });

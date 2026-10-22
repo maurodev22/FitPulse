@@ -702,34 +702,57 @@ class AppStrings {
       ? _t('Recomendaciones para ti', 'Recommendations for you')
       : _t('Recomendaciones $metasPart para ti', 'Recommendations $metasPart for you');
   String get tipsBuscar => _t('Buscar consejos...', 'Search tips...');
-  String get tipsHoyRecuperacion => _t('HOY • RECUPERACIÓN', 'TODAY • RECOVERY');
+  String get tipsHoyDestacado => _t('HOY • DESTACADO', 'TODAY • FEATURED');
   String tipsMin(int m) => _t('$m min', '$m min');
+  String tipsFuente(String fuente) => _t('Fuente: $fuente', 'Source: $fuente');
+  String get tipsVerFuente => _t('Ver fuente', 'Open source');
+  String get tipsFuenteError =>
+      _t('No se pudo abrir el enlace', 'Could not open the link');
+  String get tipsFuenteNhs => 'NHS';
+  String get tipsFuenteOms => _t('OMS', 'WHO');
+  String get tipsFuenteSleep => 'Sleep Foundation';
+
+  // ---- Consejos: articulos con fuente verificada ----
   String get tipsArticulo1Titulo =>
-      _t('La importancia de los descansos activos para no perder masa muscular',
-          'The importance of active rest to avoid losing muscle mass');
+      _t('Dormir 7-9 horas también es entrenar',
+          'Sleeping 7-9 hours is training too');
   String get tipsArticulo1Cuerpo => _t(
-      'Caminar ligero o realizar estiramientos dinámicos en tus días libres '
-      'promueve la eliminación de lactato y acelera la síntesis proteica sin fatiga adicional.',
-      'Walking lightly or doing dynamic stretches on your rest days promotes '
-      'lactate clearance and speeds up protein synthesis without extra fatigue.');
+      'La mayoría de los adultos sanos necesita entre 7 y 9 horas de sueño '
+      'cada noche, y a partir de los 18 años el mínimo recomendado son 7. Lo '
+      'recoge la Sleep Foundation a partir de las recomendaciones de las '
+      'sociedades de medicina del sueño.\n\n'
+      'Dormir es cuando el cuerpo y el cerebro recuperan: la falta de sueño se '
+      'asocia a problemas de salud crónicos, peor estado de ánimo y menos '
+      'energía durante el día.\n\n'
+      'Y hay una relación de ida y vuelta: el ejercicio moderado o intenso '
+      'mejora la calidad del sueño en adultos, reduce el tiempo que tardas en '
+      'dormirte y el tiempo que pasas despierto por la noche.',
+      'Most healthy adults need 7 to 9 hours of sleep each night, and from age '
+      '18 the recommended minimum is 7, according to sleep medicine society '
+      'recommendations compiled by the Sleep Foundation.\n\n'
+      'Sleep is when body and brain recover: not getting enough is linked to '
+      'chronic health problems, lower mood and less daytime energy.\n\n'
+      'It also works both ways: moderate to vigorous exercise improves sleep '
+      'quality in adults, reduces how long it takes to fall asleep and cuts '
+      'the time spent awake at night.');
   String get tipsLeerArticulo => _t('Leer artículo completo', 'Read full article');
   String get tipsAltoImpacto => _t('Tips de Alto Impacto', 'High-Impact Tips');
   String get tipsDesliza => _t('Desliza para ver más', 'Swipe for more');
-  String get tipsTip1Titulo => _t('Hidratación Óptima', 'Optimal Hydration');
-  String get tipsTip1Sub => _t('Pre-entreno', 'Pre-workout');
+  String get tipsTip1Titulo => _t('150 minutos', '150 minutes');
+  String get tipsTip1Sub => _t('Base semanal', 'Weekly base');
   String get tipsTip1Desc => _t(
-      'Bebe 500ml de agua 30 min antes de entrenar para llegar hidratado y rendir mejor en tu sesión.',
-      'Drink 500ml of water 30 min before training to stay hydrated and perform better in your session.');
-  String get tipsTip2Titulo => _t('Ventana Anabólica', 'Anabolic Window');
-  String get tipsTip2Sub => _t('Post-HIIT', 'Post-HIIT');
+      'Reparte 150 min de actividad moderada (o 75 intensa) en 4-5 días. Varias sesiones cortas cuentan para el total.',
+      'Spread 150 min of moderate activity (or 75 of vigorous) over 4-5 days. Several short sessions count toward the total.');
+  String get tipsTip2Titulo => _t('Rompe el sedentarismo', 'Break up sitting');
+  String get tipsTip2Sub => _t('Cada hora', 'Every hour');
   String get tipsTip2Desc => _t(
-      'Consume 25-30g de proteína de rápida asimilación tras tus sesiones HIIT para apoyar la recuperación muscular.',
-      'Have 25-30g of fast-absorbing protein after your HIIT sessions to support muscle recovery.');
-  String get tipsTip3Titulo => _t('Sueño Profundo', 'Deep Sleep');
-  String get tipsTip3Sub => _t('Regeneración', 'Recovery');
+      'Reduce el tiempo sentado y corta los periodos largos sin moverte con algo de actividad. El NHS lo pide junto al ejercicio.',
+      'Cut sitting time and break up long periods without moving with some activity. The NHS recommends it alongside exercise.');
+  String get tipsTip3Titulo => _t('Entrena y dormirás mejor', 'Train and sleep better');
+  String get tipsTip3Sub => _t('Noche', 'Night');
   String get tipsTip3Desc => _t(
-      'Duerme 7-8 horas: el descanso nocturno es clave para la recuperación y el rendimiento del día siguiente.',
-      'Sleep 7-8 hours: nightly rest is key for recovery and next-day performance.');
+      'El ejercicio moderado o intenso mejora la calidad del sueño y reduce el tiempo que tardas en dormirte.',
+      'Moderate to vigorous exercise improves sleep quality and reduces how long it takes to fall asleep.');
   String get tipsArticulosRecomendados => _t('Artículos Recomendados', 'Recommended Articles');
   String tipsVerTodos(int n) => _t('Ver todos ($n)', 'See all ($n)');
   String get tipsSinResultados =>
@@ -737,21 +760,69 @@ class AppStrings {
   String get tipsTodosArticulos => _t('Todos los artículos', 'All articles');
   String get tipsDetalleArticulo => _t('Artículo', 'Article');
   String get tipsArt1Titulo =>
-      _t('5 Errores comunes al calcular tu déficit calórico',
-          '5 Common mistakes when calculating your calorie deficit');
-  String get tipsArt1Cuerpo => _t('No pesas los aceites o subestimas las salsas.',
-      'You do not weigh oils or underestimate sauces.');
+      _t('Fuerza dos días por semana: lo que el cardio no cubre',
+          'Strength two days a week: what cardio does not cover');
+  String get tipsArt1Cuerpo => _t(
+      'Las guías del NHS para adultos de 19 a 64 años piden dos cosas a la vez: '
+      'al menos 150 minutos de actividad moderada (o 75 de intensa) por semana y, '
+      'además, actividades de fuerza que trabajen todos los grupos musculares '
+      'importantes (piernas, caderas, espalda, abdomen, pecho, hombros y brazos) '
+      'al menos 2 días por semana.\n\n'
+      'Son recomendaciones separadas: el cardio no sustituye al trabajo de '
+      'fuerza. Reparte la actividad en 4 o 5 días, o todos los días, y reduce '
+      'el tiempo sentado levantándote de vez en cuando.\n\n'
+      'Si vas justo de tiempo, varias sesiones cortas cuentan igual para el '
+      'total semanal.',
+      'NHS guidelines for adults aged 19 to 64 ask for two things at once: at '
+      'least 150 minutes of moderate activity (or 75 of vigorous activity) per '
+      'week, plus strength activities that work all major muscle groups (legs, '
+      'hips, back, abdomen, chest, shoulders and arms) on at least 2 days a '
+      'week.\n\n'
+      'These are separate recommendations: cardio does not replace strength '
+      'work. Spread activity over 4 or 5 days, or every day, and cut sitting '
+      'time by breaking up long periods without moving.\n\n'
+      'Short on time? Several short sessions count toward the weekly total.');
   String get tipsArt2Titulo =>
-      _t('Cómo mejorar tu técnica de sentadilla profunda',
-          'How to improve your deep squat technique');
-  String get tipsArt2Cuerpo =>
-      _t('Alineación del fémur, movilidad de tobillos.',
-          'Femur alignment, ankle mobility.');
+      _t('400 g de fruta y verdura al día: la referencia de la OMS',
+          '400 g of fruit and vegetables a day: the WHO reference');
+  String get tipsArt2Cuerpo => _t(
+      'La OMS recomienda que, a partir de los 10 años, se tomen al menos 400 '
+      'gramos de frutas y verduras al día. En la misma guía pide limitar la sal '
+      'a menos de 5 gramos diarios y el azúcar libre a menos del 10 % de la '
+      'energía total (unos 50 g en una dieta de 2.000 kcal).\n\n'
+      'También marca un mínimo de 25 gramos de fibra al día en adultos y '
+      'aconseja preferir grasas insaturadas (pescado, frutos secos, aceite de '
+      'oliva) frente a las saturadas.\n\n'
+      'No es una dieta estricta: son mínimos respaldados por la evidencia para '
+      'reducir el riesgo de enfermedades no transmisibles.',
+      'The WHO recommends at least 400 grams of fruit and vegetables a day from '
+      'age 10. The same guidance limits salt to less than 5 grams a day and '
+      'free sugars to less than 10% of total energy (about 50 g on a 2,000 kcal '
+      'diet).\n\n'
+      'It also sets a minimum of 25 grams of fibre a day for adults and advises '
+      'choosing unsaturated fats (fish, nuts, olive oil) over saturated ones.\n\n'
+      'This is not a strict diet: these are evidence-based minimums to lower '
+      'the risk of noncommunicable diseases.');
   String get tipsArt3Titulo =>
-      _t('Respiración diafragmática para relajarte',
-          'Diaphragmatic breathing to relax');
-  String get tipsArt3Cuerpo =>
-      _t('Técnica box-breathing de 4 tiempos.', '4-count box-breathing technique.');
+      _t('Hidratación: 6-8 vasos y una señal sencilla',
+          'Hydration: 6-8 glasses and one simple sign');
+  String get tipsArt3Cuerpo => _t(
+      'El Eatwell Guide del NHS recomienda beber 6-8 vasos o tazas de líquido '
+      'al día como referencia general. Es solo una guía: puedes necesitar más '
+      'si hace calor, si te mueves mucho, si estás embarazada o dando el pecho, '
+      'o si estás enfermo.\n\n'
+      'Una comprobación práctica es el color de la orina: debe ser amarillo '
+      'claro. Si sale oscura, probablemente estés bebiendo poco.\n\n'
+      'Agua, leche semidesnatada y bebidas bajas en azúcar son mejores '
+      'opciones que los refrescos azucarados.',
+      'The NHS Eatwell Guide recommends drinking 6 to 8 cups or glasses of '
+      'fluid a day as a general guide. It is only a guide: you may need more '
+      'in hot weather, if you are very active, pregnant or breastfeeding, or '
+      'unwell.\n\n'
+      'A practical check is urine colour: it should be pale yellow. If it is '
+      'dark, you are probably not drinking enough.\n\n'
+      'Water, lower-fat milk and lower-sugar drinks are better choices than '
+      'sugary soft drinks.');
   String get tipsAvisoSalud => _t(
       'Estos contenidos son orientativos y no sustituyen el consejo de un profesional de la salud.',
       'These contents are for guidance only and do not replace the advice of a health professional.');

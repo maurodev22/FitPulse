@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../services/locale_service.dart';
 import '../state/app_state.dart';
@@ -14,40 +15,72 @@ class TipArticulo {
     required this.cuerpo,
     required this.categoria,
     required this.min,
+    required this.fuente,
+    required this.urlFuente,
   });
 
   final String titulo;
   final String cuerpo;
   final String categoria;
   final int min;
+  final String fuente;
+  final String urlFuente;
+}
+
+// Fuentes oficiales citadas en el catálogo (verificadas, sin inventar cifras).
+const String _urlNhsActividad =
+    'https://www.nhs.uk/live-well/exercise/exercise-guidelines/physical-activity-guidelines-for-adults-aged-19-to-64/';
+const String _urlNhsAgua =
+    'https://www.nhs.uk/live-well/eat-well/food-guidelines-and-food-labels/water-drinks-nutrition/';
+const String _urlOmsDieta =
+    'https://www.who.int/news-room/fact-sheets/detail/healthy-diet';
+const String _urlSleepSueno =
+    'https://www.sleepfoundation.org/how-sleep-works/how-much-sleep-do-we-really-need';
+const String _urlSleepEjercicio =
+    'https://www.sleepfoundation.org/physical-activity/exercise-and-sleep';
+
+/// Tiempo de lectura estimado a partir del texto real (180 palabras/min).
+int _minLectura(String cuerpo) {
+  final palabras =
+      cuerpo.split(RegExp(r'\s+')).where((p) => p.isNotEmpty).length;
+  final min = (palabras / 180).ceil();
+  return min < 1 ? 1 : min;
 }
 
 /// Catálogo REAL de artículos (4): cada título y cuerpo vive en AppStrings.
-/// Nada se inventa: categoría y duración salen del propio contenido.
+/// Nada se inventa: cada texto resume una fuente oficial citada en la app.
 List<TipArticulo> catalogoArticulos(AppStrings strings) => [
       TipArticulo(
         titulo: strings.tipsArticulo1Titulo,
         cuerpo: strings.tipsArticulo1Cuerpo,
         categoria: 'Recuperación',
-        min: 3,
+        min: _minLectura(strings.tipsArticulo1Cuerpo),
+        fuente: strings.tipsFuenteSleep,
+        urlFuente: _urlSleepSueno,
       ),
       TipArticulo(
         titulo: strings.tipsArt1Titulo,
         cuerpo: strings.tipsArt1Cuerpo,
-        categoria: 'Nutrición',
-        min: 4,
+        categoria: 'Fuerza',
+        min: _minLectura(strings.tipsArt1Cuerpo),
+        fuente: strings.tipsFuenteNhs,
+        urlFuente: _urlNhsActividad,
       ),
       TipArticulo(
         titulo: strings.tipsArt2Titulo,
         cuerpo: strings.tipsArt2Cuerpo,
-        categoria: 'Fuerza',
-        min: 5,
+        categoria: 'Nutrición',
+        min: _minLectura(strings.tipsArt2Cuerpo),
+        fuente: strings.tipsFuenteOms,
+        urlFuente: _urlOmsDieta,
       ),
       TipArticulo(
         titulo: strings.tipsArt3Titulo,
         cuerpo: strings.tipsArt3Cuerpo,
         categoria: 'Bienestar',
-        min: 3,
+        min: _minLectura(strings.tipsArt3Cuerpo),
+        fuente: strings.tipsFuenteNhs,
+        urlFuente: _urlNhsAgua,
       ),
     ];
 
@@ -59,6 +92,25 @@ const List<String> categoriasTips = [
   'Fuerza',
   'Bienestar',
 ];
+
+/// Abre la fuente original en el navegador. Si el sistema no puede, avisa
+/// sin prometer que se abrió.
+Future<void> _abrirFuente(BuildContext context, String url) async {
+  final messenger = ScaffoldMessenger.of(context);
+  final strings = context.read<LocaleService>().strings;
+  var abierto = false;
+  try {
+    abierto = await launchUrl(
+      Uri.parse(url),
+      mode: LaunchMode.externalApplication,
+    );
+  } catch (_) {
+    abierto = false;
+  }
+  if (!abierto) {
+    messenger.showSnackBar(SnackBar(content: Text(strings.tipsFuenteError)));
+  }
+}
 
 /// Consejos y Bienestar: recomendaciones personalizadas según la meta del atleta.
 ///
@@ -400,7 +452,7 @@ class _ArticuloDestacado extends StatelessWidget {
                 borderRadius: BorderRadius.circular(999),
               ),
               child: Text(
-                strings.tipsHoyRecuperacion,
+                strings.tipsHoyDestacado,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: AppType.labelSm.copyWith(
@@ -470,22 +522,28 @@ class _TipsDeslizables extends StatelessWidget {
     // Catálogo traducido en vivo (el texto vive en AppStrings).
     final tips = [
       _Tip(
-        icon: Icons.water_drop,
+        icon: Icons.timer_outlined,
         titulo: strings.tipsTip1Titulo,
         subtitulo: strings.tipsTip1Sub,
         descripcion: strings.tipsTip1Desc,
+        fuente: strings.tipsFuenteNhs,
+        urlFuente: _urlNhsActividad,
       ),
       _Tip(
-        icon: Icons.restaurant,
+        icon: Icons.directions_walk,
         titulo: strings.tipsTip2Titulo,
         subtitulo: strings.tipsTip2Sub,
         descripcion: strings.tipsTip2Desc,
+        fuente: strings.tipsFuenteNhs,
+        urlFuente: _urlNhsActividad,
       ),
       _Tip(
-        icon: Icons.bedtime,
+        icon: Icons.bedtime_outlined,
         titulo: strings.tipsTip3Titulo,
         subtitulo: strings.tipsTip3Sub,
         descripcion: strings.tipsTip3Desc,
+        fuente: strings.tipsFuenteSleep,
+        urlFuente: _urlSleepEjercicio,
       ),
     ];
     return Column(
@@ -501,7 +559,7 @@ class _TipsDeslizables extends StatelessWidget {
         SizedBox(
           // F7: la altura de los tips escala con el tamaño de texto para no
           // recortar el contenido cuando el usuario sube la escala (accesible).
-          height: 200 * MediaQuery.textScalerOf(context).scale(1.0),
+          height: 216 * MediaQuery.textScalerOf(context).scale(1.0),
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             itemCount: tips.length,
@@ -523,12 +581,16 @@ class _Tip {
     required this.titulo,
     required this.subtitulo,
     required this.descripcion,
+    required this.fuente,
+    required this.urlFuente,
   });
 
   final IconData icon;
   final String titulo;
   final String subtitulo;
   final String descripcion;
+  final String fuente;
+  final String urlFuente;
 }
 
 class _TipCard extends StatelessWidget {
@@ -538,60 +600,78 @@ class _TipCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceLowest,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.outlineVariant.withValues(alpha: 0.3)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: AppColors.surfaceContainerLow,
-                  shape: BoxShape.circle,
+    final strings = context.watch<LocaleService>().strings;
+    return InkWell(
+      onTap: () => _abrirFuente(context, tip.urlFuente),
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: AppColors.surfaceLowest,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.outlineVariant.withValues(alpha: 0.3)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceContainerLow,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(tip.icon, size: 16, color: AppColors.primary),
                 ),
-                child: Icon(tip.icon, size: 16, color: AppColors.primary),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      tip.titulo,
-                      style: AppType.labelLg.copyWith(
-                        color: AppColors.onSurface,
-                        fontWeight: FontWeight.w700,
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        tip.titulo,
+                        style: AppType.labelLg.copyWith(
+                          color: AppColors.onSurface,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
-                    ),
-                    Text(
-                      tip.subtitulo,
-                      style: AppType.labelSm.copyWith(color: AppColors.primary),
-                    ),
-                  ],
+                      Text(
+                        tip.subtitulo,
+                        style: AppType.labelSm.copyWith(color: AppColors.primary),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              Icon(Icons.favorite_border, size: 18, color: AppColors.onSurfaceVariant),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Expanded(
-            child: Text(
-              tip.descripcion,
-              style: AppType.bodySm.copyWith(
-                color: AppColors.onSurfaceVariant,
-                height: 1.45,
+              ],
+            ),
+            const SizedBox(height: 10),
+            Expanded(
+              child: Text(
+                tip.descripcion,
+                style: AppType.bodySm.copyWith(
+                  color: AppColors.onSurfaceVariant,
+                  height: 1.45,
+                ),
               ),
             ),
-          ),
-        ],
+            const SizedBox(height: 6),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    strings.tipsFuente(tip.fuente),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppType.labelSm.copyWith(color: AppColors.outline),
+                  ),
+                ),
+                Icon(Icons.open_in_new, size: 12, color: AppColors.outline),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -1049,10 +1129,66 @@ class ArticuloDetalleScreen extends StatelessWidget {
                 height: 1.6,
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
+            _FuenteCard(articulo: articulo),
+            const SizedBox(height: 20),
             const _AvisoSalud(),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Tarjeta con la fuente original del artículo y acceso directo a ella.
+class _FuenteCard extends StatelessWidget {
+  const _FuenteCard({required this.articulo});
+
+  final TipArticulo articulo;
+
+  @override
+  Widget build(BuildContext context) {
+    final strings = context.watch<LocaleService>().strings;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceLowest,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.outlineVariant.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.verified_outlined, size: 18, color: AppColors.primary),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  strings.tipsFuente(articulo.fuente),
+                  style: AppType.labelLg.copyWith(
+                    color: AppColors.onSurface,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            articulo.urlFuente,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: AppType.labelSm.copyWith(color: AppColors.outline),
+          ),
+          const SizedBox(height: 10),
+          OutlinedButton.icon(
+            onPressed: () => _abrirFuente(context, articulo.urlFuente),
+            icon: const Icon(Icons.open_in_new, size: 16),
+            label: Text(strings.tipsVerFuente),
+          ),
+        ],
       ),
     );
   }
