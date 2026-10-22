@@ -1036,7 +1036,7 @@ String get pfMetaPasos => _t('1000 pasos mínimo', '1000 steps minimum');
       'FitPulse runs 100 % on your device: no accounts, no servers, and your data '
       'never leaves your phone unless you share it. This policy explains what is '
       'stored, why, and what rights you have (GDPR/EU).');
-  String get pvVigencia => _t('Vigencia: 25 de septiembre de 2026', 'Effective: 25 September 2026');
+  String get pvVigencia => _t('Vigencia: 22 de octubre de 2026', 'Effective: 22 October 2026');
   String get pvSec1 => _t('1. Responsable y comerciante', '1. Controller and merchant');
   String get pvSec1Body => _t(
       'Responsable: desarrollador independiente de FitPulse. Cuando exista una '
@@ -1105,8 +1105,26 @@ String get pfMetaPasos => _t('1000 pasos mínimo', '1000 steps minimum');
       'The camera coach uses a local AI model (Google ML Kit). Analysis happens '
       'on your phone: the camera records or uploads nothing (transparency under '
       'the EU AI Act, Art. 50).');
-  String get pvSec9 => _t('9. Contacto', '9. Contact');
+  String get pvSec9 => _t(
+      '9. Servicio de pasos y notificación permanente',
+      '9. Step service and persistent notification');
   String get pvSec9Body => _t(
+      'Si colocas el widget de pasos, la app usa un servicio en primer plano '
+      '(tipo «salud») para seguir contando con la app cerrada. Mientras está '
+      'activo, Android muestra una notificación permanente («Contando tus pasos '
+      'para el widget»). El servicio solo lee el contador de pasos del propio '
+      'teléfono, guarda el conteo en el móvil y no envía nada. Se detiene al '
+      'quitar el último widget o si el sistema no permite el servicio; en ese '
+      'caso la app sigue funcionando y el widget se actualiza al abrirla.',
+      'If you add the steps widget, the app uses a foreground service (type '
+      '“health”) to keep counting while the app is closed. While it runs, '
+      'Android shows a persistent notification (“Counting your steps for the '
+      'widget”). The service only reads the phone’s own step counter, stores '
+      'the count on the device and sends nothing. It stops when you remove the '
+      'last widget or if the system does not allow the service; in that case '
+      'the app keeps working and the widget refreshes when you open it.');
+  String get pvSec10 => _t('10. Contacto', '10. Contact');
+  String get pvSec10Body => _t(
       'Para ejercer tus derechos o resolver dudas, use la sección Ayuda de la app '
       'o los datos del comerciante cuando estén publicados.',
       'To exercise your rights or ask questions, use the Help section of the app '

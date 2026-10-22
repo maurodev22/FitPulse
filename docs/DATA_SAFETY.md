@@ -1,7 +1,8 @@
 # Data Safety — Cumplimentación para Google Play Console
 
 Respuestas exactas para el formulario **App content → Data safety** de Play Console,
-según el comportamiento REAL de la app (auditado en código, 2026-10-06).
+según el comportamiento REAL de la app (auditado en código, 2026-10-06; revisado
+2026-10-22 tras el servicio en primer plano del widget).
 Las filas marcadas con ⚠️ dependen de la publicación real (IDs de AdMob) y se
 confirman al crear la cuenta.
 
@@ -42,6 +43,28 @@ confirman al crear la cuenta.
 - **Borrado programático:** Sí — "Borrar todos mis datos" (Perfil → Privacidad y
   datos) limpia todo el almacén local (`shared_preferences.clear()`).
 
+## 2.b Servicio en primer plano (tipo `health`)
+
+La app puede ejecutar un **servicio en primer plano** (`StepWidgetService`, declarado
+en el manifest con `android:foregroundServiceType="health"`) para mantener el widget
+de pasos al día con la app cerrada. Implicaciones para la ficha:
+
+- **Solo se activa si el usuario coloca el widget** y concede `ACTIVITY_RECOGNITION`.
+  Si no hay widget, el servicio no arranca.
+- Mientras corre, Android muestra una **notificación permanente** («Contando tus pasos
+  para el widget»). Es obligatoria por el sistema; no es publicidad ni un mensaje.
+- Lee **solo** `TYPE_STEP_COUNTER` del propio teléfono, guarda el conteo en
+  `SharedPreferences` local y **no transmite nada** por red.
+- Se detiene al quitar el último widget (`StepWidgetService.detener`) o si el sistema
+  no permite el servicio; en ese caso la app sigue funcionando y el widget se
+  refresca al abrirla.
+- **Data safety:** no añade ninguna categoría de datos nueva (los pasos ya figuran
+  como «Actividad física»/«Historial de salud», locales, no compartidos).
+- **Declaración aparte en Play Console:** por usar el tipo `health` hay que rellenar
+  la declaración de **servicio en primer plano de salud** al subir el AAB (Play la
+  pide automáticamente al detectar `FOREGROUND_SERVICE_HEALTH`). Describir el uso:
+  «contar pasos para el widget con la app cerrada, solo en el dispositivo».
+
 ## 3. Prácticas de datos
 
 - **Minimización:** la app solo guarda lo que el usuario introduce o lo que Health
@@ -66,6 +89,8 @@ Checklist para el formulario:
       puede acceder a datos de salud") al publicar, con la lista de permisos reales
       del manifest: STEPS, HEART_RATE, WEIGHT, SLEEP, WATER, ACTIVE_CALORIES_BURNED,
       BODY_FAT.
+- [ ] ⚠️ Rellenar la declaración de **servicio en primer plano tipo `health`**
+      (widget de pasos) al subir el AAB; ver sección 2.b.
 
 ## 5. Contenido que Play puede pedir
 

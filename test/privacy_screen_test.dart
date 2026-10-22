@@ -37,9 +37,9 @@ void main() {
     await tester.scrollUntilVisible(find.textContaining('art. 8'), 200);
     expect(find.textContaining('art. 8'), findsWidgets);
 
-    await tester.scrollUntilVisible(find.text('9. Contacto'), 200);
+    await tester.scrollUntilVisible(find.text('10. Contacto'), 200);
     await tester.pumpAndSettle();
-    expect(find.text('9. Contacto'), findsOneWidget);
+    expect(find.text('10. Contacto'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -59,9 +59,9 @@ void main() {
     expect(find.text('Privacy policy'), findsWidgets);
     expect(find.textContaining('GDPR'), findsWidgets);
 
-    await tester.scrollUntilVisible(find.text('9. Contact'), 200);
+    await tester.scrollUntilVisible(find.text('10. Contact'), 200);
     await tester.pumpAndSettle();
-    expect(find.text('9. Contact'), findsOneWidget);
+    expect(find.text('10. Contact'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 }
