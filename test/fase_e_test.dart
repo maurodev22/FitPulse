@@ -114,8 +114,8 @@ void main() {
     });
   });
 
-  group('E2 · mini-barra de XP en Home', () {
-    testWidgets('la barra de 10 px está bajo la racha y es pasiva',
+  group('E2 - Home sin mini-barra de XP', () {
+    testWidgets('la racha sigue visible y la barra de nivel ya no esta',
         (tester) async {
       final state = AppState();
       await state.init();
@@ -132,11 +132,9 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      final barra = find.byKey(const Key('barra_nivel_home'));
-      expect(barra, findsOneWidget);
-      final box = tester.getSize(barra);
-      expect(box.height, 10);
-      // Pantalla completa del Home: sin errores de layout en 360 dp.
+      // El componente pequeno bajo la racha se quito a proposito.
+      expect(find.byKey(const Key('barra_nivel_home')), findsNothing);
+      expect(find.byType(RachaChip), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
   });
