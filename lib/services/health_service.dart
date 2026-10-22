@@ -302,4 +302,42 @@ class HealthConnectService {
       return HealthToday.vacio;
     }
   }
+
+  /// Lee los pasos reales **por día** entre [desde] y [hasta] desde Health
+  /// Connect y los agrupa en un mapa `YYYY-MM-DD → pasos` (hora local).
+  ///
+  /// Nunca lanza y nunca inventa: si no hay Health Connect o no hay permiso de
+  /// lectura de pasos devuelve un mapa vacío. Sirve para rellenar el histórico
+  /// de días anteriores al instalar la app.
+  Future<Map<String, int>> pasosPorDia({
+    required DateTime desde,
+    required DateTime hasta,
+  }) async {
+    try {
+      await _ensureConfigurado();
+      if (!await _health.isHealthConnectAvailable()) return {};
+      if (await _health.hasPermissions([HealthDataType.STEPS]) != true) {
+        return {};
+      }
+      final puntos = await _health.getHealthDataFromTypes(
+        startTime: desde,
+        endTime: hasta,
+        types: [HealthDataType.STEPS],
+      );
+      final porDia = <String, int>{};
+      for (final p in puntos) {
+        final hv = p.value;
+        final num v = hv is NumericHealthValue ? hv.numericValue : 0;
+        if (v <= 0) continue;
+        final f = p.dateFrom.toLocal();
+        final clave = '${f.year.toString().padLeft(4, '0')}-'
+            '${f.month.toString().padLeft(2, '0')}-'
+            '${f.day.toString().padLeft(2, '0')}';
+        porDia[clave] = (porDia[clave] ?? 0) + v.round();
+      }
+      return porDia;
+    } catch (_) {
+      return {};
+    }
+  }
 }

@@ -3,12 +3,14 @@ import 'package:provider/provider.dart';
 
 import '../services/locale_service.dart';
 import '../state/app_state.dart';
+import '../state/registro_diario.dart';
 import '../state/registros.dart';
 import '../state/workout.dart';
 import '../services/ads_service.dart';
 import '../services/config_service.dart';
 import '../theme.dart';
 import '../widgets/common.dart';
+import '../widgets/cumplimiento_chart.dart';
 import '../widgets/racha_chip.dart';
 import '../widgets/sesion_row.dart';
 import 'historial_sesiones_screen.dart';
@@ -75,6 +77,16 @@ class _ProgressScreenState extends State<ProgressScreen> {
                   _PeriodTabs(
                     seleccionado: _periodo,
                     onChanged: (p) => setState(() => _periodo = p),
+                  ),
+                  const SizedBox(height: 12),
+                  CumplimientoChart(
+                    registros: state.registroDiario,
+                    metas: state.metasDia,
+                    diasEntreno: state.diasEntrenoSemana,
+                    escala: _escalaDe(_periodo),
+                    onImportar: state.pasosHealthConPermiso
+                        ? state.importarPasosHealthConnect
+                        : null,
                   ),
                   const SizedBox(height: 12),
                   _buildResumenPeriodo(state, strings),
@@ -1267,6 +1279,14 @@ BoxDecoration _cardDecoration({double radius = 20}) {
 
 /// Ventana de tiempo del panel de evolución de Progreso.
 enum PeriodoRecorte { semanal, mensual, anual }
+
+/// Escala del gráfico de cumplimiento: la pestaña "Semanal" pinta los 7 días,
+/// "Mensual" las semanas del último mes y "Año" los 12 meses.
+EscalaSerie _escalaDe(PeriodoRecorte p) => switch (p) {
+      PeriodoRecorte.semanal => EscalaSerie.diaria,
+      PeriodoRecorte.mensual => EscalaSerie.semanal,
+      PeriodoRecorte.anual => EscalaSerie.mensual,
+    };
 
 /// Días que cubre cada período (incluyendo hoy).
 int _diasPeriodo(PeriodoRecorte p) => switch (p) {

@@ -11,6 +11,7 @@ import '../utils/validators.dart';
 import 'athlete_profile.dart';
 import 'estado_salud.dart';
 import 'insignias.dart';
+import 'registro_diario.dart';
 import 'registros.dart';
 import 'rutinas.dart';
 import 'workout.dart';
@@ -40,6 +41,20 @@ class AppState extends ChangeNotifier {
   // propia fecha para reiniciarlo cada día sin tocar el balance de calorías.
   static const _aguaManualKey = 'fitpulse_agua_manual_v1';
   static const _aguaManualDateKey = 'fitpulse_agua_manual_date_v1';
+
+  // Histórico diario REAL (pasos, agua, calorías, entreno y peso por día).
+  // Se cierra un día al cambiar de fecha; los días sin dato no se rellenan.
+  static const _registroKey = 'fitpulse_registro_diario_v1';
+
+  /// Tope de días que se conservan en el histórico (algo más de un año).
+  static const int registroMaxDias = 400;
+
+  /// Días que se importan de Health Connect al rellenar el histórico.
+  static const int backfillDias = 30;
+
+  // Última fecha (YYYY-MM-DD) en la que se intentó rellenar el histórico con
+  // Health Connect, para no repetir la consulta en cada refresco.
+  static const _backfillDateKey = 'fitpulse_backfill_date_v1';
 
   // L2: meta diaria de agua editable por el usuario (litros).
   static const _metaAguaKey = 'fitpulse_meta_agua_v1';
@@ -252,6 +267,10 @@ class AppState extends ChangeNotifier {
   /// Fecha a la que pertenece [_pasosBase] (para no publicar una base vieja).
   String? _pasosBaseFecha;
 
+  /// Último valor de pasos que se escribió al histórico, para no persistir en
+  /// cada paso del sensor.
+  int _pasosPersistidos = 0;
+
   /// Si el teléfono tiene sensor de pasos disponible y autorizado.
   bool get healthDisponible => _healthSource?.isAvailable ?? false;
 
@@ -282,10 +301,19 @@ class AppState extends ChangeNotifier {
 
     // Si cambió el día, reseteamos el balance, el agua manual y el baseline.
     if (_prefs?.getString(_balanceDateKey) != today) {
+      final anterior = _prefs?.getString(_balanceDateKey);
+      if (anterior != null && anterior != today) {
+        final fecha = DateTime.tryParse(anterior);
+        if (fecha != null) {
+          _archivarDia(DateTime(fecha.year, fecha.month, fecha.day));
+          _persistRegistro();
+        }
+      }
       _resetBalance();
       _resetAguaManual();
       _pasosBase = null;
       _prefs?.setString(_balanceDateKey, today);
+      _upsertDia(_construirRegistro(hoyMediodia));
     }
 
     // Base compartida con el servicio nativo del widget: si existe una base
@@ -311,6 +339,13 @@ class AppState extends ChangeNotifier {
     _pasosBaseFecha = today;
     final pasos = raw - base;
     pasosHoy = pasos < 0 ? 0 : pasos;
+    // Histórico: el día de hoy se mantiene en vivo (en memoria). Se persiste
+    // cada 100 pasos para no escribir en disco con cada paso.
+    _upsertDia(_construirRegistro(hoyMediodia));
+    if (pasosHoy - _pasosPersistidos >= 100) {
+      _pasosPersistidos = pasosHoy;
+      _persistRegistro();
+    }
     notifyListeners();
   }
 
@@ -344,6 +379,233 @@ class AppState extends ChangeNotifier {
       pasosHoy = pasos < 0 ? 0 : pasos;
       notifyListeners();
     }
+  }
+
+  // =====================================================================
+  //  Histórico diario: gráfico de cumplimiento (día / semana / mes)
+  // =====================================================================
+  //
+  // Regla del proyecto: un día sin dato NO es un cero. Las métricas que el
+  // usuario no registró se guardan como `null` y el gráfico las pinta como
+  // "sin dato". Los pasos de un día ya cerrado se marcan como parciales si no
+  // vienen de Health Connect, porque la app pudo estar cerrada y el contador
+  // siguió avanzando.
+
+  /// Días registrados (cerrados) más el día de hoy en vivo, ascendente.
+  List<RegistroDiario> registroDiario = [];
+
+  /// Metas diarias reales del usuario. Salen del perfil y de los ajustes.
+  MetasDia get metasDia => MetasDia(
+        pasos: profile.pasosMeta,
+        agua: metaAguaDiaria,
+        calorias: profile.caloriasMeta,
+      );
+
+  /// Días de la semana marcados como entreno en el perfil
+  /// (`DateTime.weekday`: 1 = lunes … 7 = domingo).
+  Set<int> get diasEntrenoSemana {
+    const iniciales = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
+    final dias = <int>{};
+    for (final d in profile.diasEntrenamiento) {
+      final i = iniciales.indexOf(d);
+      if (i >= 0) dias.add(i + 1);
+    }
+    return dias;
+  }
+
+  /// Medianoche del día de hoy.
+  DateTime get hoyMediodia {
+    final n = DateTime.now();
+    return DateTime(n.year, n.month, n.day);
+  }
+
+  /// Registro de hoy en vivo (aunque todavía no se haya persistido).
+  RegistroDiario get registroHoy => _construirRegistro(hoyMediodia);
+
+  RegistroDiario? registroDelDia(DateTime dia) => _buscarDia(dia);
+
+  void _cargarRegistroDiario() {
+    registroDiario = [];
+    for (final raw in _prefs?.getStringList(_registroKey) ?? const <String>[]) {
+      try {
+        final m = jsonDecode(raw);
+        if (m is Map<String, dynamic>) {
+          registroDiario.add(RegistroDiario.fromJson(m));
+        }
+      } catch (_) {
+        // Un registro corrupto se ignora: no se inventa el día que falta.
+      }
+    }
+    registroDiario.sort((a, b) => a.dia.compareTo(b.dia));
+    _marcarPasosParciales();
+  }
+
+  /// Un día pasado con pasos locales que no venga de Health Connect se cierra
+  /// como parcial: es el último valor conocido, no el total del día.
+  void _marcarPasosParciales() {
+    final hoy = claveDia(hoyMediodia);
+    for (var i = 0; i < registroDiario.length; i++) {
+      final r = registroDiario[i];
+      if (claveDia(r.dia) == hoy) continue;
+      if (r.pasos == null || r.pasosHealthConnect || r.pasosParciales) continue;
+      registroDiario[i] = r.copyWith(pasosParciales: true);
+    }
+  }
+
+  RegistroDiario? _buscarDia(DateTime dia) {
+    final clave = claveDia(dia);
+    for (var i = registroDiario.length - 1; i >= 0; i--) {
+      if (claveDia(registroDiario[i].dia) == clave) return registroDiario[i];
+    }
+    return null;
+  }
+
+  /// Construye el registro de [dia] con los valores reales que hay ahora.
+  RegistroDiario _construirRegistro(DateTime dia) {
+    final agua = aguaHoy;
+    final previo = _buscarDia(dia);
+    final pasos = pasosHoy > 0 ? pasosHoy : previo?.pasos;
+    return RegistroDiario(
+      dia: dia,
+      pasos: pasos,
+      pasosParciales: previo?.pasosParciales ?? false,
+      pasosHealthConnect: previo?.pasosHealthConnect ?? false,
+      agua: agua != null && agua > 0 ? agua : previo?.agua,
+      kcal: caloriasConsumidas > 0 ? caloriasConsumidas : previo?.kcal,
+      proteinas:
+          proteinasConsumidas > 0 ? proteinasConsumidas : previo?.proteinas,
+      entrenoMin: _minutosEntrenoDia(dia),
+      pesoKg: _pesoDelDia(dia),
+    );
+  }
+
+  int _minutosEntrenoDia(DateTime dia) {
+    final clave = claveDia(dia);
+    var minutos = 0;
+    for (final s in historial) {
+      if (claveDia(s.fecha) == clave) minutos += s.duracionMin;
+    }
+    return minutos;
+  }
+
+  double? _pesoDelDia(DateTime dia) {
+    final clave = claveDia(dia);
+    for (final r in historialPeso) {
+      if (claveDia(r.fecha) == clave) return r.pesoKg;
+    }
+    return null;
+  }
+
+  /// Inserta o actualiza un día en el histórico (ordenado y acotado).
+  void _upsertDia(RegistroDiario r) {
+    final clave = claveDia(r.dia);
+    var indice = -1;
+    for (var i = registroDiario.length - 1; i >= 0; i--) {
+      if (claveDia(registroDiario[i].dia) == clave) {
+        indice = i;
+        break;
+      }
+    }
+    if (indice >= 0) {
+      registroDiario[indice] = r;
+    } else {
+      registroDiario.add(r);
+      registroDiario.sort((a, b) => a.dia.compareTo(b.dia));
+    }
+    if (registroDiario.length > registroMaxDias) {
+      registroDiario.removeRange(0, registroDiario.length - registroMaxDias);
+    }
+  }
+
+  /// Actualiza el registro del día de hoy y lo persiste.
+  Future<void> _upsertHoy() async {
+    _upsertDia(_construirRegistro(hoyMediodia));
+    await _persistRegistro();
+  }
+
+  Future<void> _persistRegistro() async {
+    await _prefs?.setStringList(
+      _registroKey,
+      registroDiario.map((r) => jsonEncode(r.toJson())).toList(),
+    );
+  }
+
+  /// Cierra [dia]: guarda sus valores y marca los pasos como parciales (la app
+  /// pudo estar cerrada y el contador siguió contando). Si ese día ya tiene
+  /// pasos de Health Connect, se respetan tal cual.
+  void _archivarDia(DateTime dia) {
+    final previo = _buscarDia(dia);
+    final r = _construirRegistro(dia);
+    final pasosHc = previo?.pasosHealthConnect == true;
+    _upsertDia(RegistroDiario(
+      dia: dia,
+      pasos: pasosHc ? previo!.pasos : r.pasos,
+      pasosParciales: pasosHc ? false : r.pasos != null,
+      pasosHealthConnect: pasosHc,
+      agua: r.agua,
+      kcal: r.kcal,
+      proteinas: r.proteinas,
+      entrenoMin: r.entrenoMin,
+      pesoKg: r.pesoKg,
+    ));
+  }
+
+  /// Importa los pasos reales que Health Connect tenga de los últimos [dias]
+  /// y rellena los huecos del histórico. Devuelve cuántos días se actualizaron.
+  ///
+  /// Sin permiso de lectura de pasos devuelve 0 y no toca nada.
+  Future<int> importarPasosHealthConnect({int dias = backfillDias}) async {
+    final hc = _healthConnect;
+    if (hc == null) return 0;
+    final desde = hoyMediodia.subtract(Duration(days: dias - 1));
+    final porDia = await hc.pasosPorDia(desde: desde, hasta: DateTime.now());
+    final aplicados = await aplicarPasosHistoricos(porDia);
+    await _prefs?.setString(_backfillDateKey, _dayKey(DateTime.now()));
+    return aplicados;
+  }
+
+  /// Aplica un mapa `YYYY-MM-DD → pasos` al histórico (parte pura y testeable
+  /// de la importación de Health Connect).
+  ///
+  /// El día de hoy no se toca: se lleva en vivo. Nunca rebaja un dato mayor ya
+  /// conocido (un total de Health Connect puede llegar agregado por partes).
+  Future<int> aplicarPasosHistoricos(Map<String, int> porDia) async {
+    if (porDia.isEmpty) return 0;
+    final hoy = claveDia(hoyMediodia);
+    var aplicados = 0;
+    for (final e in porDia.entries) {
+      if (e.key == hoy || e.value <= 0) continue;
+      final fecha = DateTime.tryParse(e.key);
+      if (fecha == null) continue;
+      final dia = DateTime(fecha.year, fecha.month, fecha.day);
+      final previo = _buscarDia(dia);
+      if (previo != null && previo.pasos != null && previo.pasos! >= e.value) {
+        continue;
+      }
+      final base = previo ?? RegistroDiario(dia: dia);
+      _upsertDia(base.copyWith(
+        pasos: e.value,
+        pasosParciales: false,
+        pasosHealthConnect: true,
+      ));
+      aplicados++;
+    }
+    if (aplicados > 0) {
+      await _persistRegistro();
+      notifyListeners();
+    }
+    return aplicados;
+  }
+
+  /// Rellena el histórico con Health Connect una vez al día, solo si hay
+  /// permiso de lectura de pasos.
+  Future<void> _rellenarHistoricoUnaVezAlDia() async {
+    final hoy = _dayKey(DateTime.now());
+    if (_prefs?.getString(_backfillDateKey) == hoy) return;
+    if (!_healthToday.metricasConPermiso.contains(HealthMetricas.pasos)) {
+      return;
+    }
+    await importarPasosHealthConnect();
   }
 
   /// Vuelve el balance diario a cero (no borra el perfil ni favoritos).
@@ -404,6 +666,9 @@ class AppState extends ChangeNotifier {
     // Fase 9: registros de peso semanal y repeticiones por ejercicio.
     _cargarRegistros();
 
+    // Histórico diario real (día a día): se carga antes de cerrar el día.
+    _cargarRegistroDiario();
+
     // Reinicio diario: si el balance guardado pertenece a otro día, se vacía.
     final today = _dayKey(DateTime.now());
     if (_prefs!.getString(_balanceDateKey) != today) {
@@ -422,6 +687,12 @@ class AppState extends ChangeNotifier {
     } else {
       _resetAguaManual();
     }
+
+    // Histórico: deja el día de hoy en vivo (sin inventar: 0 pasos = sin dato
+    // hasta que el sensor diga otra cosa).
+    _pasosPersistidos = pasosHoy;
+    _upsertDia(_construirRegistro(hoyMediodia));
+    await _persistRegistro();
 
     // Fase C: días con la meta de agua cumplida (insignia "Hidratado").
     final diasAguaCumplidos = <DateTime>[];
@@ -486,6 +757,7 @@ class AppState extends ChangeNotifier {
     await _prefs?.setString(_aguaManualDateKey, today);
     // Fase C: si el total real del día ya llegó a la meta, se anota el día.
     await _registrarDiaAguaCumplida();
+    await _upsertHoy();
     notifyListeners();
   }
 
@@ -583,6 +855,10 @@ class AppState extends ChangeNotifier {
   // --- Permisos concedidos por métrica (para textos honestos) ---
   bool get pulsoConPermiso =>
       _healthToday.metricasConPermiso.contains(HealthMetricas.pulso);
+  /// `true` si Health Connect concede lectura de pasos (necesario para
+  /// rellenar el histórico de días anteriores).
+  bool get pasosHealthConPermiso =>
+      _healthToday.metricasConPermiso.contains(HealthMetricas.pasos);
   bool get pesoConPermiso =>
       _healthToday.metricasConPermiso.contains(HealthMetricas.peso);
   bool get grasaConPermiso =>
@@ -639,6 +915,9 @@ class AppState extends ChangeNotifier {
     }
     // Fase C: el agua leída de Health Connect pueda completar la meta de hoy.
     await _registrarDiaAguaCumplida();
+    // Histórico: hoy en vivo y, una vez al día, relleno con Health Connect.
+    await _upsertHoy();
+    await _rellenarHistoricoUnaVezAlDia();
     notifyListeners();
   }
 
@@ -887,6 +1166,7 @@ class AppState extends ChangeNotifier {
     notifyListeners();
     await _persistHistorial();
     await _persistXp();
+    await _upsertHoy();
 
     // Reto completado → premio y avance al siguiente objetivo (hasta 7).
     if (_retoObjetivo < 7 && _rachaActual() >= _retoObjetivo) {
@@ -1069,6 +1349,7 @@ class AppState extends ChangeNotifier {
     historialPeso.sort((a, b) => b.fecha.compareTo(a.fecha));
     notifyListeners();
     await _persistPeso();
+    await _upsertHoy();
 
     if ((profile.pesoKg - kg).abs() > 0.0001) {
       await guardarPerfil(profile.copyWith(pesoKg: kg));
@@ -1128,6 +1409,7 @@ class AppState extends ChangeNotifier {
     proteinasConsumidas += proteinas;
     carbosConsumidos += carbos;
     grasasConsumidas += grasas;
+    await _upsertHoy();
     notifyListeners();
     _trace('balance', 'consumo');
     await _prefs?.setDouble(_caloriasKey, caloriasConsumidas);
@@ -1310,6 +1592,8 @@ class AppState extends ChangeNotifier {
     rutinas = <Rutina>[];
     _pasosBase = null;
     pasosHoy = 0;
+    _pasosPersistidos = 0;
+    registroDiario = <RegistroDiario>[];
     _healthToday = HealthToday.vacio;
     _healthConnectDisponible = false;
     _healthConnectPidiendo = false;

@@ -646,6 +646,52 @@ class AppStrings {
   String prHaceDias(int n) => _t('Hace $n días', '$n days ago');
   String prVentana(int dias) => _t('Últimos $dias días', 'Last $dias days');
 
+  // ---- Gráfico de cumplimiento día a día ----
+  String get prCumplimiento => _t('Cumplimiento de metas', 'Goal compliance');
+  String get prCumplimientoSub => _t(
+      'Tu día a día, con datos reales de cada jornada.',
+      'Your day by day, with real data from each day.');
+  String get prTodo => _t('Todo', 'All');
+  String get prPasos => _t('Pasos', 'Steps');
+  String get prAgua => _t('Agua', 'Water');
+  String get prCalorias => _t('Calorías', 'Calories');
+  String get prEntreno => _t('Entreno', 'Training');
+  String get prSinDato => _t('Sin dato', 'No data');
+  String get prDatoParcial => _t('dato parcial', 'partial data');
+  String prMedia(int pct) => _t('Media $pct %', 'Average $pct %');
+  String prDiasConDato(int n) =>
+      _t('$n días con dato', n == 1 ? '1 day with data' : '$n days with data');
+  String prMejorDia(int pct) => _t('Mejor día $pct %', 'Best day $pct %');
+  String prVsPeriodo(int pct) => pct >= 0
+      ? _t('$pct % vs. el período anterior', '$pct % vs. previous period')
+      : _t('${pct.abs()} % menos que el período anterior',
+          '${pct.abs()} % less than the previous period');
+  String get prHistoricoVacio => _t(
+      'Aún no hay historial diario. Se irá llenando cada vez que abras la app.',
+      'No daily history yet. It fills up each time you open the app.');
+  String get prImportarHealthConnect =>
+      _t('Rellenar con Health Connect', 'Fill from Health Connect');
+  String prImportadoDias(int n) =>
+      _t('$n días importados', n == 1 ? '1 day imported' : '$n days imported');
+  String get prImportadoNada => _t(
+      'Health Connect no tiene pasos nuevos que importar.',
+      'Health Connect has no new steps to import.');
+  String prSemanaCorta(int n) => _t('S$n', 'W$n');
+  String get prDetalleDia => _t('Detalle del día', 'Day detail');
+  String prDeMeta(String valor, String meta) => _t('$valor / $meta', '$valor / $meta');
+  String prMinEntreno(int m) => _t('$m min', '$m min');
+  String get prEntrenoSi => _t('Sí', 'Yes');
+  String get prEntrenoNo => _t('No', 'No');
+  /// Abreviatura del mes (1 = enero) para el eje del gráfico.
+  String mesCorto(int mes) {
+    const es = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago',
+        'sep', 'oct', 'nov', 'dic'];
+    const en = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug',
+        'Sep', 'Oct', 'Nov', 'Dec'];
+    final i = (mes - 1).clamp(0, 11);
+    return _t(es[i], en[i]);
+  }
+
   // ---- Consejos ----
   String get tipsPlanPersonalizado => _t('Plan Personalizado', 'Personalized Plan');
   String tipsTuMetaDe(String metas) => _t('tu meta de $metas', 'your $metas goal');
