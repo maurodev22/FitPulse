@@ -74,8 +74,8 @@ void main() {
 
     await pumpPerfil(tester, state: state, locale: locale, config: config);
 
-    // Nivel y preferencias se conservan; la tarjeta duplicada desaparece.
-    expect(find.text('Nivel y preferencias'), findsOneWidget);
+    // El nivel se conserva; la tarjeta duplicada desaparece.
+    expect(find.text('Nivel de condición física'), findsOneWidget);
     expect(find.text('Datos Personales'), findsNothing);
   });
 

@@ -266,13 +266,6 @@ class AppStrings {
         'D' => _t('D', 'S'),
         _ => es,
       };
-  /// Nombre del entrenamiento favorito. El valor persistido sigue en español.
-  String favoritoName(String es) => switch (es) {
-        'HIIT' => _t('HIIT', 'HIIT'),
-        'Fuerza funcional' => _t('Fuerza funcional', 'Functional strength'),
-        'Running' => _t('Running', 'Running'),
-        _ => es,
-      };
   String rachaDias(int n) => _t('$n días', '$n-day streak');
   String get listoParaEntrenar => _t('Listo para entrenar', 'Ready to train');
   String get deTuPerfil => _t('De tu perfil', 'From your profile');
@@ -820,15 +813,9 @@ String get pfMetaPasos => _t('1000 pasos mínimo', '1000 steps minimum');
   String get pfAbrirPermisos =>
       _t('Abrir permisos de Health Connect', 'Open Health Connect permissions');
   String get pfNombreCompleto => _t('Nombre completo', 'Full name');
-  String get pfNivelPreferencias => _t('Nivel y preferencias', 'Level & preferences');
   String get pfMinimoDias =>
       _t('Selecciona al menos 2 días de entrenamiento', 'Select at least 2 training days');
   String get pfNivelCondicion => _t('Nivel de condición física', 'Fitness level');
-  String get pfTipoEntrenamiento => _t('Tipo de entrenamiento preferido', 'Preferred training type');
-  String get pfHIIT => _t('HIIT', 'HIIT');
-  String get pfFuerzaFuncional => _t('Fuerza funcional', 'Functional strength');
-  String get pfRunning => _t('Running', 'Running');
-  String get pfSeleccionaFavorito => _t('Selecciona tu próximo entrenamiento favorito', 'Select your next favorite workout');
   String get pfPreferencias => _t('Preferencias & Sincronización', 'Preferences & Sync');
   String get pfRecordatoriosHidratacion => _t('Recordatorios de hidratación', 'Hydration reminders');
   String get pfCadaHora => _t('Cada hora · notificación local', 'Every hour · local notification');
@@ -879,7 +866,6 @@ String get pfMetaPasos => _t('1000 pasos mínimo', '1000 steps minimum');
   String get pfGrasaPct => _t('% Grasa', '% Fat');
   String get pfImc => _t('IMC', 'BMI');
   String get pfOptimo => _t('Óptimo', 'Optimal');
-  String get pfAnadir => _t('Añadir', 'Add');
   String pfProgresoPasos(String pasos) =>
       _t('Progreso de hoy: $pasos pasos', 'Today\'s progress: $pasos steps');
   String get pfActivaDatos =>

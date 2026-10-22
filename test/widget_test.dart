@@ -183,11 +183,11 @@ void main() {
     await tester.pumpAndSettle();
 
     // El perfil vive en un ListView perezoso: los campos quedan bajo el pliegue.
-    await tester.scrollUntilVisible(find.text('Nivel y preferencias'), 200);
+    await tester.scrollUntilVisible(find.text('Nivel de condición física'), 200);
     await tester.pumpAndSettle();
 
     expect(find.text('Sofía Martínez'), findsOneWidget);
-    expect(find.text('Nivel y preferencias'), findsOneWidget);
+    expect(find.text('Nivel de condición física'), findsOneWidget);
   });
 
   testWidgets('Sin desbordes en pantalla pequeña (360x640)', (WidgetTester tester) async {

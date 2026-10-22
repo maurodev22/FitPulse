@@ -299,20 +299,19 @@ Widget _buildPremium() {
     );
   }
 
+  /// Tarjeta "Nivel de condición física". El nivel es lo único editable aquí:
+  /// la antigua sección "Tipo de entrenamiento preferido" era decorativa (sus
+  /// chips no se podían tocar y el botón "+" solo mostraba un aviso), así que
+  /// se retiró para no prometer algo que no hacía nada.
   Widget _buildNivelPreferencias() {
     final strings = context.watch<LocaleService>().strings;
     return SettingsCard(
       children: [
         SettingsCardTitle(
           icon: Icons.fitness_center,
-          title: strings.pfNivelPreferencias,
+          title: strings.pfNivelCondicion,
         ),
         const SizedBox(height: 12),
-        Text(
-          strings.pfNivelCondicion,
-          style: AppType.labelMd.copyWith(color: AppColors.onSurfaceVariant, fontWeight: FontWeight.w600),
-        ),
-        const SizedBox(height: 8),
         Container(
           padding: const EdgeInsets.all(4),
           decoration: BoxDecoration(
@@ -355,32 +354,6 @@ Widget _buildPremium() {
               );
             }).toList(),
           ),
-        ),
-        const SizedBox(height: 16),
-        Text(
-          strings.pfTipoEntrenamiento,
-          style: AppType.labelMd.copyWith(color: AppColors.onSurfaceVariant, fontWeight: FontWeight.w600),
-        ),
-        const SizedBox(height: 8),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: [
-            _PreferenceTag(icon: Icons.bolt, label: strings.favoritoName('HIIT')),
-            _PreferenceTag(
-              icon: Icons.fitness_center,
-              label: strings.favoritoName('Fuerza funcional'),
-            ),
-            _PreferenceTag(
-              icon: Icons.directions_run,
-              label: strings.favoritoName('Running'),
-            ),
-            _AddPreferenceTag(onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(strings.pfSeleccionaFavorito)),
-              );
-            }),
-          ],
         ),
       ],
     );
@@ -1206,74 +1179,6 @@ class _MiniStat extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _PreferenceTag extends StatelessWidget {
-  const _PreferenceTag({required this.icon, required this.label});
-
-  final IconData icon;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: AppColors.primary.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 14, color: AppColors.primary),
-          const SizedBox(width: 4),
-          Flexible(
-            child: Text(
-              label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: AppType.labelMd.copyWith(color: AppColors.primary, fontWeight: FontWeight.w600),
-            ),
-          ),
-          const SizedBox(width: 4),
-          Icon(Icons.close, size: 14, color: AppColors.outline),
-        ],
-      ),
-    );
-  }
-}
-
-class _AddPreferenceTag extends StatelessWidget {
-  const _AddPreferenceTag({required this.onTap});
-
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final strings = context.watch<LocaleService>().strings;
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(999),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        decoration: BoxDecoration(
-          color: AppColors.surfaceContainer,
-          borderRadius: BorderRadius.circular(999),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.add, size: 14, color: AppColors.onSurfaceVariant),
-            const SizedBox(width: 4),
-            Text(
-              strings.pfAnadir,
-              style: AppType.labelMd.copyWith(color: AppColors.onSurfaceVariant),
-            ),
-          ],
-        ),
       ),
     );
   }
