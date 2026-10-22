@@ -22,6 +22,7 @@ import 'services/locale_service.dart';
 import 'services/usage_log_service.dart';
 import 'state/app_state.dart';
 import 'theme.dart';
+import 'widgets/boton_entrenar.dart';
 import 'widgets/fit_nav_bar.dart';
 
 Future<void> main() async {
@@ -255,6 +256,10 @@ class _AppShellState extends State<AppShell> {
             ),
           ],
         ),
+        // Acceso rápido a entrenar desde cualquier pestaña menos Ayuda, que es
+        // documentación y no debe taparse con una acción flotante.
+        floatingActionButton:
+            _current == FitTab.help ? null : const BotonEntrenar(),
       ),
     );
   }

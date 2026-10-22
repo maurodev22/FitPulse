@@ -179,7 +179,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   _buildEntrenamientoHoy(),
                   const SizedBox(height: 24),
                   _buildTuSemana(),
-                  const SizedBox(height: 16),
+                  // Espacio para que el FAB "Entrenar" no tape la última
+                  // tarjeta al llegar al final del scroll.
+                  const SizedBox(height: 88),
                 ],
               ),
             ),

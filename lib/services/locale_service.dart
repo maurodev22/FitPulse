@@ -685,6 +685,15 @@ class AppStrings {
     return _t(es[i], en[i]);
   }
 
+  // ---- Botón flotante "Entrenar" (acceso rápido) ----
+  String get fabEntrenar => _t('Entrenar', 'Train');
+  String get fabEntrenarTitulo => _t('¿Qué entrenamos hoy?', 'What are we training today?');
+  String get fabEntrenarDesc => _t(
+      'Tu plan de hoy, tus rutinas o una nueva desde cero.',
+      'Today\'s plan, your routines or a new one from scratch.');
+  String get fabCrearRutinaDesc =>
+      _t('Elige ejercicios y guárdala', 'Pick exercises and save it');
+
   // ---- Consejos ----
   String get tipsPlanPersonalizado => _t('Plan Personalizado', 'Personalized Plan');
   String tipsTuMetaDe(String metas) => _t('tu meta de $metas', 'your $metas goal');
