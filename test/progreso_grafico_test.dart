@@ -78,8 +78,12 @@ void main() {
     expect(find.textContaining('2 días con dato'), findsOneWidget);
 
     // Toque en una barra: abre el detalle con los valores reales del día.
+    // La etiqueta depende del día real de la semana (no se fija a "J").
+    const iniciales = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
+    final inicialHoy = iniciales[hoy.weekday - 1];
     final barra = find.byWidgetPredicate((w) =>
-        w is Semantics && (w.properties.label ?? '').startsWith('J: 100'));
+        w is Semantics &&
+        (w.properties.label ?? '').startsWith('$inicialHoy: 100'));
     expect(barra, findsOneWidget, reason: 'la barra de hoy debe existir');
     await tester.tap(barra);
     await tester.pumpAndSettle();

@@ -19,10 +19,18 @@ class BotonEntrenar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final strings = context.watch<LocaleService>().strings;
+    // Marco de contraste con el fondo: blanco en tema oscuro, negro en claro.
+    final borde = Theme.of(context).brightness == Brightness.dark
+        ? Colors.white
+        : Colors.black;
     return FloatingActionButton.extended(
       onPressed: () => _abrirHoja(context),
       backgroundColor: AppColors.primary,
       foregroundColor: AppColors.onPrimary,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(999),
+        side: BorderSide(color: borde, width: 1.5),
+      ),
       icon: const Icon(Icons.play_arrow_rounded),
       label: Text(
         strings.fabEntrenar,

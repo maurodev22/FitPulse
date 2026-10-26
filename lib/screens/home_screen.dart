@@ -820,54 +820,40 @@ class _WorkoutHeroCard extends StatelessWidget {
               const SizedBox(height: 16),
               SizedBox(
                 width: double.infinity,
-                child: Builder(
-                  builder: (context) {
-                    // Borde de contraste con el fondo: blanco en oscuro,
-                    // negro en claro.
-                    final borde = Theme.of(context).brightness == Brightness.dark
-                        ? Colors.white
-                        : Colors.black;
-                    return Material(
-                      color: AppColors.botonGradiente,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(999),
-                        side: BorderSide(color: borde, width: 1.5),
-                      ),
-                      clipBehavior: Clip.antiAlias,
-                      child: InkWell(
-                        onTap: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute<void>(
-                              builder: (_) =>
-                                  WorkoutPlayerScreen(program: program),
-                            ),
-                          );
-                        },
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.play_arrow_rounded,
-                                  size: 22, color: AppColors.onBotonGradiente),
-                              const SizedBox(width: 8),
-                              Flexible(
-                                child: Text(
-                                  strings.homeComenzar,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: AppType.labelLg.copyWith(
-                                    color: AppColors.onBotonGradiente,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
+                child: Material(
+                  color: AppColors.botonGradiente,
+                  borderRadius: BorderRadius.circular(999),
+                  child: InkWell(
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) => WorkoutPlayerScreen(program: program),
                         ),
+                      );
+                    },
+                    borderRadius: BorderRadius.circular(999),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.play_arrow_rounded, size: 22, color: AppColors.onBotonGradiente),
+                          const SizedBox(width: 8),
+                          Flexible(
+                            child: Text(
+                              strings.homeComenzar,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: AppType.labelLg.copyWith(
+                                color: AppColors.onBotonGradiente,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                    );
-                  },
+                    ),
+                  ),
                 ),
               ),
             ],
