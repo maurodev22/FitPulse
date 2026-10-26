@@ -27,6 +27,10 @@ void main() {
       expect(utc.millisecondsSinceEpoch, local.millisecondsSinceEpoch);
     });
 
+    test('P15: el recordatorio de agua se repite cada hora', () {
+      expect(intervaloHidratacion, const Duration(hours: 1));
+    });
+
     test('P15: textos de hidratación serios y sin emojis', () {
       expect(textoAvisoHidratacionTitulo, 'Hidrátate');
       expect(

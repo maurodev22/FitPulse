@@ -64,6 +64,9 @@ void main() {
     expect(find.text('Avisos (opcional)'), findsOneWidget);
     // Los toggles opt-in salen con el estado real del perfil (activos).
     expect(find.text('Recordatorios de hidratación'), findsOneWidget);
+    // El recordatorio de agua avisa cada hora (no cada 30 min).
+    expect(find.text('Cada hora · notificación local'), findsOneWidget);
+    expect(find.textContaining('Cada 30 min'), findsNothing);
     expect(find.text('Aviso de racha en riesgo'), findsOneWidget);
     // La nota es honesta: sin permiso no se programa nada.
     expect(find.textContaining('permiso de notificaciones'), findsOneWidget);

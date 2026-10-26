@@ -899,7 +899,6 @@ String get pfMetaPasos => _t('1000 pasos mínimo', '1000 steps minimum');
   String get pfPreferencias => _t('Preferencias & Sincronización', 'Preferences & Sync');
   String get pfRecordatoriosHidratacion => _t('Recordatorios de hidratación', 'Hydration reminders');
   String get pfCadaHora => _t('Cada hora · notificación local', 'Every hour · local notification');
-  String get pfCadaMediaHora => _t('Cada 30 min · notificación local', 'Every 30 min · local notification');
   String get pfAvisoRacha => _t('Aviso de racha en riesgo', 'Streak-at-risk alert');
   String get pfDiario20 => _t('Diario a las 20:00 con tu racha real', 'Daily at 8:00 PM with your real streak');
   String get pfHealthKit => _t('HealthKit / Smartwatch', 'HealthKit / Smartwatch');

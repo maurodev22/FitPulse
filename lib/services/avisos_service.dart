@@ -137,7 +137,7 @@ class AvisosService {
     }
   }
 
-  /// Activa (programa el recordatorio cada 30 min) o desactiva la hidratación.
+  /// Activa (programa el recordatorio cada hora) o desactiva la hidratación.
   Future<AvisoResultado> setHidratacion({required bool activar}) async {
     if (!await _permiso()) {
       return const AvisoResultado(
@@ -195,14 +195,14 @@ class AvisosService {
     }
   }
 
-  /// Programa el recordatorio de hidratación cada 30 minutos (P15) con el
+  /// Programa el recordatorio de hidratación cada hora (P15) con el
   /// intervalo nativo por duración del plugin. Texto serio, sin emojis.
   Future<void> _programarHidratacion() async {
     await _plugin.periodicallyShowWithDuration(
       id: AvisosIds.hidratacion,
       title: textoAvisoHidratacionTitulo,
       body: textoAvisoHidratacionCuerpo,
-      repeatDurationInterval: const Duration(minutes: 30),
+      repeatDurationInterval: intervaloHidratacion,
       notificationDetails: _detallesComunes,
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
     );

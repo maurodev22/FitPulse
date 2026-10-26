@@ -283,7 +283,7 @@ class _SetupScreenState extends State<SetupScreen> {
         ToggleRow(
           icon: Icons.water_drop_outlined,
           title: strings.pfRecordatoriosHidratacion,
-          subtitle: strings.pfCadaMediaHora,
+          subtitle: strings.pfCadaHora,
           value: _hidratacion,
           onChanged: (v) => setState(() => _hidratacion = v),
         ),
