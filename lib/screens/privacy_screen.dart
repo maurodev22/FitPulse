@@ -64,6 +64,7 @@ class PrivacyScreen extends StatelessWidget {
             _Seccion(titulo: strings.pvSec8, cuerpo: strings.pvSec8Body),
             _Seccion(titulo: strings.pvSec9, cuerpo: strings.pvSec9Body),
             _Seccion(titulo: strings.pvSec10, cuerpo: strings.pvSec10Body),
+            _Seccion(titulo: strings.pvSec11, cuerpo: strings.pvSec11Body),
           ],
         ),
       ),

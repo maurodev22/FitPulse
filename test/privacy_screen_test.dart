@@ -29,17 +29,27 @@ void main() {
 
     expect(find.text('Política de privacidad'), findsWidgets);
     expect(find.textContaining('RGPD'), findsWidgets);
-    expect(find.textContaining('art. 9'), findsWidgets);
+    expect(find.textContaining('26 de octubre de 2026'), findsOneWidget);
 
     // El ListView con children: es perezoso: las secciones del final se crean
     // al desplazarse. Se recorre la lista en pasos para construirlas todas y
     // verificar el contenido íntegro sin depender del tamaño del viewport.
+    await tester.scrollUntilVisible(find.textContaining('art. 9'), 200);
+    expect(find.textContaining('art. 9'), findsWidgets);
+
     await tester.scrollUntilVisible(find.textContaining('art. 8'), 200);
     expect(find.textContaining('art. 8'), findsWidgets);
 
-    await tester.scrollUntilVisible(find.text('10. Contacto'), 200);
+    // Publicidad: nombra a Google AdMob y su política (transparencia UE).
+    await tester.scrollUntilVisible(find.text('7. Publicidad'), 200);
+    expect(find.textContaining('AdMob'), findsWidgets);
+
+    await tester.scrollUntilVisible(find.text('10. Enlaces a webs externas'), 200);
+    expect(find.textContaining('NHS'), findsWidgets);
+
+    await tester.scrollUntilVisible(find.text('11. Contacto'), 200);
     await tester.pumpAndSettle();
-    expect(find.text('10. Contacto'), findsOneWidget);
+    expect(find.text('11. Contacto'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -58,10 +68,14 @@ void main() {
 
     expect(find.text('Privacy policy'), findsWidgets);
     expect(find.textContaining('GDPR'), findsWidgets);
+    expect(find.textContaining('26 October 2026'), findsOneWidget);
 
-    await tester.scrollUntilVisible(find.text('10. Contact'), 200);
+    await tester.scrollUntilVisible(find.text('10. External website links'), 200);
+    expect(find.textContaining('NHS'), findsWidgets);
+
+    await tester.scrollUntilVisible(find.text('11. Contact'), 200);
     await tester.pumpAndSettle();
-    expect(find.text('10. Contact'), findsOneWidget);
+    expect(find.text('11. Contact'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 }

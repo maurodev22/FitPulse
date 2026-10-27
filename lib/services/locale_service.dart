@@ -1147,7 +1147,7 @@ String get pfMetaPasos => _t('1000 pasos mínimo', '1000 steps minimum');
       'FitPulse runs 100 % on your device: no accounts, no servers, and your data '
       'never leaves your phone unless you share it. This policy explains what is '
       'stored, why, and what rights you have (GDPR/EU).');
-  String get pvVigencia => _t('Vigencia: 22 de octubre de 2026', 'Effective: 22 October 2026');
+  String get pvVigencia => _t('Vigencia: 26 de octubre de 2026', 'Effective: 26 October 2026');
   String get pvSec1 => _t('1. Responsable y comerciante', '1. Controller and merchant');
   String get pvSec1Body => _t(
       'Responsable: desarrollador independiente de FitPulse. Cuando exista una '
@@ -1167,12 +1167,15 @@ String get pfMetaPasos => _t('1000 pasos mínimo', '1000 steps minimum');
       'All of it is stored locally with shared_preferences.');
   String get pvSec3 => _t('3. Qué NO se transmite', '3. What is NOT transmitted');
   String get pvSec3Body => _t(
-      'Nada. FitPulse no recopila, no envía ni comparte tus datos con servidores '
-      'o terceros. El único acceso a red es opcional (anuncios, si los habilitas) '
-      'y nunca incluye tus datos de salud.',
-      'Nothing. FitPulse does not collect, send or share your data with servers '
-      'or third parties. The only network access is optional (ads, if you enable '
-      'them) and never includes your health data.');
+      'Nada, salvo las peticiones técnicas de los anuncios. FitPulse no recopila '
+      'ni comparte tus datos de salud. El único acceso a red son los anuncios de '
+      'Google AdMob, si los activas: la solicitud incluye el identificador de '
+      'publicidad del dispositivo y datos técnicos, nunca tu perfil ni tus datos '
+      'de salud.',
+      'Nothing, except the technical ad requests. FitPulse does not collect or '
+      'share your health data. The only network access is Google AdMob '
+      'advertising, if you enable it: the request includes the device '
+      'advertising ID and technical data, never your profile or health data.');
   String get pvSec4 => _t('4. Datos de salud (categoría especial)', '4. Health data (special category)');
   String get pvSec4Body => _t(
       'Si lo autorizas, la app lee métricas de salud (pasos, pulso, peso, sueño) '
@@ -1202,12 +1205,17 @@ String get pfMetaPasos => _t('1000 pasos mínimo', '1000 steps minimum');
       'data you can export, import and delete.');
   String get pvSec7 => _t('7. Publicidad', '7. Advertising');
   String get pvSec7Body => _t(
-      'Puedes desactivar los anuncios desde Perfil. Si resides en el EEE o Reino '
-      'Unido, la app usa mecánicas de consentimiento para la publicidad '
-      '(personalizada o no personalizada) antes de mostrar el primer anuncio.',
-      'You can disable ads from the Profile. If you reside in the EEA or UK, the '
-      'app uses consent mechanisms for advertising (personalised or '
-      'non-personalised) before showing the first ad.');
+      'Puedes desactivar los anuncios desde Perfil. Los sirve Google AdMob, que '
+      'trata el identificador de publicidad y datos técnicos (consulta su '
+      'política en policies.google.com/privacy). Si resides en el EEE o Reino '
+      'Unido, la app pide consentimiento para la publicidad (personalizada o no '
+      'personalizada) antes de mostrar el primer anuncio; sin consentimiento no '
+      'hay anuncios personalizados.',
+      'You can disable ads from the Profile. They are served by Google AdMob, '
+      'which processes the advertising ID and technical data (see its policy at '
+      'policies.google.com/privacy). If you reside in the EEA or UK, the app asks '
+      'for advertising consent (personalised or non-personalised) before showing '
+      'the first ad; without consent there are no personalised ads.');
   String get pvSec8 => _t('8. IA en tu dispositivo', '8. On-device AI');
   String get pvSec8Body => _t(
       'El entrenador con cámara usa un modelo de IA local (ML Kit de Google). El '
@@ -1234,8 +1242,18 @@ String get pfMetaPasos => _t('1000 pasos mínimo', '1000 steps minimum');
       'the count on the device and sends nothing. It stops when you remove the '
       'last widget or if the system does not allow the service; in that case '
       'the app keeps working and the widget refreshes when you open it.');
-  String get pvSec10 => _t('10. Contacto', '10. Contact');
+  String get pvSec10 => _t('10. Enlaces a webs externas', '10. External website links');
   String get pvSec10Body => _t(
+      'Algunos consejos incluyen «Ver fuente» y abren la web del NHS, la OMS o la '
+      'Sleep Foundation en tu navegador. Esas webs son ajenas a FitPulse y tienen '
+      'sus propias políticas de privacidad: la app solo abre la dirección que '
+      'pulsas y no les envía tus datos.',
+      'Some tips include “View source” and open the NHS, WHO or Sleep Foundation '
+      'website in your browser. Those sites are independent from FitPulse and '
+      'have their own privacy policies: the app only opens the address you tap '
+      'and sends them no data about you.');
+  String get pvSec11 => _t('11. Contacto', '11. Contact');
+  String get pvSec11Body => _t(
       'Para ejercer tus derechos o resolver dudas, use la sección Ayuda de la app '
       'o los datos del comerciante cuando estén publicados.',
       'To exercise your rights or ask questions, use the Help section of the app '
