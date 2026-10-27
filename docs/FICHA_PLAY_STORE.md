@@ -103,6 +103,33 @@ advice of a health professional.
 
 ---
 
+## Release notes — v1.1.0 (what's new) — Español
+
+> Novedades de FitPulse 1.1.0:
+> - Consejos de entrenamiento, alimentación, sueño e hidratación con fuentes
+>   citadas (NHS, OMS, Sleep Foundation) y enlace a cada artículo.
+> - Recordatorio de hidratación cada hora (antes cada 30 minutos).
+> - Gráfico de cumplimiento de metas con tu histórico real.
+> - Botón «Entrenar» siempre a mano con tres accesos: entrenar, rutinas y
+>   entrenador por cámara.
+> - Inicio más limpio: la racha vuelve a ser el único protagonista.
+> - Política de privacidad ampliada: publicidad, consentimiento en la UE y
+>   enlaces a webs externas.
+
+## Release notes — v1.1.0 — English
+
+> What's new in FitPulse 1.1.0:
+> - Training, nutrition, sleep and hydration tips with cited sources (NHS, WHO,
+>   Sleep Foundation) and a link to each article.
+> - Hydration reminder every hour (previously every 30 minutes).
+> - Goal compliance chart built from your real history.
+> - The “Train” button is always at hand with three shortcuts: train, routines
+>   and the camera coach.
+> - Cleaner Home: your streak is the only highlight again.
+> - Expanded privacy policy: advertising, EU consent and external website links.
+
+---
+
 ## Release notes — v1.0.0 (what's new) — Español
 
 > Primera versión oficial de FitPulse.
