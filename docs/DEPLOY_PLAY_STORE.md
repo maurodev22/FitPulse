@@ -19,7 +19,7 @@ GitHub Pages) y deja los textos listos para pegar en los formularios.
 | 4 | Mensaje de consentimiento UMP (EEE/Reino Unido) | 🔴 falta | tú |
 | 5 | Estado de comerciante (DSA) en la consola | 🔴 falta | tú |
 | 6 | Política de privacidad pública (Pages) | 🔴 404 | tú (2 clics) |
-| 7 | Capturas de ficha | 🔴 pendientes: script listo, falta ejecutarlo | yo |
+| 7 | Capturas de ficha | 🟢 5 regeneradas a 1080×2400 (sin emulador) | yo |
 | 8 | AAB firmado de la versión final | 🟡 se regenera al cerrar la versión | yo |
 | 9 | Declaraciones de App content (salud, FGS, anuncios, datos) | 🟢 textos listos (§4) | yo + tú |
 | 10 | Test cerrado 12 testers × 14 días | ⏳ 2 semanas | tú |
@@ -93,12 +93,16 @@ Pages no está activado:
 - **Data Safety**: respuestas exactas en `docs/DATA_SAFETY.md`.
 - **Copy de ficha**: `docs/FICHA_PLAY_STORE.md` (nombre, descripciones, notas).
 - **Assets**: `docs/store_assets/icono_512.png` y `feature_graphic.png`.
-- **Capturas**: `integration_test/capturas_ficha_test.dart` +
-  `test_driver/capturas_driver.dart` regeneran
+- **Capturas**: `test/manual/capturas_ficha.dart` regenera
   `docs/store_assets/capturas/cap_{home,recetas,progreso,consejos,perfil}.png`
-  desde un emulador con datos de demostración generados por la propia API
-  (pendiente de ejecutar; las de `cap_*.png` actuales son anteriores a los
-  últimos cambios):
+  a 1080×2400 **sin emulador ni dispositivo** (renderiza la app real en un test
+  con datos de demostración creados por la propia API):
+  ```
+  flutter test test/manual/capturas_ficha.dart
+  ```
+  No se ejecuta en `flutter test` normal (no acaba en `_test.dart`).
+  Alternativa con barra de estado real: `integration_test/capturas_ficha_test.dart`
+  + `test_driver/capturas_driver.dart` en un emulador:
   ```
   flutter drive --driver test_driver/capturas_driver.dart `
     --target integration_test/capturas_ficha_test.dart -d emulator-5554
@@ -201,11 +205,13 @@ Hasta elegir, **no** promocionar el Premium como compra en la ficha ni en la app
 - Requisitos: 2–8 por tipo, PNG/JPEG, lado corto ≥ 320 px, lado largo ≤ 3840 px,
   sin marcos de dispositivo ni texto añadido. Teléfono obligatorio; tablet solo si
   se declara compatibilidad (la app no está adaptada a tablet → no declararla).
-- Generación: comando de §2. Revisar que no aparezcan banners de prueba, el
-  teclado ni la barra de estado con notificaciones personales.
-- Las capturas antiguas de `docs/store_assets/capturas/` no incluyen los últimos
-  cambios (marco del FAB, Consejos con fuentes, sin mini-barra de XP): hay que
-  regenerarlas antes de subir la ficha.
+- Generación: comando de §2 (sin emulador). Revisar que no aparezcan banners de
+  prueba, el teclado ni notificaciones personales. El generador desactiva los
+  anuncios y usa el perfil de demostración «Ana», así que no expone datos reales.
+- Estado actual: las 5 capturas de `docs/store_assets/capturas/` ya incluyen el
+  marco del FAB, Consejos con fuentes y la interfaz sin mini-barra de XP
+  (regeneradas el 2026-10-30). `cap_lista.png` y `cap_widget_launcher.png` son
+  material antiguo que la ficha no usa.
 
 ---
 

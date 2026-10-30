@@ -158,12 +158,13 @@ advice of a health professional.
 - **Assets ya generados** en `docs/store_assets/`: `icono_512.png` (512×512) y
   `feature_graphic.png` (1024×500). El icono es un upscale del launcher actual:
   si quieres una versión más nítida, sustituir por un diseño 512 nativo.
-- **Capturas de pantalla** (2–8 de teléfono): se regeneran con el emulador
+- **Capturas de pantalla** (2-8 de teléfono): se regeneran sin emulador con
   ```bash
-  flutter drive --driver test_driver/capturas_driver.dart --target integration_test/capturas_ficha_test.dart -d emulator-5554
+  flutter test test/manual/capturas_ficha.dart
   ```
-  y se guardan en `docs/store_assets/capturas/`. No declarar compatibilidad con
-  tablet si no se aportan capturas de tablet.
+  (1080×2400, perfil de demostración «Ana», anuncios desactivados) y se guardan
+  en `docs/store_assets/capturas/`. No declarar compatibilidad con tablet si no
+  se aportan capturas de tablet.
 - **IDs de AdMob:** hoy la app usa solo IDs de prueba (ver `docs/ADS_CLIENTE.md`);
   activar los reales con `tools/activar_ids_ads.ps1` antes de publicar.
 - **Monetización (decisión pendiente):** opción recomendada = gratis con anuncios
