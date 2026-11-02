@@ -898,7 +898,27 @@ String get pfMetaPasos => _t('1000 pasos mínimo', '1000 steps minimum');
   String get pfNivelCondicion => _t('Nivel de condición física', 'Fitness level');
   String get pfPreferencias => _t('Preferencias & Sincronización', 'Preferences & Sync');
   String get pfRecordatoriosHidratacion => _t('Recordatorios de hidratación', 'Hydration reminders');
+  String get pfIntervaloHidratacion => _t('Intervalo de hidratación', 'Hydration interval');
   String get pfCadaHora => _t('Cada hora · notificación local', 'Every hour · local notification');
+
+  /// Etiqueta corta del intervalo del aviso de agua: "30 minutos", "1 hora",
+  /// "2 horas"… Se usa en Ajustes y en el onboarding.
+  String intervaloAguaEtiqueta(int minutos) {
+    if (minutos < 60) return _t('$minutos minutos', '$minutos minutes');
+    final horas = minutos ~/ 60;
+    return horas == 1
+        ? _t('1 hora', '1 hour')
+        : _t('$horas horas', '$horas hours');
+  }
+
+  /// Subtítulo del interruptor de hidratación con el intervalo real elegido.
+  /// A 60 minutos se dice "Cada hora", no "Cada 1 hora".
+  String pfCadaIntervalo(int minutos) => minutos == 60
+      ? _t('Cada hora · notificación local', 'Every hour · local notification')
+      : _t(
+          'Cada ${intervaloAguaEtiqueta(minutos)} · notificación local',
+          'Every ${intervaloAguaEtiqueta(minutos)} · local notification',
+        );
   String get pfAvisoRacha => _t('Aviso de racha en riesgo', 'Streak-at-risk alert');
   String get pfDiario20 => _t('Diario a las 20:00 con tu racha real', 'Daily at 8:00 PM with your real streak');
   String get pfHealthKit => _t('HealthKit / Smartwatch', 'HealthKit / Smartwatch');

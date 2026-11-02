@@ -1,12 +1,7 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:fitpulse/screens/home_screen.dart';
-import 'package:fitpulse/services/locale_service.dart';
 import 'package:fitpulse/state/app_state.dart';
-import 'package:fitpulse/theme.dart';
 
 /// FASE D — Ritual semanal sin presión.
 ///
@@ -14,8 +9,9 @@ import 'package:fitpulse/theme.dart';
 ///  1. el registro honesto de XP por día (`_otorgarXp` → `xpPorDia`) y su
 ///     persistencia/backup;
 ///  2. los getters de la semana pasada (días, sesiones, XP reales);
-///  3. la tarjeta "Tu semana" en Home: aparece solo con actividad la semana
-///     anterior, muestra datos reales y nunca lenguaje negativo.
+///
+/// La tarjeta "Tu semana" se retiró de Home (2026-11-02); los datos de la
+/// semana pasada siguen calculándose y se cubren aquí.
 void main() {
   setUp(() {
     SharedPreferences.setMockInitialValues({});
@@ -129,81 +125,6 @@ void main() {
 
       state2.resetTrasBorrado();
       expect(state2.xpPorDia, isEmpty);
-    });
-  });
-
-  group('Home · tarjeta "Tu semana"', () {
-    Future<void> pumpHome(WidgetTester tester, AppState state) async {
-      final locale = LocaleService();
-      await locale.init();
-      AppColors.activate(darkFitPalette);
-      await tester.pumpWidget(
-        ChangeNotifierProvider<AppState>.value(
-          value: state,
-          child: ChangeNotifierProvider<LocaleService>.value(
-            value: locale,
-            child: const MaterialApp(home: HomeScreen()),
-          ),
-        ),
-      );
-      await tester.pumpAndSettle();
-    }
-
-    testWidgets('no aparece sin actividad la semana anterior (D1)',
-        (tester) async {
-      final state = AppState();
-      await state.init();
-      await pumpHome(tester, state);
-      expect(find.text('Tu semana'), findsNothing);
-    });
-
-    testWidgets('aparece con actividad real de la semana pasada y es informativa',
-        (tester) async {
-      final state = AppState();
-      await state.init();
-      final lunesPasado =
-          lunesDe(DateTime.now()).subtract(const Duration(days: 7));
-      await state.registrarSesionCompletada(
-        nombre: 'A',
-        duracion: const Duration(minutes: 20),
-        calorias: 100,
-        fecha: lunesPasado,
-      );
-      // XP real otorgado la semana pasada (ledger honesto).
-      state.xpPorDia[keyDe(lunesPasado)] = 350;
-
-      await pumpHome(tester, state);
-
-      expect(find.text('Tu semana'), findsOneWidget);
-      expect(find.text('1 día · 1 sesión · 350 XP'), findsOneWidget);
-      // Sin racha viva: no se menciona el reto (cero presión, D3).
-      expect(find.textContaining('Vas'), findsNothing);
-    });
-
-    testWidgets('con racha viva sí muestra el reto discreto (D2)',
-        (tester) async {
-      final state = AppState();
-      await state.init();
-      final lunesPasado =
-          lunesDe(DateTime.now()).subtract(const Duration(days: 7));
-      await state.registrarSesionCompletada(
-        nombre: 'A',
-        duracion: const Duration(minutes: 20),
-        calorias: 100,
-        fecha: lunesPasado,
-      );
-      // Sesión de hoy → racha viva = 1 pero NO cuenta para la semana pasada.
-      await state.registrarSesionCompletada(
-        nombre: 'B',
-        duracion: const Duration(minutes: 20),
-        calorias: 100,
-      );
-
-      await pumpHome(tester, state);
-
-      expect(find.text('Tu semana'), findsOneWidget);
-      expect(find.text('1 día · 1 sesión'), findsOneWidget); // XP 0 → sin tramo
-      expect(find.text('Vas 1 de 3 días'), findsOneWidget);
     });
   });
 }

@@ -3,7 +3,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:fitpulse/screens/home_screen.dart';
 import 'package:fitpulse/screens/workout_builder_screen.dart';
 import 'package:fitpulse/screens/workout_player_screen.dart';
 import 'package:fitpulse/services/config_service.dart';
@@ -13,6 +12,7 @@ import 'package:fitpulse/state/rutinas.dart';
 import 'package:fitpulse/state/workout.dart';
 import 'package:fitpulse/theme.dart';
 import 'package:fitpulse/utils/validators.dart';
+import 'package:fitpulse/widgets/boton_entrenar.dart';
 
 /// L3 (3b + 3c) — Constructor de rutinas: lista, editor y entrada desde Home.
 ///
@@ -82,26 +82,14 @@ Future<AppState> _pump(
 Future<AppState> _pumpRutinas(WidgetTester tester, {AppState? state}) =>
     _pump(tester, home: const MisRutinasScreen(), state: state);
 
-/// Monta Home con su provider de estado y el de idioma (Home no usa
-/// ConfigService, así que no hace falta traerlo).
-Future<AppState> _pumpHome(WidgetTester tester, {AppState? state}) async {
-  final s = state ?? AppState();
-  await s.init();
-  final locale = LocaleService();
-  await locale.init();
-  AppColors.activate(lightFitPalette);
-  await tester.pumpWidget(
-    ChangeNotifierProvider<AppState>.value(
-      value: s,
-      child: ChangeNotifierProvider<LocaleService>.value(
-        value: locale,
-        child: const MaterialApp(home: HomeScreen()),
-      ),
-    ),
-  );
-  await tester.pumpAndSettle();
-  return s;
-}
+/// Monta un Home mínimo con el botón flotante "Entrenar", que es el único
+/// acceso al entrenamiento y a "Mis rutinas" desde Home.
+Future<AppState> _pumpHome(WidgetTester tester, {AppState? state}) =>
+    _pump(
+      tester,
+      home: const Scaffold(floatingActionButton: BotonEntrenar()),
+      state: state,
+    );
 
 /// Monta el editor **encima de la lista**, como en el uso real: así, al guardar
 /// se vuelve a la lista y se puede comprobar que la rutina aparece ahí.
@@ -544,9 +532,12 @@ void main() {
     });
   });
 
-  group('L3 · Home enlaza a "Mis rutinas"', () {
+  group('L3 · el botón "Entrenar" de Home abre "Mis rutinas"', () {
     testWidgets('sin rutinas ofrece crear la primera', (tester) async {
       await _pumpHome(tester);
+
+      await tester.tap(find.byType(FloatingActionButton));
+      await tester.pumpAndSettle();
 
       final entrada = find.text('Mis rutinas');
       expect(entrada, findsOneWidget);
@@ -559,9 +550,19 @@ void main() {
       await state.init();
       await state.guardarRutina(_rutinaValida(id: 'a'));
       await _pumpHome(tester, state: state);
+
+      await tester.tap(find.byType(FloatingActionButton));
+      await tester.pumpAndSettle();
       expect(find.text('1 rutina guardada'), findsOneWidget);
 
+      // Se cierra la hoja y se añade otra rutina: al reabrirla, el recuento es
+      // el real (no un texto fijo que se quede desactualizado).
+      await tester.tapAt(const Offset(10, 10));
+      await tester.pumpAndSettle();
       await state.guardarRutina(_rutinaValida(id: 'b', nombre: 'Piernas'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byType(FloatingActionButton));
       await tester.pumpAndSettle();
       expect(find.text('2 rutinas guardadas'), findsOneWidget);
       expect(find.text('1 rutina guardada'), findsNothing);
@@ -573,7 +574,7 @@ void main() {
       await state.guardarRutina(_rutinaValida());
       await _pumpHome(tester, state: state);
 
-      await tester.ensureVisible(find.text('Mis rutinas'));
+      await tester.tap(find.byType(FloatingActionButton));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Mis rutinas'));
       await tester.pumpAndSettle();

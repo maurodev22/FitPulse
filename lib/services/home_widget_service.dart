@@ -80,6 +80,9 @@ class HomeWidgetBridge with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       unawaited(sincronizarBaseNativa());
+      // Al volver a la app, se relee Health Connect: es la fuente del total
+      // real del día de pasos (el sensor solo cuenta desde que la app abrió).
+      unawaited(_appState.refreshHealthConnect());
       _onCambio(forzar: true);
     }
   }

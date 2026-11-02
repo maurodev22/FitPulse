@@ -86,7 +86,9 @@ void main() {
     // Saludo personalizado con el nombre registrado en onboarding.
     expect(find.text('Hola, Sofía'), findsOneWidget);
     expect(find.text('Resumen de hoy'), findsOneWidget);
-    expect(find.text('Entrenamiento de hoy'), findsOneWidget);
+    // Home solo deja el botón flotante de entrenar (sin tarjeta de entreno).
+    expect(find.text('Entrenamiento de hoy'), findsNothing);
+    expect(find.text('Entrenar'), findsOneWidget);
   });
 
   testWidgets('Navega a la pestaña de Recetas', (WidgetTester tester) async {
@@ -123,11 +125,11 @@ void main() {
       (WidgetTester tester) async {
     await _enterDashboard(tester);
 
-    // El hero recomendado abre el reproductor con ejercicios y temporizador.
-    // El hero vive bajo el pliegue del Home: se hace scroll hasta él.
-    await tester.scrollUntilVisible(find.text('Comenzar entrenamiento'), 200);
+    // Home ya no tiene tarjeta de entreno: se empieza desde el botón flotante
+    // "Entrenar" (hoja con el entrenamiento recomendado de hoy).
+    await tester.tap(find.byType(FloatingActionButton));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Comenzar entrenamiento'));
+    await tester.tap(find.text('Entrenamiento de hoy'));
     await tester.pumpAndSettle();
     expect(find.text('EJERCICIO'), findsOneWidget);
     expect(find.text('1 / 8'), findsOneWidget);

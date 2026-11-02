@@ -26,7 +26,8 @@ enum AvisosPermisoEstado {
 
 /// Fase 6: avisos locales reales (notificaciones en el propio móvil).
 ///
-/// - Hidratación: recordatorio periódico (cada hora) activable por separado.
+/// - Hidratación: recordatorio periódico (cada hora por defecto; el usuario
+///   elige el intervalo en Ajustes) activable por separado.
 /// - Racha en riesgo: aviso diario a las 20:00 con la racha REAL del historial;
 ///   se cancela el día en que se completa una sesión y se reprograma al día
 ///   siguiente con la racha actualizada.
@@ -112,6 +113,7 @@ class AvisosService {
     required bool hidratacion,
     required bool racha,
     required int rachaDias,
+    Duration intervaloAgua = intervaloHidratacion,
   }) async {
     final error = await inicializar();
     if (error != null) return; // Honesto: sin plugin no hay avisos.
@@ -120,7 +122,7 @@ class AvisosService {
       await _plugin.cancel(id: AvisosIds.hidratacion);
       await _plugin.cancel(id: AvisosIds.racha);
       if (hidratacion) {
-        await _programarHidratacion();
+        await _programarHidratacion(intervaloAgua);
       }
       if (racha) {
         await _programarRacha(rachaDias);
@@ -137,8 +139,11 @@ class AvisosService {
     }
   }
 
-  /// Activa (programa el recordatorio cada hora) o desactiva la hidratación.
-  Future<AvisoResultado> setHidratacion({required bool activar}) async {
+  /// Activa (programa el recordatorio con [intervaloAgua]) o lo desactiva.
+  Future<AvisoResultado> setHidratacion({
+    required bool activar,
+    Duration intervaloAgua = intervaloHidratacion,
+  }) async {
     if (!await _permiso()) {
       return const AvisoResultado(
         ok: false,
@@ -148,7 +153,7 @@ class AvisosService {
     try {
       await _plugin.cancel(id: AvisosIds.hidratacion);
       if (activar) {
-        await _programarHidratacion();
+        await _programarHidratacion(intervaloAgua);
       }
       return AvisoResultado(
         ok: true,
@@ -195,14 +200,15 @@ class AvisosService {
     }
   }
 
-  /// Programa el recordatorio de hidratación cada hora (P15) con el
-  /// intervalo nativo por duración del plugin. Texto serio, sin emojis.
-  Future<void> _programarHidratacion() async {
+  /// Programa el recordatorio de hidratación con el [intervalo] elegido por el
+  /// usuario en Ajustes (por defecto, una hora) usando el intervalo nativo por
+  /// duración del plugin. Texto serio, sin emojis.
+  Future<void> _programarHidratacion(Duration intervalo) async {
     await _plugin.periodicallyShowWithDuration(
       id: AvisosIds.hidratacion,
       title: textoAvisoHidratacionTitulo,
       body: textoAvisoHidratacionCuerpo,
-      repeatDurationInterval: intervaloHidratacion,
+      repeatDurationInterval: intervalo,
       notificationDetails: _detallesComunes,
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
     );

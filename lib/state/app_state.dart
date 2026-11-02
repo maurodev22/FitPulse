@@ -17,6 +17,18 @@ import 'rutinas.dart';
 import 'workout.dart';
 import 'workout_catalog.dart';
 
+/// Pasos reales visibles del día: el mayor entre el sensor del teléfono y el
+/// total de Health Connect.
+///
+/// El sensor (`TYPE_STEP_COUNTER`) solo cuenta desde que la app se abre y, tras
+/// un reinicio, vuelve a cero; Health Connect tiene el total real del día. Por
+/// eso nunca se muestra un número menor que el que el sistema ya registró.
+int pasosVisiblesDelDia({required int sensor, required int healthConnect}) {
+  final s = sensor < 0 ? 0 : sensor;
+  final h = healthConnect < 0 ? 0 : healthConnect;
+  return max(s, h);
+}
+
 /// Estado global de la aplicación (patrón ChangeNotifier + Provider).
 ///
 /// Centraliza el perfil del atleta, el balance nutricional diario, las métricas
@@ -36,6 +48,10 @@ class AppState extends ChangeNotifier {
   // Baseline de pasos: contador del sensor del teléfono al inicio del día.
   static const _pasosBaseKey = 'fitpulse_pasos_base_v1';
   static const _pasosBaseDateKey = 'fitpulse_pasos_base_date_v1';
+  // Pasos ya contados hoy, para no mostrar 0 al reabrir la app (se guardan
+  // junto con su fecha y solo se restauran si son del día actual).
+  static const _pasosHoyKey = 'fitpulse_pasos_hoy_v1';
+  static const _pasosHoyDateKey = 'fitpulse_pasos_hoy_date_v1';
 
   // P14: agua registrada MANUALMENTE por el usuario (litros del día), con su
   // propia fecha para reiniciarlo cada día sin tocar el balance de calorías.
@@ -271,6 +287,14 @@ class AppState extends ChangeNotifier {
   /// cada paso del sensor.
   int _pasosPersistidos = 0;
 
+  /// Pasos reales de HOY según Health Connect (0 si no hay permiso o dato).
+  ///
+  /// El sensor del teléfono solo cuenta desde que la app se abre (el contador
+  /// nativo es "desde el arranque del sistema"), así que puede quedarse corto.
+  /// Health Connect sí tiene el total del día: se usa como suelo para que el
+  /// número mostrado nunca sea menor que el real ya registrado por el sistema.
+  int _pasosHoyHC = 0;
+
   /// Si el teléfono tiene sensor de pasos disponible y autorizado.
   bool get healthDisponible => _healthSource?.isAvailable ?? false;
 
@@ -312,6 +336,9 @@ class AppState extends ChangeNotifier {
       _resetBalance();
       _resetAguaManual();
       _pasosBase = null;
+      _pasosBaseFecha = null;
+      _pasosPersistidos = 0;
+      _pasosHoyHC = 0;
       _prefs?.setString(_balanceDateKey, today);
       _upsertDia(_construirRegistro(hoyMediodia));
     }
@@ -338,15 +365,26 @@ class AppState extends ChangeNotifier {
     }
     _pasosBaseFecha = today;
     final pasos = raw - base;
-    pasosHoy = pasos < 0 ? 0 : pasos;
+    // Se muestra el mayor entre el sensor y el total del día de Health Connect
+    // (si hay permiso y dato): el sensor puede haber arrancado a mitad del día
+    // y nunca debe rebajar lo que el sistema ya contó.
+    pasosHoy = pasosVisiblesDelDia(sensor: pasos, healthConnect: _pasosHoyHC);
     // Histórico: el día de hoy se mantiene en vivo (en memoria). Se persiste
-    // cada 100 pasos para no escribir en disco con cada paso.
+    // cada 50 pasos para no escribir en disco con cada paso.
     _upsertDia(_construirRegistro(hoyMediodia));
-    if (pasosHoy - _pasosPersistidos >= 100) {
-      _pasosPersistidos = pasosHoy;
+    if ((pasosHoy - _pasosPersistidos).abs() >= 50) {
+      _guardarPasosDeHoy(today);
       _persistRegistro();
     }
     notifyListeners();
+  }
+
+  /// Persiste los pasos conocidos de hoy con su fecha. Solo se restauran en
+  /// `init()` si la fecha coincide, así un valor de ayer nunca se reutiliza.
+  void _guardarPasosDeHoy(String fecha) {
+    _pasosPersistidos = pasosHoy;
+    _prefs?.setInt(_pasosHoyKey, pasosHoy);
+    _prefs?.setString(_pasosHoyDateKey, fecha);
   }
 
   /// Línea base de pasos del día (contador crudo al primer paso de hoy) y su
@@ -377,6 +415,7 @@ class AppState extends ChangeNotifier {
       _prefs?.setString(_pasosBaseDateKey, fecha);
       final pasos = raw - base;
       pasosHoy = pasos < 0 ? 0 : pasos;
+      _guardarPasosDeHoy(fecha);
       notifyListeners();
     }
   }
@@ -465,11 +504,15 @@ class AppState extends ChangeNotifier {
     final agua = aguaHoy;
     final previo = _buscarDia(dia);
     final pasos = pasosHoy > 0 ? pasosHoy : previo?.pasos;
+    // Si hoy hay total de Health Connect y el valor mostrado lo alcanza, el
+    // día tiene un total fiable (no es "parcial").
+    final pasosHc = (previo?.pasosHealthConnect ?? false) ||
+        (pasos != null && _pasosHoyHC > 0 && pasos >= _pasosHoyHC);
     return RegistroDiario(
       dia: dia,
       pasos: pasos,
-      pasosParciales: previo?.pasosParciales ?? false,
-      pasosHealthConnect: previo?.pasosHealthConnect ?? false,
+      pasosParciales: pasosHc ? false : (previo?.pasosParciales ?? false),
+      pasosHealthConnect: pasosHc,
       agua: agua != null && agua > 0 ? agua : previo?.agua,
       kcal: caloriasConsumidas > 0 ? caloriasConsumidas : previo?.kcal,
       proteinas:
@@ -674,11 +717,25 @@ class AppState extends ChangeNotifier {
     if (_prefs!.getString(_balanceDateKey) != today) {
       _resetBalance();
       _prefs!.setString(_balanceDateKey, today);
-    } else {
-      // Mismo día: restauramos el baseline de pasos para continuar el conteo.
-      _pasosBase = _prefs!.getInt(_pasosBaseKey);
-      _pasosBaseFecha = today;
+      _pasosBase = null;
+      _pasosBaseFecha = null;
       pasosHoy = 0;
+    } else {
+      // Mismo día: se restaura la base SOLO si es de hoy. Una base de ayer
+      // haría que el contador sumara pasos de más (el sensor no se reinicia a
+      // medianoche) o que el widget contara desde una marca vieja.
+      if (_prefs!.getString(_pasosBaseDateKey) == today) {
+        _pasosBase = _prefs!.getInt(_pasosBaseKey);
+        _pasosBaseFecha = today;
+      } else {
+        _pasosBase = null;
+        _pasosBaseFecha = null;
+      }
+      // Los pasos ya contados hoy se conservan: al reabrir la app no se
+      // muestra 0 hasta que el sensor emita el siguiente paso.
+      pasosHoy = _prefs!.getString(_pasosHoyDateKey) == today
+          ? (_prefs!.getInt(_pasosHoyKey) ?? 0)
+          : 0;
     }
 
     // P14: agua registrada manualmente — pertenece al día actual (o 0).
@@ -908,10 +965,17 @@ class AppState extends ChangeNotifier {
     final hc = _healthConnect;
     if (hc == null) return;
     _healthToday = await hc.leerHoy();
-    // Si el sensor del teléfono no está disponible pero Health Connect sí
-    // concede pasos, usamos el total del día de Health Connect.
-    if (!healthDisponible && _healthToday.pasos > 0) {
-      pasosHoy = _healthToday.pasos;
+    // Pasos: Health Connect es el total real del día. Si supera al sensor (la
+    // app se abrió tarde, el teléfono se reinició o el día cambió), manda HC;
+    // si no hay permiso/dato se mantiene el sensor. Nunca se rebaja el número.
+    final hcPasos = _healthToday.pasos;
+    if (_healthToday.metricasConPermiso.contains(HealthMetricas.pasos) &&
+        hcPasos > 0) {
+      _pasosHoyHC = hcPasos;
+      if (hcPasos > pasosHoy) {
+        pasosHoy = hcPasos;
+        _guardarPasosDeHoy(_dayKey(DateTime.now()));
+      }
     }
     // Fase C: el agua leída de Health Connect pueda completar la meta de hoy.
     await _registrarDiaAguaCumplida();
@@ -966,7 +1030,7 @@ class AppState extends ChangeNotifier {
     var mejor = 1;
     var actual = 1;
     for (var i = 1; i < dias.length; i++) {
-      if (dias[i].difference(dias[i - 1]).inDays == 1) {
+      if (_indiceDia(dias[i]) - _indiceDia(dias[i - 1]) == 1) {
         actual++;
         if (actual > mejor) mejor = actual;
       } else {
@@ -984,9 +1048,7 @@ class AppState extends ChangeNotifier {
 
   /// Minutos reales de entrenamiento esta semana (lunes a domingo actual).
   int get minutosEntrenadosSemana {
-    final ahora = DateTime.now();
-    final lunes = ahora.subtract(Duration(days: ahora.weekday - 1));
-    final inicio = DateTime(lunes.year, lunes.month, lunes.day);
+    final inicio = _lunesDe(DateTime.now());
     var total = 0;
     for (final s in historial) {
       if (!s.fecha.isBefore(inicio)) total += s.duracionMin;
@@ -996,9 +1058,7 @@ class AppState extends ChangeNotifier {
 
   /// Días distintos con al menos una sesión esta semana.
   int get diasEntrenadosSemana {
-    final ahora = DateTime.now();
-    final lunes = ahora.subtract(Duration(days: ahora.weekday - 1));
-    final inicio = DateTime(lunes.year, lunes.month, lunes.day);
+    final inicio = _lunesDe(DateTime.now());
     final dias = <String>{};
     for (final s in historial) {
       if (!s.fecha.isBefore(inicio)) dias.add(_dayKey(s.fecha));
@@ -1012,16 +1072,23 @@ class AppState extends ChangeNotifier {
   // =====================================================================
 
   /// Lunes (medianoche) de la semana que contiene [d].
+  ///
+  /// Se resta en campos de fecha (`día - n`), no en horas: el cambio de hora
+  /// (DST) hace que un día dure 23 o 25 h y rompería la racha y las semanas.
   DateTime _lunesDe(DateTime d) {
     final dia = DateTime(d.year, d.month, d.day);
-    return dia.subtract(Duration(days: dia.weekday - 1));
+    return DateTime(dia.year, dia.month, dia.day - (dia.weekday - 1));
   }
 
   /// Rango [lunes de la semana pasada, lunes de esta semana) medio abierto.
   ({DateTime inicio, DateTime fin}) get _rangoSemanaAnterior {
     final inicioActual = _lunesDe(DateTime.now());
     return (
-      inicio: inicioActual.subtract(const Duration(days: 7)),
+      inicio: DateTime(
+        inicioActual.year,
+        inicioActual.month,
+        inicioActual.day - 7,
+      ),
       fin: inicioActual,
     );
   }
@@ -1064,13 +1131,11 @@ class AppState extends ChangeNotifier {
 
   /// Días (L..D) de la semana actual con al menos una sesión, para la UI.
   Set<int> get diasSemanaEntrenados {
-    final ahora = DateTime.now();
-    final lunes = DateTime(ahora.year, ahora.month, ahora.day);
-    final lunesInicio = lunes.subtract(Duration(days: lunes.weekday - 1));
+    final lunesInicio = _lunesDe(DateTime.now());
     final entrenados = <int>{};
     for (final s in historial) {
       final d = DateTime(s.fecha.year, s.fecha.month, s.fecha.day);
-      final diff = d.difference(lunesInicio).inDays;
+      final diff = _indiceDia(d) - _indiceDia(lunesInicio);
       if (diff >= 0 && diff <= 6) entrenados.add(diff);
     }
     return entrenados;
@@ -1127,17 +1192,25 @@ class AppState extends ChangeNotifier {
     return list;
   }
 
+  /// Índice del día natural (el 0 es 1970-01-01). Compara fechas locales sin
+  /// que el cambio de hora (días de 23 o 25 h) desplace un día.
+  static int _indiceDia(DateTime d) =>
+      DateTime.utc(d.year, d.month, d.day).millisecondsSinceEpoch ~/
+      Duration.millisecondsPerDay;
+
   int _rachaActual() {
     final dias = _diasConSesion();
     if (dias.isEmpty) return 0;
     final ahora = DateTime.now();
     final hoy = DateTime(ahora.year, ahora.month, ahora.day);
     // Si hoy aún no entreno, la racha se cuenta desde ayer.
-    var cursor = dias.contains(hoy) ? hoy : hoy.subtract(const Duration(days: 1));
+    var cursor = dias.contains(hoy)
+        ? hoy
+        : DateTime(hoy.year, hoy.month, hoy.day - 1);
     var count = 0;
     while (dias.contains(cursor)) {
       count++;
-      cursor = cursor.subtract(const Duration(days: 1));
+      cursor = DateTime(cursor.year, cursor.month, cursor.day - 1);
     }
     return count;
   }
@@ -1593,6 +1666,7 @@ class AppState extends ChangeNotifier {
     _pasosBase = null;
     pasosHoy = 0;
     _pasosPersistidos = 0;
+    _pasosHoyHC = 0;
     registroDiario = <RegistroDiario>[];
     _healthToday = HealthToday.vacio;
     _healthConnectDisponible = false;

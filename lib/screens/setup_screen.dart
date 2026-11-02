@@ -55,6 +55,7 @@ class _SetupScreenState extends State<SetupScreen> {
       hidratacion: _hidratacion,
       racha: _racha,
       rachaDias: appState.rachaDias,
+      intervaloAgua: context.read<ConfigService>().aguaIntervalo,
     );
     if (!mounted) return;
     Navigator.of(context).pushReplacement(
@@ -273,6 +274,7 @@ class _SetupScreenState extends State<SetupScreen> {
   }
 
   Widget _buildAvisos(AppStrings strings) {
+    final config = context.watch<ConfigService>();
     return SettingsCard(
       children: [
         SettingsCardTitle(
@@ -283,7 +285,7 @@ class _SetupScreenState extends State<SetupScreen> {
         ToggleRow(
           icon: Icons.water_drop_outlined,
           title: strings.pfRecordatoriosHidratacion,
-          subtitle: strings.pfCadaHora,
+          subtitle: strings.pfCadaIntervalo(config.aguaIntervaloMinutos),
           value: _hidratacion,
           onChanged: (v) => setState(() => _hidratacion = v),
         ),

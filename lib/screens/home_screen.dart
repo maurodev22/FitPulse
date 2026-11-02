@@ -6,13 +6,11 @@ import 'package:provider/provider.dart';
 
 import '../services/locale_service.dart';
 import '../state/app_state.dart';
-import '../state/workout.dart';
 import '../theme.dart';
 import '../utils/validators.dart';
 import '../widgets/common.dart';
 import '../widgets/estado_salud_card.dart';
 import '../widgets/racha_chip.dart';
-import 'workout_builder_screen.dart';
 import 'workout_player_screen.dart';
 
 /// Abre el diálogo para registrar MANUALMENTE el agua consumida hoy (P14):
@@ -175,10 +173,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   const EstadoSaludCard(),
                   const SizedBox(height: 24),
                   _buildResumenHoy(),
-                  const SizedBox(height: 24),
-                  _buildEntrenamientoHoy(),
-                  const SizedBox(height: 24),
-                  _buildTuSemana(),
                   // Espacio para que el FAB "Entrenar" no tape la última
                   // tarjeta al llegar al final del scroll.
                   const SizedBox(height: 88),
@@ -188,57 +182,6 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
       ),
-    );
-  }
-
-  /// Fase D (D1): tarjeta "Tu semana" — resumen informativo de la semana
-  /// pasada con datos reales ("6 días · 4 sesiones · 350 XP"). Solo aparece
-  /// si hubo actividad la semana anterior; sin botones de compartir ni
-  /// lenguaje negativo (D3): si no hay racha viva, no se menciona.
-  Widget _buildTuSemana() {
-    final state = context.watch<AppState>();
-    final strings = context.watch<LocaleService>().strings;
-    final dias = state.diasActivosSemanaPasada;
-    if (dias == 0) return const SizedBox.shrink();
-    final sesiones = state.sesionesSemanaPasada;
-    final xp = state.xpSemanaPasada;
-    final rachaViva = state.rachaDias;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SectionHeader(title: strings.hoTuSemana),
-        const SizedBox(height: 12),
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: AppColors.surfaceLowest,
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                strings.hoTuSemanaResumen(dias, sesiones, xp),
-                style: AppType.bodyMd.copyWith(
-                  color: AppColors.onSurface,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              // D2: la mecánica del reto (3→5→7 días) se expone de forma
-              // discreta y solo si hay racha viva; nunca con presión.
-              if (rachaViva > 0) ...[
-                const SizedBox(height: 6),
-                Text(
-                  strings.hoTuSemanaReto(rachaViva, state.retoObjetivo),
-                  style: AppType.bodySm.copyWith(color: AppColors.primary),
-                ),
-              ],
-            ],
-          ),
-        ),
-      ],
     );
   }
 
@@ -439,103 +382,6 @@ class _HomeScreenState extends State<HomeScreen> {
       },
     );
   }
-
-  Widget _buildEntrenamientoHoy() {
-    final strings = context.watch<LocaleService>().strings;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Expanded(
-              child: Text(strings.homeEntrenamientoHoy, style: AppType.headlineSm.copyWith(fontWeight: FontWeight.w700)),
-            ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                color: AppColors.secondaryContainer,
-                borderRadius: BorderRadius.circular(999),
-              ),
-              child: Text(
-                strings.homeSugerido,
-                style: AppType.labelSm.copyWith(
-                  color: AppColors.onSecondaryContainer,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.6,
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        _WorkoutHeroCard(program: context.watch<AppState>().entrenamientoRecomendado),
-        const SizedBox(height: 12),
-        const _EntradaMisRutinas(),
-      ],
-    );
-  }
-}
-
-/// Entrada a "Mis rutinas" (L3).
-///
-/// Muestra un dato real (cuantas rutinas tiene el usuario) y no inventa
-/// contenido: si no hay ninguna, lleva a crear la primera.
-class _EntradaMisRutinas extends StatelessWidget {
-  const _EntradaMisRutinas();
-
-  @override
-  Widget build(BuildContext context) {
-    final strings = context.watch<LocaleService>().strings;
-    final total = context.watch<AppState>().rutinas.length;
-
-    return Material(
-      color: AppColors.surfaceContainerLow,
-      borderRadius: BorderRadius.circular(16),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: () => Navigator.of(context).push(
-          MaterialPageRoute<void>(builder: (_) => const MisRutinasScreen()),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          child: Row(
-            children: [
-              Icon(Icons.edit_note, color: AppColors.primary),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      strings.rutTitulo,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppType.labelLg.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.onSurface,
-                      ),
-                    ),
-                    Text(
-                      total == 0
-                          ? strings.rutVacio
-                          : (total == 1
-                              ? strings.rutNRutinas
-                              : strings.rutNRutinasN(total)),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppType.labelSm.copyWith(color: AppColors.outline),
-                    ),
-                  ],
-                ),
-              ),
-              Icon(Icons.chevron_right, color: AppColors.outline),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 }
 
 class _HomeHeader extends StatelessWidget {
@@ -722,181 +568,6 @@ String _groupThousands(int value) => value.toString().replaceAllMapped(
       RegExp(r'\B(?=(\d{3})+(?!\d))'),
       (_) => ',',
     );
-
-class _WorkoutHeroCard extends StatelessWidget {
-  const _WorkoutHeroCard({required this.program});
-
-  final WorkoutProgram program;
-
-  @override
-  Widget build(BuildContext context) {
-    final strings = context.watch<LocaleService>().strings;
-    final intensidad = program.intensidad.toUpperCase();
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            AppColors.gradienteInicio,
-            AppColors.gradienteIntermedio,
-            AppColors.gradienteFin,
-          ],
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primaryContainer.withValues(alpha: 0.4),
-            blurRadius: 24,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Stack(
-        children: [
-          Positioned(
-            right: -30,
-            bottom: -30,
-            child: Container(
-              width: 150,
-              height: 150,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(color: AppColors.onGradienteAcento.withValues(alpha: 0.15), width: 8),
-              ),
-            ),
-          ),
-          Positioned(
-            right: 30,
-            top: 10,
-            child: Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                color: AppColors.onGradienteAcento.withValues(alpha: 0.1),
-                shape: BoxShape.circle,
-              ),
-            ),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                strings.homeRecomendado(
-                  program.duracionEtiqueta.toUpperCase(),
-                  intensidad,
-                ),
-                style: AppType.labelSm.copyWith(
-                  color: AppColors.onGradienteAcento,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.6,
-                ),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                program.nombre,
-                style: AppType.headlineLg.copyWith(
-                  color: AppColors.onGradiente,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                program.descripcion,
-                style: AppType.bodySm.copyWith(color: AppColors.onGradienteVariant),
-              ),
-              const SizedBox(height: 16),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  _HeroInfoChip(icon: Icons.schedule, label: program.duracionEtiqueta),
-                  _HeroInfoChip(icon: Icons.local_fire_department, label: program.kcalEtiqueta),
-                  _HeroInfoChip(icon: Icons.fitness_center, label: program.ejerciciosEtiqueta),
-                ],
-              ),
-              const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                child: Material(
-                  color: AppColors.botonGradiente,
-                  borderRadius: BorderRadius.circular(999),
-                  child: InkWell(
-                    onTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute<void>(
-                          builder: (_) => WorkoutPlayerScreen(program: program),
-                        ),
-                      );
-                    },
-                    borderRadius: BorderRadius.circular(999),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.play_arrow_rounded, size: 22, color: AppColors.onBotonGradiente),
-                          const SizedBox(width: 8),
-                          Flexible(
-                            child: Text(
-                              strings.homeComenzar,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: AppType.labelLg.copyWith(
-                                color: AppColors.onBotonGradiente,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _HeroInfoChip extends StatelessWidget {
-  const _HeroInfoChip({required this.icon, required this.label});
-
-  final IconData icon;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: AppColors.onGradienteAcento.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: AppColors.onGradienteAcento.withValues(alpha: 0.12)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 14, color: AppColors.onGradienteAcento),
-          const SizedBox(width: 4),
-          Flexible(
-            child: Text(
-              label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: AppType.labelMd.copyWith(color: AppColors.onGradiente, fontWeight: FontWeight.w600),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 class _DiaIdealCard extends StatefulWidget {
   const _DiaIdealCard({required this.onVerDetalle});

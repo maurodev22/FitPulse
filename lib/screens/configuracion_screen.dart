@@ -92,6 +92,7 @@ class _ConfiguracionScreenState extends State<ConfiguracionScreen> {
 
   Widget _buildPreferencias() {
     final strings = context.watch<LocaleService>().strings;
+    final config = context.watch<ConfigService>();
     return SettingsCard(
       children: [
         SettingsCardTitle(icon: Icons.tune, title: strings.pfPreferencias),
@@ -99,13 +100,21 @@ class _ConfiguracionScreenState extends State<ConfiguracionScreen> {
         ToggleRow(
           icon: Icons.water_drop,
           title: strings.pfRecordatoriosHidratacion,
-          subtitle: strings.pfCadaHora,
+          subtitle: strings.pfCadaIntervalo(config.aguaIntervaloMinutos),
           value: _hydration,
           onChanged: (v) {
             setState(() => _hydration = v);
             _aplicarAvisoHidratacion(v);
           },
         ),
+        // Submenú de intervalo: solo tiene sentido con el aviso encendido.
+        if (_hydration)
+          FilaAccion(
+            icon: Icons.schedule,
+            title: strings.pfIntervaloHidratacion,
+            subtitle: strings.intervaloAguaEtiqueta(config.aguaIntervaloMinutos),
+            onTap: _elegirIntervaloHidratacion,
+          ),
         ToggleRow(
           icon: Icons.alarm,
           title: strings.pfAvisoRacha,
@@ -522,13 +531,84 @@ class _ConfiguracionScreenState extends State<ConfiguracionScreen> {
   }
 
   /// Aplica el recordatorio de hidratación (programa/cancela la notificación
-  /// periódica) mostrando un aviso honesto si no procede.
+  /// periódica) con el intervalo elegido, mostrando un aviso honesto si no
+  /// procede.
   Future<void> _aplicarAvisoHidratacion(bool activar) async {
-    final r = await avisosService.setHidratacion(activar: activar);
+    final intervalo = context.read<ConfigService>().aguaIntervalo;
+    final r = await avisosService.setHidratacion(
+      activar: activar,
+      intervaloAgua: intervalo,
+    );
     if (!r.ok && mounted) {
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text(r.mensaje)));
     }
+  }
+
+  /// Submenú "cada cuánto" del recordatorio de hidratación: hoja con los
+  /// intervalos permitidos (30 min – 4 h). Al elegir, se persiste y se
+  /// reprograma el aviso con el intervalo nuevo.
+  Future<void> _elegirIntervaloHidratacion() async {
+    final strings = context.read<LocaleService>().strings;
+    final config = context.read<ConfigService>();
+    final actual = config.aguaIntervaloMinutos;
+    final elegido = await showModalBottomSheet<int>(
+      context: context,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (sheetCtx) => SafeArea(
+        // Desplazable: en pantallas bajas o en horizontal la lista de opciones
+        // no cabe entera y no debe recortarse.
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    strings.pfIntervaloHidratacion,
+                    style: AppType.headlineSm.copyWith(
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.onSurface,
+                    ),
+                  ),
+                ),
+              ),
+              for (final min in ConfigService.intervalosAguaMinutos)
+                ListTile(
+                  leading: Icon(
+                    min == actual
+                        ? Icons.radio_button_checked
+                        : Icons.radio_button_unchecked,
+                    color: min == actual ? AppColors.primary : AppColors.outline,
+                  ),
+                  title: Text(
+                    strings.intervaloAguaEtiqueta(min),
+                    style: AppType.labelLg.copyWith(
+                      color: AppColors.onSurface,
+                      fontWeight:
+                          min == actual ? FontWeight.w700 : FontWeight.w500,
+                    ),
+                  ),
+                  onTap: () => Navigator.of(sheetCtx).pop(min),
+                ),
+                const SizedBox(height: 8),
+            ],
+          ),
+        ),
+      ),
+    );
+    if (elegido == null || elegido == actual || !mounted) return;
+    await config.setAguaIntervaloMinutos(elegido);
+    if (_hydration) await _aplicarAvisoHidratacion(true);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(strings.pfCadaIntervalo(elegido))),
+    );
   }
 
   /// Aplica el aviso diario de racha (20:00) con la racha real del historial;

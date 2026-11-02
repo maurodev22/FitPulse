@@ -62,6 +62,7 @@ Future<void> main() async {
         hidratacion: appState.profile.hidratacion,
         racha: appState.profile.entrenamientoMatutino,
         rachaDias: appState.rachaDias,
+        intervaloAgua: configService.aguaIntervalo,
       ),
     );
   }

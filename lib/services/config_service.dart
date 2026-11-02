@@ -25,6 +25,11 @@ class ConfigService extends ChangeNotifier {
   static const _premiumKey = 'fitpulse_config_premium_v1';
   static const _mockSensorsKey = 'fitpulse_config_mock_sensors_v1';
   static const _themeKey = 'fitpulse_theme_v1';
+  static const _aguaIntervaloKey = 'fitpulse_agua_intervalo_min_v1';
+
+  /// Intervalos ofrecidos para el recordatorio de hidratación (minutos).
+  /// Se limita a valores razonables: ni un aviso cada minuto ni uno al día.
+  static const List<int> intervalosAguaMinutos = [30, 60, 120, 180, 240];
 
   SharedPreferences? _prefs;
 
@@ -33,6 +38,9 @@ class ConfigService extends ChangeNotifier {
 
   /// Modo de tema elegido (Fase 7). Por defecto sigue al sistema.
   AppThemeMode _themeMode = AppThemeMode.system;
+
+  /// Intervalo del recordatorio de hidratación (minutos). Por defecto 1 hora.
+  int _aguaIntervaloMinutos = 60;
 
   /// Feature-flags. Por defecto en modo simulado mientras no existan
   /// sensores reales ni monetización activa.
@@ -46,6 +54,12 @@ class ConfigService extends ChangeNotifier {
   /// Modo de tema persistido (sistema / claro / oscuro).
   AppThemeMode get themeMode => _themeMode;
 
+  /// Cada cuánto se repite el recordatorio de hidratación (minutos).
+  int get aguaIntervaloMinutos => _aguaIntervaloMinutos;
+
+  /// El mismo intervalo como [Duration], para programar la notificación.
+  Duration get aguaIntervalo => Duration(minutes: _aguaIntervaloMinutos);
+
   /// Carga la configuración persistida del dispositivo.
   Future<void> init() async {
     _prefs = await SharedPreferences.getInstance();
@@ -54,7 +68,24 @@ class ConfigService extends ChangeNotifier {
     premiumEnabled = (_prefs!.getInt(_premiumKey) ?? 0) == 1;
     mockSensorsEnabled = (_prefs!.getInt(_mockSensorsKey) ?? 1) == 1;
     _themeMode = _leerModoTema(_prefs!.getString(_themeKey));
+    _aguaIntervaloMinutos =
+        _leerIntervaloAgua(_prefs!.getInt(_aguaIntervaloKey));
     notifyListeners();
+  }
+
+  static int _leerIntervaloAgua(int? minutos) {
+    if (minutos == null || !intervalosAguaMinutos.contains(minutos)) return 60;
+    return minutos;
+  }
+
+  /// Fija cada cuánto se repite el aviso de hidratación (solo valores de
+  /// [intervalosAguaMinutos]; cualquier otro cae en 1 hora).
+  Future<void> setAguaIntervaloMinutos(int minutos) async {
+    final v = _leerIntervaloAgua(minutos);
+    if (v == _aguaIntervaloMinutos) return;
+    _aguaIntervaloMinutos = v;
+    notifyListeners();
+    await _prefs?.setInt(_aguaIntervaloKey, v);
   }
 
   static AppThemeMode _leerModoTema(String? nombre) {
@@ -105,6 +136,7 @@ class ConfigService extends ChangeNotifier {
         'mock_sensors': mockSensorsEnabled,
         'tema': _themeMode.name,
         'eula_version': eulaAcceptedVersion,
+        'agua_intervalo_min': _aguaIntervaloMinutos,
       };
 
   /// Restaura la configuración desde un snapshot de backup.
@@ -115,11 +147,14 @@ class ConfigService extends ChangeNotifier {
         snapshot['mock_sensors'] as bool? ?? mockSensorsEnabled;
     _themeMode = _leerModoTema(snapshot['tema'] as String?);
     eulaAcceptedVersion = snapshot['eula_version'] as int? ?? eulaAcceptedVersion;
+    _aguaIntervaloMinutos =
+        _leerIntervaloAgua(snapshot['agua_intervalo_min'] as int?);
     await _prefs?.setInt(_adsKey, adsEnabled ? 1 : 0);
     await _prefs?.setInt(_premiumKey, premiumEnabled ? 1 : 0);
     await _prefs?.setInt(_mockSensorsKey, mockSensorsEnabled ? 1 : 0);
     await _prefs?.setString(_themeKey, _themeMode.name);
     await _prefs?.setInt(_eulaVersionKey, eulaAcceptedVersion);
+    await _prefs?.setInt(_aguaIntervaloKey, _aguaIntervaloMinutos);
     notifyListeners();
   }
 
@@ -130,6 +165,7 @@ class ConfigService extends ChangeNotifier {
     adsEnabled = true;
     premiumEnabled = false;
     mockSensorsEnabled = true;
+    _aguaIntervaloMinutos = 60;
     notifyListeners();
   }
 }
